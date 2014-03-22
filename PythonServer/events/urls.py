@@ -7,3 +7,8 @@ urlpatterns = patterns("events.api",
                         url(r"^update/(\d+)", "updateEvent"),
                         url(r"^select_attending", "selectAttending")
                         )
+
+urlpatterns += patterns("events.views",
+                        # manual refreshing/updating of campaign backend data
+                        url(r"^view/create", "createEvent"),
+                        )

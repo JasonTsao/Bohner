@@ -3,4 +3,5 @@ from models import *
 
 admin.site.register(Event)
 admin.site.register(InvitedFriend)
+admin.site.register(EventLocation)
 

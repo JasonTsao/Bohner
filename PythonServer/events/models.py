@@ -13,6 +13,18 @@ class Event(models.Model):
     event_over = models.NullBooleanField(null=True, blank=True, default=False)
     cancelled = models.NullBooleanField(null=True, blank=True, default=False)
 
+    def __unicode__(self):
+        return str('{0} : {1}'.format(self.pk,self.name))
+
+
+class EventLocation(models.Model):
+    event = models.ForeignKey(Event)
+    location_name = models.CharField(max_length=255, null=True, blank=True)
+    location_address = models.CharField(max_length=255, null=True, blank=True)
+    location_coordinates = models.CharField(max_length=255, null=True, blank=True)
+    def __unicode__(self):
+        return str(self.location_name)
+
 
 class InvitedFriend(models.Model):
     user = models.ForeignKey(MeepUser)
