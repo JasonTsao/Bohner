@@ -1,3 +1,4 @@
+import timedelta
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -31,6 +32,8 @@ class AccountSettings(models.Model):
     account = models.OneToOneField(Account)
     private = models.NullBooleanField(default=False)
     searchable = models.NullBooleanField(default=True)
+    reminder_on = models.NullBooleanField(default=True)
+    reminder_delta = timedelta.fields.TimedeltaField(null=True,blank=True)
     vibrate_on_notification = models.NullBooleanField(default=True)
 
 

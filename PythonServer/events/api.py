@@ -29,7 +29,7 @@ def checkIfAuthorized(event, account):
 
 
 @login_required
-def UpcomingEvents(request):
+def upcomingEvents(request):
     rtn_dict = {'success': False, "msg": ""}
     try:
         rtn_dict['upcoming_events'] = []
@@ -99,13 +99,13 @@ def createEvent(request):
 
 
 @login_required
-def inviteFriends(request):
+def inviteFriends(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     is_authorized = False
     if request.method == 'POST':
         try:
             invited_friends = request.POST['invited_friends']
-            event = Event.objects.get(pk=request.POST['event_id'])
+            event = Event.objects.get(pk=event_id)
 
             # check to see if this use is allowed to invite more friends to event
             try:
@@ -193,13 +193,13 @@ def updateEvent(request, event_id):
 
 
 @login_required
-def selectAttending(request):
+def selectAttending(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
 
     if request.method == 'POST':
         try:
             user = Account.objects.get(user=request.user)
-            event = Event.objects.get(pk=request.POST['event_id'])
+            event = Event.objects.get(pk=event_id)
             invited_friend = InvitedFriend.objects.get(event=event, user=user)
             if request.POST['attending']:
                 invited_friend.attending = True

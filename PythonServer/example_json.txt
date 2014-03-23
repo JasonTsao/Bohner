@@ -1,0 +1,75 @@
+createEvent: /events/create
+
+	POST:
+
+	{
+		"name": string,
+		"start_time": %Y-%m-%d,
+		"end_time": %Y-%m-%d,
+		"description" : string,
+		"location_name": string,
+		"location_address": string,
+		"location_coordinates": string,
+		"friends_can_invite": boolean,
+		"invited_friends": [
+								{
+									"user_id": string,
+									"can_invite_friends": boolean,
+								},
+							 ],
+	}
+
+	Response:
+	{
+		"success": Boolean,
+		"msg": "String"
+	}
+
+
+updateEvent:  /events/update/(\d+)
+
+	POST:
+
+	{
+		"name": string,
+		"start_time": %Y-%m-%d,
+		"end_time": %Y-%m-%d,
+		"description" : string,
+		"location_name": string,
+		"location_address": string,
+		"location_coordinates": string,
+		"friends_can_invite": boolean,
+	}
+
+	Response:
+	{
+		"success": Boolean,
+		"msg": "String"
+	}
+
+inviteFriends: /events/invite_friends/(\d+)
+	{
+		"invited_friends": [
+								{
+									"user_id": string,
+									"can_invite_friends": boolean,
+								},
+							 ],
+	}
+
+
+selectAttending: /events/attending/(\d+)
+	{
+		"attending", boolean
+	}
+
+
+createUser
+
+updateUser
+
+
+
+
+
+upcomingEvents

@@ -12,3 +12,4 @@ pylibmc==1.2.2
 django-pylibmc-sasl==0.2.4
 google-api-python-client==1.1
 oauth2
+django-timedeltafield
