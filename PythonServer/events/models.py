@@ -13,6 +13,7 @@ class Event(models.Model):
     location_coordinates = models.CharField(max_length=255, null=True, blank=True)
     event_over = models.NullBooleanField(default=False)
     cancelled = models.NullBooleanField(default=False)
+    private = models.NullBooleanField(default=True)
     friends_can_invite = models.NullBooleanField(default=True)
 
     created = models.DateTimeField(auto_now_add=True)
@@ -24,9 +25,9 @@ class Event(models.Model):
 class EventComment(models.Model):
     event = models.ForeignKey(Event)
     user = models.ForeignKey(Account)
+    description = models.TextField() 
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True, blank=True, null=True)
-    description = models.TextField() 
 
 
 class InvitedFriend(models.Model):
@@ -34,3 +35,6 @@ class InvitedFriend(models.Model):
     event = models.ForeignKey(Event)
     can_invite_friends = models.NullBooleanField(default=True)
     attenting = models.NullBooleanField(null=True, blank=True, default=False)
+
+    class Meta:
+        unique_together = (('user', 'event',),)

@@ -13,6 +13,22 @@ logger = logging.getLogger("django.request")
 
 
 @login_required
+def checkIfAuthorized(event, account):
+    is_authorized = False
+    # Make sure user is authorized to leave a comment on this event
+    if event.creator == account:
+        is_authorized = True
+
+    if not is_authorized:
+        try:
+            invited_friend = InvitedFriend.objects.get(event=event, user=account)
+            is_authorized = True
+        except:
+            pass
+    return is_authorized
+
+
+@login_required
 def UpcomingEvents(request):
     rtn_dict = {'success': False, "msg": ""}
     try:
@@ -114,10 +130,14 @@ def inviteFriends(request):
                         account = Account.objects.get(pk=user_id)
                         invited_friend = InvitedFriend(event=event, user=account, can_invite_friends=can_invite_friends)
                         invited_friend.save()
+                        rtn_dict['success'] = True
+                        rtn_dict['msg'] = 'Successfully added users'
                     except Exception as e:
                         logger.info('Error adding user {0}: {1}'.format(user,e))
-                rtn_dict['success'] = True
-                rtn_dict['msg'] = 'Successfully added users'
+                        rtn_dict['msg'] = 'Error adding user {0}: {1}'.format(user,e)
+                
+            else:
+                rtn_dict['msg'] = 'user if not authorized to invite other friends: {0}'.format(e)
         except Exception as e:
             logger.info('Error inviting friends: {0}'.format(e))
             rtn_dict['msg'] = 'Error inviting friends: {0}'.format(e)
@@ -168,6 +188,7 @@ def updateEvent(request, event_id):
         rtn_dict['msg'] = 'Successfully updated {0} to {1}!'.format(field, value)
     except Exception as e:
         logger.info('Error updating event {0}: {1}'.format(event_id, e))
+        rtn_dict['msg'] = 'Error updating event {0}: {1}'.format(event_id, e)
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
@@ -187,5 +208,45 @@ def selectAttending(request):
             invited_friend.save()
         except Exception as e:
             logger.info('Error selected attending for event {0}: user {1}'.format(event.id, user.id , e))
+            rtn_dict['msg'] = 'Error selected attending for event {0}: user {1}'.format(event.id, user.id , e)
 
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@login_required
+def createEventComment(request):
+    rtn_dict = {'success': False, "msg": ""}
+    if request.method == 'POST':
+        try:
+            account = Account.objects.get(user=request.user)
+            event = Event.objects.get(pk=request.POST['event_id'])
+
+            is_authorized = checkIfAuthorized(account, event)
+
+            if is_authorized:
+                new_comment = EventComment(event=event,user=account)
+                new_comment.description = request.POST['description']
+                new_comment.save()
+            else:
+                logger.info('user not authorized to create event comments')
+                rtn_dict['msg'] = 'user not authorized to create event comments'
+        except Exception as e:
+            logger.info('Error creating event comment: {0}'.format(e))
+            rtn_dict['msg'] = 'Error creating event comment: {0}'.format(e)
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@login_required
+def getEventComments(request, event_id):
+    rtn_dict = {'success': False, "msg": ""}
+
+    try:
+        account = Account.objects.get(user=request.user)
+        event = Event.objects.get(pk=event_id)
+        is_authorized = checkIfAuthorized(account, event)
+
+        comments = EventComment.objects.filter(event=event)
+    except Exception as e:
+        logger.info('Error retrieving event comments: {0}'.format(e))
+        rtn_dict['msg'] = 'Error retrieving event comments: {0}'.format(e)
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
