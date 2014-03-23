@@ -143,6 +143,116 @@ def getFriends(request):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@login_required
+def createGroup(request):
+	rtn_dict = {'success': False, "msg": ""}
+	if request.method == 'POST':
+		try:
+			account = Account.objects.get(user=request.user)
+			group = Group(creator=account)
+			group.name = request.POST['name']
+			group.save()
+			members = request.POST['members']
+			for member_id in members:
+				friend = Account.objects.get(pk=member_id)
+				group.members.add(friend)
+		except Exception as e:
+			logger.info('Error creating group: {0}'.format(e))
+			rtn_dict['msg'] = 'Error creating group: {0}'.format(e)
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@login_required
+def getGroup(request, group_id):
+	rtn_dict = {'success': False, "msg": ""}
+	try:
+		creator = Account.objects.get(user=request.user)
+		group = Group.objects.get(pk=group_id, creator=creator)
+		rtn_dict['group'] = model_to_dict(group)
+		rtn_dict['success'] = True
+		rtn_dict['msg'] = 'successfully retrieved group {0}'.format(group_id)
+	except Exception as e:
+		logger.info('Error retrieving group: {0}'.format(e))
+		rtn_dict['msg'] = 'Error retrieving group: {0}'.format(e)
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@login_required
+def getGroups(request):
+	rtn_dict = {'success': False, "msg": ""}
+	try:
+		groups_list = []
+		creator = Account.objects.get(user=request.user)
+		groups = Group.objects.filter(creator=request.creator)
+		for group in groups:
+			groups_list.append(model_to_dict(group))
+
+		rtn_dict['groups'] = groups_list
+		rtn_dict['success'] = True
+		rtn_dict['msg'] = 'successfully retrieved group {0}'.format(group_id)
+	except Exception as e:
+		logger.info('Error retrieving groups: {0}'.format(e))
+		rtn_dict['msg'] = 'Error retrieving groups: {0}'.format(e)
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@login_required
+def addUsersToGroup(request, group_id):
+	rtn_dict = {'success': False, "msg": ""}
+	if request.method == 'POST':
+		try:
+			creator = Account.objects.get(user=request.user)
+			group = Group.objects.get(pk=group_id, creator=creator)
+
+			members_to_add = request.POST['new_members']
+			for member_id in members_to_add:
+				new_member = Account.objects.get(pk=member_id)
+				link = AccountLink.objects.get(account_user=creator, friend=new_member)
+				group.members.add(new_member)
+
+			rtn_dict['success'] = True
+			rtn_dict['msg'] = 'successfully added users to group {0}'.format(group_id)
+		except Exception as e:
+			logger.info('Error adding users to group: {0}'.format(e))
+			rtn_dict['msg'] = 'Error adding users to group: {0}'.format(e)
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+def removeUsersFromGroup(request, group_id):
+	rtn_dict = {'success': False, "msg": ""}
+	if request.method == 'POST':
+		try:
+			creator = Account.objects.get(user=request.user)
+			group = Group.objects.get(pk=group_id, creator=creator)
+			members_to_remove = request.POST['members_to_remove']
+			for member_id in members_to_remove:
+				member_to_remove = Account.objects.get(pk=member_id)
+				group.members.remove(new_member)
+
+			rtn_dict['success'] = True
+			rtn_dict['msg'] = 'successfully removed users from group {0}'.format(group_id)
+		except Exception as e:
+			logger.info('Error removing users from group: {0}'.format(e))
+			rtn_dict['msg'] = 'Error removing users from group: {0}'.format(e)
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+def editGroup(request, group_id):
+	rtn_dict = {'success': False, "msg": ""}
+	if request.method == 'POST':
+		try:
+			creator = Account.objects.get(user=request.user)
+			group = Group.objects.get(pk=group_id, creator=creator)
+			group.name = request.POST['new_name']
+			group.save()
+			rtn_dict['success'] = True
+			rtn_dict['msg'] = 'successfully edited group {0}'.format(group_id)
+		except Exception as e:
+			logger.info('Error retrieving groups: {0}'.format(e))
+			rtn_dict['msg'] = 'Error retrieving groups: {0}'.format(e)
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
 def updateAccount(request):
 	pass
 

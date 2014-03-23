@@ -13,4 +13,7 @@ urlpatterns += patterns("accounts.api",
                         url(r"^search/email", "searchUsersByEmail"),
                         url(r"^friends/new", "addFriend"),
                         url(r"^friends/list", "getFriends"),
+                        url(r"^group/new", "createGroup"),
+                        url(r"^group/edit", "editGroup"),
+                        url(r"^group/list", "getGroups"),
                         )

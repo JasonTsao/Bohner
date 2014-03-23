@@ -27,6 +27,7 @@ class EventComment(models.Model):
     user = models.ForeignKey(Account)
     description = models.TextField() 
     created = models.DateTimeField(auto_now_add=True)
+    private =  models.NullBooleanField(default=False)
     modified = models.DateTimeField(auto_now=True, blank=True, null=True)
 
 

@@ -21,6 +21,7 @@ class Account(models.Model):
     gender = models.CharField(max_length=255, null=True, blank=True, choices=GENDER)
     birthday = models.DateField(null=True,blank=True)
     home_town = models.CharField(max_length=255, null=True, blank=True)
+    is_active = models.NullBooleanField(default=True)
 
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True, blank=True, null=True)
@@ -54,6 +55,7 @@ class AccountLink(models.Model):
     friend = models.ForeignKey(Account, related_name='friend')
     invited_count = models.IntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
+    blocked = models.NullBooleanField(default=False)
 
     def __unicode__(self):
         return str('{0} : {1}'.format(self.user.user_name,self.friend.user_name))
@@ -65,4 +67,9 @@ class Group(models.Model):
     group_creator = models.ForeignKey(Account, related_name='group_creator') 
     name = models.CharField(max_length=255)
     members = models.ManyToManyField(Account)
+    is_active = models.NullBooleanField(default=True)
     created = models.DateTimeField(auto_now_add=True)
+    def __unicode__(self):
+        return str('{0} : {1}'.format(self.name,self.group_creator.id))
+    class Meta:
+        unique_together = (('group_creator', 'name'),)

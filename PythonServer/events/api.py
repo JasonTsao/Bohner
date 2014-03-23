@@ -27,6 +27,7 @@ def checkIfAuthorized(event, account):
             pass
     return is_authorized
 
+
 @login_required
 def getEvent(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
