@@ -10,6 +10,7 @@ createEvent: /events/create
 		"location_name": string,
 		"location_address": string,
 		"location_coordinates": string,
+		"private"; boolean,
 		"friends_can_invite": boolean,
 		"invited_friends": [
 								{
@@ -38,6 +39,7 @@ updateEvent:  /events/update/(\d+)
 		"location_name": string,
 		"location_address": string,
 		"location_coordinates": string,
+		"private"; boolean,
 		"friends_can_invite": boolean,
 	}
 
@@ -59,17 +61,43 @@ inviteFriends: /events/invite_friends/(\d+)
 
 
 selectAttending: /events/attending/(\d+)
+
+	POST:
 	{
 		"attending", boolean
 	}
 
+	Response:
+	{
+		"success": Boolean,
+		"msg": "String"
+	}
 
-createUser
+upcomingEvents: /events/events
+	
+	GET:
 
-updateUser
+	Response:
+		[
+			{
+				"name": string,
+				"start_time": %Y-%m-%d,
+				"end_time": %Y-%m-%d,
+				"description" : string,
+				"location_name": string,
+				"location_address": string,
+				"location_coordinates": string,
+				"friends_can_invite": boolean,
+				"event_over": boolean,
+				"cancelled": boolean,
+				"private"; boolean,
+				"friends_can_invite": boolean,
+			}, 
+		]
 
 
+createUser:
+
+updateUser:
 
 
-
-upcomingEvents
