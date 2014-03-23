@@ -28,6 +28,8 @@ DATABASES = {
     }
 }
 
+#PASSWORD_HASHERS = 'md5'
+
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = []
@@ -129,9 +131,12 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.admin',
     'south',
     'gunicorn',
     'djcelery',
+    'accounts',
+    'events',
     # Uncomment the next line to enable the admin:
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
@@ -166,11 +171,3 @@ LOGGING = {
         },
     }
 }
-
-'''
-    For use of settings for test environments different than live version
-'''
-try:
-    from local_settings import *
-except ImportError:
-    print "Can't import local settings for some reason..."

@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from django.forms.models import model_to_dict
-from accounts.models import MeepUser
+from accounts.models import Account
 from events.models import Event, InvitedFriend
 from django.contrib.auth.hashers import make_password
 
@@ -47,7 +47,7 @@ def updateUser(request):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-def updateMeepUser(request):
+def updateAccount(request):
 	pass
 
 

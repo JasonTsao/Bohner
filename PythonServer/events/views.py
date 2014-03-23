@@ -6,17 +6,17 @@ from django.forms.models import model_to_dict
 from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth.models import User
 from django.shortcuts import render_to_response
-from accounts.models import MeepUser
-from models import Event, EventLocation, InvitedFriend
+from accounts.models import Account
+from models import Event, InvitedFriend
 from forms import EventForm
 
 logger = logging.getLogger("django.request")
 
 
 def createEvent(request):
-    meep_user = MeepUser.objects.get(user=request.user)
+    account = Account.objects.get(user=request.user)
     form = EventForm()
-    form.creator = meep_user
+    form.creator = account
     return render_to_response("events/create_event.html", {'form': form}, context_instance=RequestContext(request))
 
 

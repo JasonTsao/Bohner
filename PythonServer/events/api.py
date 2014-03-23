@@ -6,8 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.forms.models import model_to_dict
 from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth.models import User
-from accounts.models import MeepUser
-from models import Event, EventLocation, InvitedFriend
+from accounts.models import Account
+from models import Event, InvitedFriend
 
 logger = logging.getLogger("django.request")
 
@@ -17,19 +17,23 @@ def UpcomingEvents(request):
     rtn_dict = {'success': False, "msg": ""}
     try:
         rtn_dict['upcoming_events'] = []
-        meep_user = MeepUser.objects.filter(user=request.user)
+        account = Account.objects.filter(user=request.user)
 
-        owned_events = Event.objects.filter(creator=meep_user).order_by('time')
+        owned_events = Event.objects.filter(creator=account).order_by('start_time')
         for event in owned_events:
             if not event.event_over and not event.cancelled:
                 rtn_dict['upcoming_events'].append(model_to_dict(event)) 
 
-        invited_users = InvitedFriend.objects.select_related('event').filter(user=meep_user).order_by('time')
+        invited_users = InvitedFriend.objects.select_related('event').filter(user=account)
         for invited_user in invited_users:
             if not invited_user.event.event_over and not invited_user.event.cancelled:
-                if invited_user.event.creator != meep_user:
+                if invited_user.event.creator != account:
                     rtn_dict['upcoming_events'].append(model_to_dict(invited_user.event))
+
+        rtn_dict['success'] = True
+        rtn_dict['message'] = 'Successfully retrieved upcoming events'
     except Exception as e:
+        print 'Error grabbing upcoming events: {0}'.format(e)
         logger.info('Error grabbing upcoming events: {0}'.format(e))
 
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
@@ -40,33 +44,31 @@ def createEvent(request):
     rtn_dict = {'success': False, "msg": ""}
     if request.method == 'POST':
         try:
-            user = MeepUser.objects.get(user=request.user)
+            user = Account.objects.get(user=request.user)
             event = Event(creator=user)
             event.name = request.POST['name']
-            event.time = request.POST['time']
+            event.start_time = request.POST['start_time']
+            event.end_time = request.POST['end_time']
             event.description = request.POST['description']
             event.location_name = request.POST['location_name']
             event.location_address = request.POST['location_address']
             event.location_coordinates = request.POST['location_coordinates']
+            event.friends_can_invite = reqest.POST['friends_can_invite']
             event.save()
-
-            event_location = EventLocation(event=event)
-            event_location.location_name = event.location_name
-            event_location.location_address = event.location_address
-            event_location.location_coordinates = event.location_coordinates
-            event_location.save()
 
             try:
                 invited_friends = request.POST['invited_friends']
-                for user_name in invited_friends:
+                for user_dict in invited_friends:
                     try:
-                        meep_user = MeepUser.objects.get(user_name=user_name)
-                        invited_friend = InvitedFriend(event=event, user=meep_user)
+                        user_id = user_dict['user_id']
+                        can_invite_friends = user_dict['can_invite_friends']
+                        account = Account.objects.get(pk=user_id)
+                        invited_friend = InvitedFriend(event=event, user=account, can_invite_friends=can_invite_friends)
                         invited_friend.save()
                     except Exception as e:
                         logger.info('Error adding user {0}: {1}'.format(user,e))
             except:
-                pass
+                logger.info('Error inviting friends: {0}'.format(e))
 
             rtn_dict['success'] = True
             rtn_dict['msg'] = 'Successfully created new user event!'
@@ -81,22 +83,86 @@ def createEvent(request):
 
 
 @login_required
+def inviteFriends(request):
+    rtn_dict = {'success': False, "msg": ""}
+    is_authorized = False
+    if request.method == 'POST':
+        try:
+            invited_friends = request.POST['invited_friends']
+            event = Event.objects.get(pk=request.POST['event_id'])
+
+            # check to see if this use is allowed to invite more friends to event
+            try:
+                account = Account.objects.get(user=request.user)
+                if event.creator == account:
+                    is_authorized = True
+            except:
+                pass
+
+            try:
+                invited_friend = InvitedFriend.objects.get(event=Event, user=account)
+                if inivited_friend.can_invite_friends:
+                    is_authorized = True
+            except:
+                pass
+
+            if is_authorized:
+                for user_dict in invited_friends:
+                    try:
+                        user_id = user_dict['user_id']
+                        can_invite_friends = user_dict['can_invite_friends']
+                        account = Account.objects.get(pk=user_id)
+                        invited_friend = InvitedFriend(event=event, user=account, can_invite_friends=can_invite_friends)
+                        invited_friend.save()
+                    except Exception as e:
+                        logger.info('Error adding user {0}: {1}'.format(user,e))
+                rtn_dict['success'] = True
+                rtn_dict['msg'] = 'Successfully added users'
+        except Exception as e:
+            logger.info('Error inviting friends: {0}'.format(e))
+            rtn_dict['msg'] = 'Error inviting friends: {0}'.format(e)
+
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@login_required
 def updateEvent(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     try:
         event = Event.objects.get(pk=event_id)
-        if request.POST['name']:
+        try:
             event.name = request.POST['name']
-        if request.POST['time']:
-            event.time = request.POST['time']
-        if request.POST['description']:
+        except:
+            pass
+        try:
+            event.start_time = request.POST['start_time']
+        except:
+            pass
+        try:
+            event.end_time = request.POST['end_time']
+        except:
+            pass
+        try:
             event.description = request.POST['description']
-        if request.POST['location_name']:
+        except:
+            pass
+        try:
             event.location_name = request.POST['location_name']
-        if request.POST['location_address']:
+        except:
+            pass
+        try:
             event.location_address = request.POST['location_address']
-        if request.POST['location_coordinates']:
+        except:
+            pass
+        try:
             event.location_coordinates = request.POST['location_coordinates']
+        except:
+            pass
+        try:
+            event.friends_can_invite = request.POST['friends_can_invite']
+        except:
+            pass
+
         event.save()
         rtn_dict['success'] = True
         rtn_dict['msg'] = 'Successfully updated {0} to {1}!'.format(field, value)
@@ -111,7 +177,7 @@ def selectAttending(request):
 
     if request.method == 'POST':
         try:
-            user = MeepUser.objects.get(pk=request.POST['user_id'])
+            user = Account.objects.get(user=request.user)
             event = Event.objects.get(pk=request.POST['event_id'])
             invited_friend = InvitedFriend.objects.get(event=event, user=user)
             if request.POST['attending']:
