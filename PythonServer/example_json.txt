@@ -1,4 +1,4 @@
-createEvent: /events/create
+createEvent: /events/new
 
 	POST:
 
@@ -50,14 +50,20 @@ updateEvent:  /events/update/(\d+)
 	}
 
 inviteFriends: /events/invite_friends/(\d+)
-	{
-		"invited_friends": [
-								{
-									"user_id": string,
-									"can_invite_friends": boolean,
-								},
-							 ],
-	}
+	POST:
+		{
+			"invited_friends": [
+									{
+										"user_id": string,
+										"can_invite_friends": boolean,
+									},
+								 ],
+		}
+	Response:
+		{
+			"success": Boolean,
+			"msg": "String",
+		}
 
 
 selectAttending: /events/attending/(\d+)
@@ -73,30 +79,68 @@ selectAttending: /events/attending/(\d+)
 		"msg": "String"
 	}
 
-upcomingEvents: /events/events
+upcomingEvents: /events/upcoming
 	
 	GET:
 
 	Response:
-		[
-			{
-				"name": string,
-				"start_time": %Y-%m-%d,
-				"end_time": %Y-%m-%d,
-				"description" : string,
-				"location_name": string,
-				"location_address": string,
-				"location_coordinates": string,
-				"friends_can_invite": boolean,
-				"event_over": boolean,
-				"cancelled": boolean,
-				"private"; boolean,
-				"friends_can_invite": boolean,
-			}, 
-		]
+		{
+			"upcoming_events": [
+								{
+									"name": string,
+									"start_time": %Y-%m-%d,
+									"end_time": %Y-%m-%d,
+									"description" : string,
+									"location_name": string,
+									"location_address": string,
+									"location_coordinates": string,
+									"friends_can_invite": boolean,
+									"event_over": boolean,
+									"cancelled": boolean,
+									"private"; boolean,
+									"friends_can_invite": boolean,
+								}, 
+							],
+			"success": Boolean,
+			"msg": "String",
+		}
+
+
+createEventComment: /events/comments/new/(\d+)
+	POST:
+		{
+			"description": string
+		}
+
+	Response:
+		{
+			"success": Boolean,
+			"msg": "String"
+		}
+
+
+getEventComments: /events/comments/(\d+)
+	GET:
+
+	Response:
+		{
+			"comments":[
+				{
+					"event": integer,
+					"user": integer,
+					"description": string,
+				},
+				],
+			"success": Boolean,
+			"msg": "String",
+		}
 
 
 createUser:
+	POST:
+
+	Response:
+
 
 updateUser:
 

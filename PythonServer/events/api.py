@@ -214,12 +214,12 @@ def selectAttending(request, event_id):
 
 
 @login_required
-def createEventComment(request):
+def createEventComment(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     if request.method == 'POST':
         try:
             account = Account.objects.get(user=request.user)
-            event = Event.objects.get(pk=request.POST['event_id'])
+            event = Event.objects.get(pk=event_id)
 
             is_authorized = checkIfAuthorized(account, event)
 
@@ -241,11 +241,16 @@ def getEventComments(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
 
     try:
+        comments = []
         account = Account.objects.get(user=request.user)
         event = Event.objects.get(pk=event_id)
         is_authorized = checkIfAuthorized(account, event)
 
-        comments = EventComment.objects.filter(event=event)
+        event_comments = EventComment.objects.filter(event=event)
+
+        for event_comment in event_comments:
+            comments.append(model_to_dict(event_comment))
+        rtn_dict['comments'] = comments
     except Exception as e:
         logger.info('Error retrieving event comments: {0}'.format(e))
         rtn_dict['msg'] = 'Error retrieving event comments: {0}'.format(e)

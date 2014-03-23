@@ -2,11 +2,13 @@ from django.conf.urls import url, patterns
 from django.contrib.auth.decorators import login_required
 
 urlpatterns = patterns("events.api",
-                        url(r"^events", "upcomingEvents"),
-                        url(r"^create", "createEvent"),
+                        url(r"^upcoming", "upcomingEvents"),
+                        url(r"^new", "createEvent"),
                         url(r"^update/(\d+)", "updateEvent"),
                         url(r"^attending/(\d+)", "selectAttending"),
                         url(r"^invite_friends/(\d+)", "inviteFriends"),
+                        url(r"^comments/new/(\d+)", "createEventComment"),
+                        url(r"^comments/(\d+)", "getEventComments"),
                         )
 
 urlpatterns += patterns("events.views",
