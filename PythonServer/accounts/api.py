@@ -39,6 +39,7 @@ def registerUser(request):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@login_required
 def updateUser(request):
     rtn_dict = {'success': False, "msg": ""}
 
@@ -88,6 +89,7 @@ def updateUser(request):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@login_required
 def searchUsersByEmail(request):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
@@ -101,6 +103,43 @@ def searchUsersByEmail(request):
 		except Exception as e:
 			logger.info('Error searching for useres: {0}'.format(e))
 			rtn_dict['msg'] = 'Error searching for useres: {0}'.format(e)
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@login_required
+def addFriend(request):
+	rtn_dict = {'success': False, "msg": ""}
+	if request.method == 'POST':
+		try:
+			account = Account.objects.get(user=request.user)
+			friend = Account.object.get(pk=request.POST['friend_id'])
+			link = AccountLink(account_user=account, friend=friend)
+			link.save()
+			rtn_dict['success'] = True
+			rtn_dict['msg'] = 'successfully added friend {0}'.format(friend.id)
+		except Exception as e:
+			logger.info('Error searching for useres: {0}'.format(e))
+			rtn_dict['msg'] = 'Error adding friend: {0}'.format(e)
+	else:
+		rtn_dict['msg'] = 'Not POST'
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@login_required
+def getFriends(request):
+	rtn_dict = {'success': False, "msg": ""}
+	try:
+		friends_list = []
+		friend_links = AccountLink.objects.select_related('friend').filter(account_user=request.user).order_by('invited_count')
+		for link in friend_links:
+			friends_list.append(model_to_dict(link.friend))
+		rtn_dict['success'] = True
+		rtn_dict['msg'] = 'successfully retrieved friend list'
+		rtn_dict['friends'] = friends_list
+	except:
+		logger.info('Error getting friend list: {0}'.format(e))
+		rtn_dict['msg'] = 'Error getting friend list: {0}'.format(e)
+
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
