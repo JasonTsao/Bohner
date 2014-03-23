@@ -11,10 +11,10 @@ GENDER = (
 class Account(models.Model):
     user = models.OneToOneField(User)
     user_name = models.CharField(max_length=255, unique=True)
-    first_name = models.CharField(max_length=255)
-    last_name = models.CharField(max_length=255)
+    first_name = models.CharField(max_length=255, null=True, blank=True)
+    last_name = models.CharField(max_length=255, null=True, blank=True)
     phone_number = models.CharField(max_length=255, null=True, blank=True)
-    email = models.CharField(max_length=255, null=True, blank=True, unique=True) 
+    email = models.CharField(max_length=255, unique=True) 
     facebook_id = models.CharField(max_length=255, null=True, blank=True)
     uber = models.CharField(max_length=255, null=True, blank=True)
     avatar =  models.CharField(max_length=255, null=True, blank=True)

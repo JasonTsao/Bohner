@@ -136,7 +136,7 @@ getEventComments: /events/comments/(\d+)
 		}
 
 
-createUser:
+registerUser:
 	POST:
 
 	Response:

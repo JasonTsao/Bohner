@@ -27,6 +27,23 @@ def checkIfAuthorized(event, account):
             pass
     return is_authorized
 
+@login_required
+def getEvent(request, event_id):
+    rtn_dict = {'success': False, "msg": ""}
+
+    try:
+        account = Account.objects.get(user=request.user)
+        event = Event.objects.get(pk=event_id)
+        is_authorized = checkIfAuthorized(event, account)
+        if is_authorized:
+            rtn_dict['event'] = model_to_dict(event)
+            rtn_dict['success'] = True
+            rtn_dict['msg'] = 'successfully got event'
+    except Exception as e:
+        logger.info('Error grabbing events {0}: {1}'.format(event_id, e))
+        rtn_dict['msg'] = 'Error grabbing events {0}: {1}'.format(event_id, e)
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
 
 @login_required
 def upcomingEvents(request):
@@ -51,6 +68,7 @@ def upcomingEvents(request):
     except Exception as e:
         print 'Error grabbing upcoming events: {0}'.format(e)
         logger.info('Error grabbing upcoming events: {0}'.format(e))
+        rtn_dict['msg'] = 'Error grabbing upcoming events: {0}'.format(e)
 
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 

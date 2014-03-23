@@ -1,0 +1,38 @@
+<html>
+<body>
+<div id="account-registrationform"role="dialog">
+        <form class="form-horizontal" action="/acct/register" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <header class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h3>Register</h3>
+            </header>
+            <div class="modal-body">
+                <div class="control-group">
+                    <label class="control-label" for="registration-username">Username</label>
+                    <div class="controls">
+                        <input id="registration-username" type="text" name="username" placeholder="Username" maxlength="30">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label" for="registration-email">Email</label>
+                    <div class="controls">
+                        <input id="registration-email" type="text" name="email" placeholder="E-Mail">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label" for="registration-password">Password</label>
+                    <div class="controls">
+                        <input id="registration-password" type="password" name="password1" placeholder="Password">
+                        <input id="registration-passwordconfirm" type="password" name="password2" placeholder="Confirm Password">
+                    </div>
+                </div>
+            </div>
+            <footer class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+                <button class="btn btn-primary" type="submit">Register</button>
+            </footer>
+        </form>
+    </div>
+</body>
+</html>
