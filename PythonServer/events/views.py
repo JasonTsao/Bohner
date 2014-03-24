@@ -26,13 +26,12 @@ def inviteFriends(request):
 
 def createEventComment(request):
     return render_to_response("events/create_event_comment.html", {}, context_instance=RequestContext(request))
+
+def updateEvent(request, event_id):
+    return render_to_response("events/update_event.html", {}, context_instance=RequestContext(request))
 '''
 def UpcomingEvents(request):
     pass
-
-def updateEvent(request):
-    pass
-
 
 def selectAttending(request):
     pass

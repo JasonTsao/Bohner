@@ -117,8 +117,6 @@ def searchUsersByEmail(request):
 @login_required
 def addFriend(request):
 	rtn_dict = {'success': False, "msg": ""}
-	print 'nooo'
-	print request.method
 	if request.method == 'POST':
 		try:
 			account = Account.objects.get(user=request.user, is_active=True)

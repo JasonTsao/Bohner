@@ -18,4 +18,5 @@ urlpatterns += patterns("events.views",
                         url(r"^view/create", "createEvent"),
                         url(r"^events/invite", "inviteFriends"),
                         url(r"^events/new_comment", "createEventComment"),
+                        url(r"^events/update/(\d+)", "updateEvent"),
                         )

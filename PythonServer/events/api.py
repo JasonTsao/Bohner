@@ -87,7 +87,6 @@ def upcomingEvents(request):
 def createEvent(request):
     rtn_dict = {'success': False, "msg": ""}
     if request.method == 'POST':
-        print request.POST
         try:
             user = Account.objects.get(user=request.user)
             event = Event(creator=user)
@@ -221,7 +220,7 @@ def updateEvent(request, event_id):
 
         event.save()
         rtn_dict['success'] = True
-        rtn_dict['msg'] = 'Successfully updated {0} to {1}!'.format(field, value)
+        rtn_dict['msg'] = 'Successfully updated {0}!'.format(event.name)
     except Exception as e:
         logger.info('Error updating event {0}: {1}'.format(event_id, e))
         rtn_dict['msg'] = 'Error updating event {0}: {1}'.format(event_id, e)
@@ -261,6 +260,8 @@ def createEventComment(request, event_id):
                 new_comment = EventComment(event=event,user=account)
                 new_comment.description = request.POST['description']
                 new_comment.save()
+                rtn_dict['success'] = True
+                rtn_dict['msg'] = 'successfully created comment for event {0}'.format(event_id)
             else:
                 logger.info('user not authorized to create event comments')
                 rtn_dict['msg'] = 'user not authorized to create event comments'
@@ -284,6 +285,8 @@ def getEventComments(request, event_id):
         for event_comment in event_comments:
             comments.append(model_to_dict(event_comment))
         rtn_dict['comments'] = comments
+        rtn_dict['success'] = True
+        rtn_dict['msg'] = 'successfully retrieved comments for event {0}'.format(event_id)
     except Exception as e:
         logger.info('Error retrieving event comments: {0}'.format(e))
         rtn_dict['msg'] = 'Error retrieving event comments: {0}'.format(e)

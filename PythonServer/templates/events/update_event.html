@@ -1,0 +1,38 @@
+
+<script src="/static/js/jquery.min.js"></script>
+<script type="text/javascript" >
+	$(document).ready(function(){
+		$('#new_comment').click(function(){
+			var event_dict = {
+                "name": "Clubbing at Metropolitan",
+                "start_time": "2014-11-11",
+                "end_time": "2014-11-12",
+                "description": "Come have a blast!",
+                "csrfmiddlewaretoken": "{{csrf_token}}"}
+			//var dict = {};
+			//dict['user_id'] = 2;
+			//dict['can_invite_friends'] = false;
+			//invited_friends.push(dict);
+			$.ajax({
+            type:"POST",
+                    url:"/events/update/2",
+                    data: event_dict,
+            success: function(data){
+                        //alert(data['status']);
+                        console.log('success!');
+                        console.log(data);
+                    },
+            error: function(data){
+            		console.log('error');
+            		console.log(data);
+                //alert("Server side error");
+            }
+        });
+		})
+	})
+</script>
+
+
+
+	<input type="text" id="search_field"></input>
+	<input type="button" value="Press" id="new_comment" class="btn btn-primary">
