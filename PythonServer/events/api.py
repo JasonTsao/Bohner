@@ -10,12 +10,11 @@ from django.forms.models import model_to_dict
 from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth.models import User
 from accounts.models import Account
-from models import Event, InvitedFriend
+from models import Event, EventComment, InvitedFriend
 
 logger = logging.getLogger("django.request")
 
 
-@login_required
 def checkIfAuthorized(event, account):
     is_authorized = False
     # Make sure user is authorized to leave a comment on this event
@@ -39,11 +38,18 @@ def getEvent(request, event_id):
         account = Account.objects.get(user=request.user)
         event = Event.objects.get(pk=event_id)
         is_authorized = checkIfAuthorized(event, account)
+        #is_authorized = True
         if is_authorized:
+            invited_friends_list = []
+            invited_friends = InvitedFriend.objects.filter(event=event)
+            for invited_friend in invited_friends:
+                invited_friends_list.append(model_to_dict(invited_friend))
+            rtn_dict['invited_friends'] = invited_friends_list
             rtn_dict['event'] = model_to_dict(event)
             rtn_dict['success'] = True
             rtn_dict['msg'] = 'successfully got event'
     except Exception as e:
+        print e
         logger.info('Error grabbing events {0}: {1}'.format(event_id, e))
         rtn_dict['msg'] = 'Error grabbing events {0}: {1}'.format(event_id, e)
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
@@ -250,9 +256,7 @@ def createEventComment(request, event_id):
         try:
             account = Account.objects.get(user=request.user)
             event = Event.objects.get(pk=event_id)
-
-            is_authorized = checkIfAuthorized(account, event)
-
+            is_authorized = checkIfAuthorized(event, account)
             if is_authorized:
                 new_comment = EventComment(event=event,user=account)
                 new_comment.description = request.POST['description']
@@ -269,12 +273,11 @@ def createEventComment(request, event_id):
 @login_required
 def getEventComments(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
-
     try:
         comments = []
         account = Account.objects.get(user=request.user)
         event = Event.objects.get(pk=event_id)
-        is_authorized = checkIfAuthorized(account, event)
+        is_authorized = checkIfAuthorized(event, account)
 
         event_comments = EventComment.objects.filter(event=event)
 

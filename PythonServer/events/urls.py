@@ -10,10 +10,12 @@ urlpatterns = patterns("events.api",
                         url(r"^invite_friends/(\d+)", "inviteFriends"),
                         url(r"^comments/new/(\d+)", "createEventComment"),
                         url(r"^comments/(\d+)", "getEventComments"),
+                        
                         )
 
 urlpatterns += patterns("events.views",
                         # manual refreshing/updating of campaign backend data
                         url(r"^view/create", "createEvent"),
                         url(r"^events/invite", "inviteFriends"),
+                        url(r"^events/new_comment", "createEventComment"),
                         )

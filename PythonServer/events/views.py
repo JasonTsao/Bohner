@@ -24,6 +24,8 @@ def inviteFriends(request):
     return render_to_response("events/invite_friend.html", {}, context_instance=RequestContext(request))
 
 
+def createEventComment(request):
+    return render_to_response("events/create_event_comment.html", {}, context_instance=RequestContext(request))
 '''
 def UpcomingEvents(request):
     pass
