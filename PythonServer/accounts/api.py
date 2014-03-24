@@ -24,7 +24,7 @@ def registerUser(request):
 			new_user.save()
 			user = authenticate(username=request.POST.get("username"), password=request.POST.get("password1"))
 			login(request, user)
-			account = Accout(user=user)
+			account = Account(user=user)
 			account.email = user.email
 			account.user_name = user.username
 			account.save()
@@ -80,6 +80,10 @@ def updateUser(request):
 				account.home_town = request.POST['home_town']
 			except:
 				pass
+			try:
+				account.is_active = request.POST['is_active']
+			except:
+				pass
 			account.save()
 			rtn_dict['success'] = True
 			rtn_dict['msg'] = 'successfully updated user {0}'.format(account)
@@ -91,15 +95,16 @@ def updateUser(request):
 
 @login_required
 def searchUsersByEmail(request):
-	rtn_dict = {'success': False, "msg": ""}
+	rtn_dict = {'success': False, "msg": "", "users": []}
 	if request.method == 'POST':
 		try:
 			searched_users = []
 			search_field = request.POST['search_field']
-			users = Account.objects.filter(email__starts_with=search_field)
+			users = Account.objects.filter(email__starts_with=search_field, is_active=True)
 			for user in users:
 				searched_users.append(model_to_dict(user))
 			rtn_dict['users'] = searched_users
+
 		except Exception as e:
 			logger.info('Error searching for useres: {0}'.format(e))
 			rtn_dict['msg'] = 'Error searching for useres: {0}'.format(e)
@@ -111,8 +116,8 @@ def addFriend(request):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
-			account = Account.objects.get(user=request.user)
-			friend = Account.object.get(pk=request.POST['friend_id'])
+			account = Account.objects.get(user=request.user, is_active=True)
+			friend = Account.object.get(pk=request.POST['friend_id'], is_active=True)
 			link = AccountLink(account_user=account, friend=friend)
 			link.save()
 			rtn_dict['success'] = True
@@ -127,12 +132,13 @@ def addFriend(request):
 
 @login_required
 def getFriends(request):
-	rtn_dict = {'success': False, "msg": ""}
+	rtn_dict = {'success': False, "msg": "", "friends": []}
 	try:
 		friends_list = []
 		friend_links = AccountLink.objects.select_related('friend').filter(account_user=request.user).order_by('invited_count')
 		for link in friend_links:
-			friends_list.append(model_to_dict(link.friend))
+			if link.friend.is_active:
+				friends_list.append(model_to_dict(link.friend))
 		rtn_dict['success'] = True
 		rtn_dict['msg'] = 'successfully retrieved friend list'
 		rtn_dict['friends'] = friends_list
@@ -154,7 +160,7 @@ def createGroup(request):
 			group.save()
 			members = request.POST['members']
 			for member_id in members:
-				friend = Account.objects.get(pk=member_id)
+				friend = Account.objects.get(pk=member_id, is_active=True)
 				group.members.add(friend)
 		except Exception as e:
 			logger.info('Error creating group: {0}'.format(e))
@@ -164,9 +170,9 @@ def createGroup(request):
 
 @login_required
 def getGroup(request, group_id):
-	rtn_dict = {'success': False, "msg": ""}
+	rtn_dict = {'success': False, "msg": "", "group": ""}
 	try:
-		creator = Account.objects.get(user=request.user)
+		creator = Account.objects.get(user=request.user, is_active=True)
 		group = Group.objects.get(pk=group_id, creator=creator)
 		rtn_dict['group'] = model_to_dict(group)
 		rtn_dict['success'] = True
@@ -179,10 +185,10 @@ def getGroup(request, group_id):
 
 @login_required
 def getGroups(request):
-	rtn_dict = {'success': False, "msg": ""}
+	rtn_dict = {'success': False, "msg": "", "groups": []}
 	try:
 		groups_list = []
-		creator = Account.objects.get(user=request.user)
+		creator = Account.objects.get(user=request.user, is_active=True)
 		groups = Group.objects.filter(creator=request.creator)
 		for group in groups:
 			groups_list.append(model_to_dict(group))
@@ -201,7 +207,7 @@ def addUsersToGroup(request, group_id):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
-			creator = Account.objects.get(user=request.user)
+			creator = Account.objects.get(user=request.user, is_active=True)
 			group = Group.objects.get(pk=group_id, creator=creator)
 
 			members_to_add = request.POST['new_members']
@@ -222,7 +228,7 @@ def removeUsersFromGroup(request, group_id):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
-			creator = Account.objects.get(user=request.user)
+			creator = Account.objects.get(user=request.user, is_active=True)
 			group = Group.objects.get(pk=group_id, creator=creator)
 			members_to_remove = request.POST['members_to_remove']
 			for member_id in members_to_remove:
@@ -241,7 +247,7 @@ def editGroup(request, group_id):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
-			creator = Account.objects.get(user=request.user)
+			creator = Account.objects.get(user=request.user, is_active=True)
 			group = Group.objects.get(pk=group_id, creator=creator)
 			group.name = request.POST['new_name']
 			group.save()

@@ -33,8 +33,8 @@ updateEvent:  /events/update/(\d+)
 
 	{
 		"name": string,
-		"start_time": %Y-%m-%d,
-		"end_time": %Y-%m-%d,
+		"start_time": %Y-%m-%d:%h:%M:%s,
+		"end_time": %Y-%m-%d:%h:%M:%s,
 		"description" : string,
 		"location_name": string,
 		"location_address": string,
@@ -88,8 +88,8 @@ upcomingEvents: /events/upcoming
 			"upcoming_events": [
 								{
 									"name": string,
-									"start_time": %Y-%m-%d,
-									"end_time": %Y-%m-%d,
+									"start_time": %Y-%m-%d:%h:%M:%s,
+									"end_time": %Y-%m-%d:%h:%M:%s,
 									"description" : string,
 									"location_name": string,
 									"location_address": string,
@@ -136,12 +136,201 @@ getEventComments: /events/comments/(\d+)
 		}
 
 
-registerUser:
+registerUser: /acct/register
 	POST:
+		{
+			"username": string,
+			"password1": string,
+			"email": email,
+		}
+	Response:
+		{
+			"success": Boolean,
+			"msg": "String",
+		}
+
+updateUser: /acct/update
+	POST:
+		{
+			"username": string,
+			"email": string,
+			"first_name": string,
+			"last_name": string,
+			"phone_number": string,
+			"gender": string,
+			"birthday": %Y-%m-%d,
+			"is_active": boolean,
+
+		}
+	Response:
+		{
+			"success": Boolean,
+			"msg": "String",
+		}
+
+searchUsersByEmail: /search/email
+
+	POST:
+		{
+			"search_field"
+		}
+	Response:
+		{
+			"users": [
+				{
+					"username": string,
+					"email": string,
+					"first_name": string,
+					"last_name": string,
+					"phone_number": string,
+					"gender": string,
+					"birthday": %Y-%m-%d,
+					"is_active": boolean,
+				},
+			],
+			"success": Boolean,
+			"msg": "String",
+		}
+
+addFriend: /friends/new
+	POST:
+		{
+			"friend_id": string,
+		}
 
 	Response:
+		{
+			"success": Boolean,
+			"msg": "String",
+		}
 
 
-updateUser:
+getFriends: /friends/list
+	GET:
+
+	Response:
+		{
+			"friends": [
+				{
+					"username": string,
+					"email": string,
+					"first_name": string,
+					"last_name": string,
+					"phone_number": string,
+					"gender": string,
+					"birthday": %Y-%m-%d,
+					"is_active": boolean,
+				}
+			], 
+			"success": Boolean,
+			"msg": "String",
+		}
+
+
+createGroup: /group/new
+	POST:
+		{
+			"name": string,
+			"members": [integer]      <--- ints are Account ids
+		}
+
+	Response:
+		{
+			"success": Boolean,
+			"msg": "String",
+		}
+
+getGroup: /group/(\d+)
+	GET
+
+	Response:
+		{
+			"group": {
+				"group_creator": integer,
+				"name": string,
+				"members": [
+					{
+						"username": string,
+						"email": string,
+						"first_name": string,
+						"last_name": string,
+						"phone_number": string,
+						"gender": string,
+						"birthday": %Y-%m-%d,
+						"is_active": boolean,
+					},
+				],
+			}
+			"success": Boolean,
+			"msg": "String",
+		}
+
+
+getGroups: /group/list
+	GET
+
+	Response:
+	{
+		"groups": [
+			{
+				"group_creator": integer,
+				"name": string,
+				"members": [
+					{
+						"username": string,
+						"email": string,
+						"first_name": string,
+						"last_name": string,
+						"phone_number": string,
+						"gender": string,
+						"birthday": %Y-%m-%d,
+						"is_active": boolean,
+					},
+				]
+			}
+		]
+		"success": Boolean,
+		"msg": "String",
+	}
+
+
+addUsersToGroup: /group/(\d+)/members/add
+	POST:
+	{
+		"new_members": [integer,]    <--- integers are Account ids
+	}
+
+
+	Response:
+	{
+		"success": Boolean,
+		"msg": "String",
+	}
+
+
+removeUsersFromGroup: /group/(\d+)/members/remove 
+	POST:
+	{
+		"members_to_remove": [integer,]    <--- integers are Account ids
+	}
+
+
+	Response:
+	{
+		"success": Boolean,
+		"msg": "String",
+	}
+
+
+editGroup: /group/(\d+)/edit
+	POST:
+	{
+		"new_name": string
+	}
+	Response:
+	{
+		"success": Boolean,
+		"msg": "String",
+	}
 
 
