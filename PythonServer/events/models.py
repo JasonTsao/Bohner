@@ -4,7 +4,7 @@ from accounts.models import Account
 
 class Event(models.Model):
     creator = models.ForeignKey(Account)
-    name = models.CharField(max_length=255, defualt='New Event')
+    name = models.CharField(max_length=255, default='New Event')
     start_time = models.DateTimeField(db_index=True, null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
     description = models.TextField(null=True, blank=True) 
