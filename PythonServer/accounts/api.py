@@ -1,4 +1,5 @@
 import json
+import logging
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader, Context, RequestContext
 from django.contrib.auth.decorators import login_required
@@ -6,10 +7,12 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from django.core.serializers.json import DjangoJSONEncoder
 from django.forms.models import model_to_dict
-from accounts.models import Account
+from accounts.models import Account, AccountLink, Group, AccountSetting, AccountSettings
 from events.models import Event, InvitedFriend
 from django.contrib.auth.hashers import make_password
 from forms import RegisterForm
+
+logger = logging.getLogger("django.request")
 
 
 def registerUser(request):
@@ -100,7 +103,7 @@ def searchUsersByEmail(request):
 		try:
 			searched_users = []
 			search_field = request.POST['search_field']
-			users = Account.objects.filter(email__starts_with=search_field, is_active=True)
+			users = Account.objects.filter(email__startswith=search_field, is_active=True)
 			for user in users:
 				searched_users.append(model_to_dict(user))
 			rtn_dict['users'] = searched_users
@@ -114,15 +117,18 @@ def searchUsersByEmail(request):
 @login_required
 def addFriend(request):
 	rtn_dict = {'success': False, "msg": ""}
+	print 'nooo'
+	print request.method
 	if request.method == 'POST':
 		try:
 			account = Account.objects.get(user=request.user, is_active=True)
-			friend = Account.object.get(pk=request.POST['friend_id'], is_active=True)
+			friend = Account.objects.get(pk=request.POST['friend_id'], is_active=True)
 			link = AccountLink(account_user=account, friend=friend)
 			link.save()
 			rtn_dict['success'] = True
 			rtn_dict['msg'] = 'successfully added friend {0}'.format(friend.id)
 		except Exception as e:
+			print 'Error searching for useres: {0}'.format(e)
 			logger.info('Error searching for useres: {0}'.format(e))
 			rtn_dict['msg'] = 'Error adding friend: {0}'.format(e)
 	else:

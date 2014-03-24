@@ -1,0 +1,15 @@
+{% load staticfiles %}
+<script src="{% static 'js/jquery.min.js' %}"></script>
+<script type="text/javascript" >
+	$(document).ready(function(){
+		alert('yay');
+		$('#add_friend').submit(function(){
+			console.log($('#search_field').val())
+		}
+	}))
+</script>
+
+
+
+	<input type="text" id="search_field"></input>
+	<input type="button" value="Press" id="add_friend" class="btn btn-primary">

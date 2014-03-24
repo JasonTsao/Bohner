@@ -1,0 +1,8 @@
+
+<form action="/acct/search/email" method="post" enctype="multipart/form-data" autocomplete="off">
+	{% csrf_token %}
+	<table>
+	<input type="text" name="search_field"></input>
+	</table>
+	<input type="submit" value="Submit" class="btn btn-primary">
+</form>

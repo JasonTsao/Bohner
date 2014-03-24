@@ -1,5 +1,8 @@
 import json
 import logging
+import pickle
+import simplejson
+import ast
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader, Context, RequestContext
 from django.contrib.auth.decorators import login_required
@@ -78,6 +81,7 @@ def upcomingEvents(request):
 def createEvent(request):
     rtn_dict = {'success': False, "msg": ""}
     if request.method == 'POST':
+        print request.POST
         try:
             user = Account.objects.get(user=request.user)
             event = Event(creator=user)
@@ -88,7 +92,10 @@ def createEvent(request):
             event.location_name = request.POST['location_name']
             event.location_address = request.POST['location_address']
             event.location_coordinates = request.POST['location_coordinates']
-            event.friends_can_invite = reqest.POST['friends_can_invite']
+            event.event_over = request.POST['event_over']
+            event.friends_can_invite = request.POST['friends_can_invite'] # not saving nullboolean fields correctly 
+            event.cancelled = request.POST['cancelled']
+            event.private = request.POST['private']
             event.save()
 
             try:
@@ -102,13 +109,14 @@ def createEvent(request):
                         invited_friend.save()
                     except Exception as e:
                         logger.info('Error adding user {0}: {1}'.format(user,e))
-            except:
+            except Exception as e:
                 logger.info('Error inviting friends: {0}'.format(e))
 
             rtn_dict['success'] = True
             rtn_dict['msg'] = 'Successfully created new user event!'
 
         except Exception as e:
+            print 'Error creating new event: {0}'.format(e)
             logger.info('Error creating new event: {0}'.format(e))
             rtn_dict['msg'] = 'Error creating new event: {0}'.format(e)
 
@@ -123,7 +131,7 @@ def inviteFriends(request, event_id):
     is_authorized = False
     if request.method == 'POST':
         try:
-            invited_friends = request.POST['invited_friends']
+            invited_friends = ast.literal_eval(json.loads(request.POST['invited_friends']))
             event = Event.objects.get(pk=event_id)
 
             # check to see if this use is allowed to invite more friends to event
@@ -144,6 +152,7 @@ def inviteFriends(request, event_id):
             if is_authorized:
                 for user_dict in invited_friends:
                     try:
+                        #print user_dict
                         user_id = user_dict['user_id']
                         can_invite_friends = user_dict['can_invite_friends']
                         account = Account.objects.get(pk=user_id)
@@ -152,12 +161,14 @@ def inviteFriends(request, event_id):
                         rtn_dict['success'] = True
                         rtn_dict['msg'] = 'Successfully added users'
                     except Exception as e:
-                        logger.info('Error adding user {0}: {1}'.format(user,e))
-                        rtn_dict['msg'] = 'Error adding user {0}: {1}'.format(user,e)
+                        #print 'Error adding user {0}'.format(e)
+                        logger.info('Error adding user {0}'.format(e))
+                        rtn_dict['msg'] = 'Error adding user {0}'.format(e)
                 
             else:
                 rtn_dict['msg'] = 'user if not authorized to invite other friends: {0}'.format(e)
         except Exception as e:
+            print 'Error inviting friends: {0}'.format(e)
             logger.info('Error inviting friends: {0}'.format(e))
             rtn_dict['msg'] = 'Error inviting friends: {0}'.format(e)
 

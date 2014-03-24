@@ -58,7 +58,7 @@ class AccountLink(models.Model):
     blocked = models.NullBooleanField(default=False)
 
     def __unicode__(self):
-        return str('{0} : {1}'.format(self.user.user_name,self.friend.user_name))
+        return str('{0} : {1}'.format(self.account_user.user_name,self.friend.user_name))
     class Meta:
         unique_together = (('account_user', 'friend'),)
     

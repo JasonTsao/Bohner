@@ -15,4 +15,5 @@ urlpatterns = patterns("events.api",
 urlpatterns += patterns("events.views",
                         # manual refreshing/updating of campaign backend data
                         url(r"^view/create", "createEvent"),
+                        url(r"^events/invite", "inviteFriends"),
                         )

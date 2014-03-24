@@ -13,6 +13,13 @@ def createUser(request):
     return render_to_response("accounts/register.html", {}, context_instance=RequestContext(request))
 
 
+def searchByEmail(request):
+	return render_to_response("accounts/search_by_email.html", {}, context_instance=RequestContext(request))
+
+def addFriend(request):
+	return render_to_response("accounts/add_friend.html", {}, context_instance=RequestContext(request))
+
+
 def updateUser(request):
     pass
 

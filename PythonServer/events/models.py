@@ -13,8 +13,8 @@ class Event(models.Model):
     location_coordinates = models.CharField(max_length=255, null=True, blank=True)
     event_over = models.NullBooleanField(default=False)
     cancelled = models.NullBooleanField(default=False)
-    private = models.NullBooleanField(default=True)
-    friends_can_invite = models.NullBooleanField(default=True)
+    private = models.NullBooleanField(default=False)
+    friends_can_invite = models.NullBooleanField(default=False)
 
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True, blank=True, null=True)
