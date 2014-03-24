@@ -133,7 +133,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'south',
-    'gunicorn',
     'djcelery',
     'accounts',
     'events',
