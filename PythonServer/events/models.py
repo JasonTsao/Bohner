@@ -22,13 +22,14 @@ class Event(models.Model):
         return str('{0} : {1}'.format(self.pk,self.name))
 
 
-class EventComment(models.Model):
+class EventNotification(models.Model):
     event = models.ForeignKey(Event)
-    user = models.ForeignKey(Account)
-    description = models.TextField() 
-    created = models.DateTimeField(auto_now_add=True)
-    private =  models.NullBooleanField(default=False)
-    modified = models.DateTimeField(auto_now=True, blank=True, null=True)
+    recipient = models.ForeignKey(Account)
+    message = models.CharField(max_length=255, blank=True, null=True)
+    created = models.DateField(auto_now_add=True)
+    facebook = models.NullBooleanField(null=True, blank=True, default=False)
+    def __unicode__(self):
+        return self.message
 
 
 class InvitedFriend(models.Model):
@@ -39,14 +40,35 @@ class InvitedFriend(models.Model):
     class Meta:
         unique_together = (('user', 'event',),)
 
+    def save(self, user=None, *args, **kwargs):
+        if not self.pk:
+            event_notification = EventNotification(recipient=self.user, event=self.event)
+            event_notification.message = '{0} has invited you to {1}'.format(self.event.creator.user_name, self.event.name)
+            event_notification.save()
+        super(InvitedFriend, self).save()
 
-class EventNotification(models.Model):
+
+class EventComment(models.Model):
     event = models.ForeignKey(Event)
-    recipient = models.ForeignKey(Account)
-    message = models.CharField(max_length=255, blank=True, null=True)
-    created = models.DateField(auto_now_add=True)
-    facebook = models.NullBooleanField(null=True, blank=True, default=False)
-    def __unicode__(self):
-        return self.message
-    class Meta:
-        unique_together = (('event', 'recipient', 'message'),)
+    user = models.ForeignKey(Account)
+    description = models.TextField() 
+    created = models.DateTimeField(auto_now_add=True)
+    private =  models.NullBooleanField(default=False)
+    modified = models.DateTimeField(auto_now=True, blank=True, null=True)
+    def save(self, user=None, *args, **kwargs):
+        if not self.pk:
+            if self.user != self.event.creator:
+                event_notification = EventNotification(recipient=self.event.creator, event=self.event)
+                event_notification.message = '{0} said on event {1} : {2}'.format(self.user.user_name, self.event.name, self.description)
+                event_notification.save()
+
+            invited_friends = InvitedFriend.objects.filter(event=self.event)
+            for invited_friend in invited_friends:
+                if invited_friend != self.user:
+                    event_notification = EventNotification(recipient=invited_friend.user, event=self.event)
+                    event_notification.message = '{0} said on event {1} : {2}'.format(self.user.user_name, self.event.name, self.description)
+                    event_notification.save()
+        super(EventComment, self).save()
+
+
+

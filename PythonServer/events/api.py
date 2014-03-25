@@ -10,7 +10,7 @@ from django.forms.models import model_to_dict
 from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth.models import User
 from accounts.models import Account
-from models import Event, EventComment, InvitedFriend
+from models import Event, EventComment, EventNotification, InvitedFriend
 
 logger = logging.getLogger("django.request")
 
@@ -107,6 +107,7 @@ def createEvent(request):
                 invited_friends = request.POST['invited_friends']
                 for user_dict in invited_friends:
                     try:
+                        # save user link to event
                         user_id = user_dict['user_id']
                         can_invite_friends = user_dict['can_invite_friends']
                         account = Account.objects.get(pk=user_id)
@@ -171,7 +172,7 @@ def inviteFriends(request, event_id):
                         rtn_dict['msg'] = 'Error adding user {0}'.format(e)
                 
             else:
-                rtn_dict['msg'] = 'user if not authorized to invite other friends: {0}'.format(e)
+                rtn_dict['msg'] = 'user is not authorized to invite other friends'
         except Exception as e:
             print 'Error inviting friends: {0}'.format(e)
             logger.info('Error inviting friends: {0}'.format(e))

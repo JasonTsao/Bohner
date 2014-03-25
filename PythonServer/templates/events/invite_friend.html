@@ -12,7 +12,7 @@
 			console.log(invited_friends)
 			$.ajax({
             type:"POST",
-                    url:"/events/invite_friends/2",
+                    url:"/events/invite_friends/1",
                     data:{
                         "invited_friends": invited_friends,
                     	"csrfmiddlewaretoken": "{{csrf_token}}",	
