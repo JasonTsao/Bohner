@@ -36,6 +36,17 @@ class InvitedFriend(models.Model):
     event = models.ForeignKey(Event)
     can_invite_friends = models.NullBooleanField(default=True)
     attenting = models.NullBooleanField(null=True, blank=True, default=False) # need to be changed to attending!!
-
     class Meta:
         unique_together = (('user', 'event',),)
+
+
+class EventNotification(models.Model):
+    event = models.ForeignKey(Event)
+    recipient = models.ForeignKey(Account)
+    message = models.CharField(max_length=255, blank=True, null=True)
+    created = models.DateField(auto_now_add=True)
+    facebook = models.NullBooleanField(null=True, blank=True, default=False)
+    def __unicode__(self):
+        return self.message
+    class Meta:
+        unique_together = (('event', 'recipient', 'message'),)
