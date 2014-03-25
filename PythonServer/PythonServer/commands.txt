@@ -1,0 +1,3 @@
+gunicorn -c gunicorn.conf PythonServer.wsgi:application
+sudo service nginx restart
+sudo nano /etc/nginx/sites-enabled/default 
