@@ -76,57 +76,47 @@ def updateUser(request):
 
 			try:
 				account.user_name = request.POST['username']
-				redis_account['user_name'] = request.POST['username']
 			except:
 				pass
 			try:
 				account.first_name = request.POST['first_name']
-				redis_account['first_name'] = request.POST['first_name']
 			except:
 				pass
 			try:
 				account.last_name = request.POST['last_name']
-				redis_account['last_name'] = request.POST['last_name']
 			except:
 				pass
 			try:
 				account.phone_number = request.POST['phone_number']
-				redis_account['phone_number'] = request.POST['phone_number']
 			except:
 				pass
 			try:
 				account.profile_pic = request.POST['profile_pic']
-				redis_account['profile_pic'] = request.POST['profile_pic']
 			except:
 				pass
 			try:
 				account.email = request.POST['email']
-				redis_account['email'] = request.POST['email']
 			except:
 				pass
 			try:
 				account.gender = request.POST['gender']
-				redis_account['gender'] = request.POST['gender']
 			except:
 				pass
 			try:
 				account.birthday = request.POST['birthday']
-				redis_account['birthday'] = request.POST['birthday']
 			except:
 				pass
 			try:
 				account.home_town = request.POST['home_town']
-				redis_account['home_town'] = request.POST['home_town']
 			except:
 				pass
 			try:
 				account.is_active = request.POST['is_active']
-				redis_account['is_active'] = request.POST['is_active']
 			except:
 				pass
 			account.save()
 
-			pushToNOSQLHash(redis_key, redis_account)
+			pushToNOSQLHash(redis_key, model_to_dict(account))
 
 			rtn_dict['success'] = True
 			rtn_dict['msg'] = 'successfully updated user {0}'.format(account)
@@ -188,35 +178,30 @@ def addFriend(request):
 
 
 @login_required
-def getFriends(request):
+def getFriends(request, user_id):
 	rtn_dict = {'success': False, "msg": "", "friends": []}
 
 	try:
-		account = Account.objects.get(user=request.user)
-		user_id = account.id
 		r = R.r
 		redis_key = 'account.{0}.friends.set'.format(user_id)
 		friends_list = r.zrange(redis_key, 0, 10)
 
 		if not friends_list:
-			try:
-				friends_list = []
-				friend_links = AccountLink.objects.select_related('friend').filter(account_user=request.user).order_by('invited_count')
-				for link in friend_links:
-					if link.friend.is_active:
-						friends_list.append(model_to_dict(link.friend))
-				rtn_dict['success'] = True
-				rtn_dict['msg'] = 'successfully retrieved friend list'
-				rtn_dict['friends'] = friends_list
-			except:
-				logger.info('Error getting friend list: {0}'.format(e))
-				rtn_dict['msg'] = 'Error getting friend list: {0}'.format(e)
-		else:
-			rtn_dict['friends'] = friends_list
+			friends_list = []
+			friend_links = AccountLink.objects.select_related('friend').filter(account_user=request.user).order_by('invited_count')
+			for link in friend_links:
+				if link.friend.is_active:
+					friends_list.append(model_to_dict(link.friend))
 			rtn_dict['success'] = True
 			rtn_dict['msg'] = 'successfully retrieved friend list'
+			rtn_dict['friends'] = friends_list
+
+		rtn_dict['friends'] = friends_list
+		rtn_dict['success'] = True
+		rtn_dict['msg'] = 'successfully retrieved friend list'
 	except Exception as e:
-		rtn_dict['msg'] = 'Error retrieving list of friends: {0}'.format(e)
+		logger.info('Error getting friend list: {0}'.format(e))
+		rtn_dict['msg'] = 'Error getting friend list: {0}'.format(e)
 
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 

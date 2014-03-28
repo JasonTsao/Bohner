@@ -10,6 +10,7 @@ from django.forms.models import model_to_dict
 from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth.models import User
 from accounts.models import Account
+from accounts.api import pushToNOSQLSet, pushToNOSQLHash
 from models import Event, EventComment, EventNotification, InvitedFriend
 from rediscli import r as R
 
@@ -57,23 +58,27 @@ def getEvent(request, event_id):
 
 
 @login_required
-def upcomingEvents(request):
+def upcomingEvents(request, account_id):
     rtn_dict = {'success': False, "msg": ""}
     try:
-        rtn_dict['upcoming_events'] = []
-        account = Account.objects.filter(user=request.user)
+        r = R.r
+        redis_key = 'account.{0}.events.set'.format(account_id)
+        upcoming_events = r.zrange(redis_key, 0, 10)
 
-        owned_events = Event.objects.filter(creator=account).order_by('start_time')
-        for event in owned_events:
-            if not event.event_over and not event.cancelled:
-                rtn_dict['upcoming_events'].append(model_to_dict(event)) 
+        if not upcoming_events:
+            upcoming_events = []
 
-        invited_users = InvitedFriend.objects.select_related('event').filter(user=account)
-        for invited_user in invited_users:
-            if not invited_user.event.event_over and not invited_user.event.cancelled:
-                if invited_user.event.creator != account:
-                    rtn_dict['upcoming_events'].append(model_to_dict(invited_user.event))
+            owned_events = Event.objects.filter(creator=account).order_by('start_time')
+            for event in owned_events:
+                if not event.event_over and not event.cancelled:
+                    upcoming_events.append(model_to_dict(event)) 
 
+            invited_users = InvitedFriend.objects.select_related('event').filter(user=account)
+            for invited_user in invited_users:
+                if not invited_user.event.event_over and not invited_user.event.cancelled:
+                    if invited_user.event.creator != account:
+                        upcoming_events.append(model_to_dict(invited_user.event))
+        rtn_dict['upcoming_events'] = upcoming_events
         rtn_dict['success'] = True
         rtn_dict['message'] = 'Successfully retrieved upcoming events'
     except Exception as e:
@@ -104,6 +109,10 @@ def createEvent(request):
             event.private = request.POST['private']
             event.save()
 
+            r = R.r
+            redis_key = 'event.{0}.hash'.format(event.id)
+            r.hmset(redis_key, model_to_dict(event))
+
             try:
                 invited_friends = request.POST['invited_friends']
                 for user_dict in invited_friends:
@@ -114,6 +123,15 @@ def createEvent(request):
                         account = Account.objects.get(pk=user_id)
                         invited_friend = InvitedFriend(event=event, user=account, can_invite_friends=can_invite_friends)
                         invited_friend.save()
+
+                        redis_friend_key = 'event.{0}.invited_friends.set'.format(event.id)
+                        invited_friend_dict = {'id': invited_friend.id, 'pf_pic': invited_friend.profile_pic, 'name': invited_friend.display_name, "attending": False}
+                        invited_friend_dict = json.dumps(invited_friend_dict)
+                        pushToNOSQLSet(redis_friend_key, invited_friend_dict, 0)
+                        redis_user_events_key = 'account.{0}.events.set'.format(account.id)
+                        event_dict = {'event_id': event.id, 'event_name': event.name}
+                        event_dict = json.dumps(event_dict)
+                        pushToNOSQLSet(redis_user_events_key, event_dict, 0)
                     except Exception as e:
                         logger.info('Error adding user {0}: {1}'.format(user,e))
             except Exception as e:
@@ -157,6 +175,7 @@ def inviteFriends(request, event_id):
                 pass
 
             if is_authorized:
+                r = R.r
                 for user_dict in invited_friends:
                     try:
                         #print user_dict
@@ -165,6 +184,15 @@ def inviteFriends(request, event_id):
                         account = Account.objects.get(pk=user_id)
                         invited_friend = InvitedFriend(event=event, user=account, can_invite_friends=can_invite_friends)
                         invited_friend.save()
+
+                        redis_key = 'event.{0}.invited_friends.set'.format(event_id)
+                        invited_friend_dict = {'id': invited_friend.id, 'pf_pic': invited_friend.profile_pic, 'name': invited_friend.display_name, "attending": False}
+                        invited_friend_dict = json.dumps(invited_friend_dict)
+                        pushToNOSQLSet(redis_key, invited_friend_dict, 0)
+                        redis_user_events_key = 'account.{0}.events.set'.format(account.id)
+                        event_dict = {'event_id': event.id, 'event_name': event.name}
+                        event_dict = json.dumps(event_dict)
+                        pushToNOSQLSet(redis_user_events_key, event_dict, 0)
                         rtn_dict['success'] = True
                         rtn_dict['msg'] = 'Successfully added users'
                     except Exception as e:
@@ -187,6 +215,8 @@ def updateEvent(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     try:
         event = Event.objects.get(pk=event_id)
+        r = R.r
+        redis_key = 'event.{0}.hash'.format(event_id)
         try:
             event.name = request.POST['name']
         except:
@@ -221,6 +251,7 @@ def updateEvent(request, event_id):
             pass
 
         event.save()
+        pushToNOSQLHash(redis_key, model_to_dict(event))
         rtn_dict['success'] = True
         rtn_dict['msg'] = 'Successfully updated {0}!'.format(event.name)
     except Exception as e:
@@ -262,6 +293,12 @@ def createEventComment(request, event_id):
                 new_comment = EventComment(event=event,user=account)
                 new_comment.description = request.POST['description']
                 new_comment.save()
+                r = R.r
+                redis_key = 'event.{0}.comments.set'.format(event_id)
+                new_comment_dict = model_to_dict(new_comment)
+                comment_dict = json.dumps(new_comment_dict)
+                pushToNOSQLSet(redis_key, comment_dict, 0)
+
                 rtn_dict['success'] = True
                 rtn_dict['msg'] = 'successfully created comment for event {0}'.format(event_id)
             else:
@@ -277,15 +314,21 @@ def createEventComment(request, event_id):
 def getEventComments(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     try:
-        comments = []
-        account = Account.objects.get(user=request.user)
-        event = Event.objects.get(pk=event_id)
-        is_authorized = checkIfAuthorized(event, account)
+        r = R.r
+        redis_key = 'event.{0}.comments.set'.format(event_id)
+        comments = r.zrange(redis_key, 0, 10)
 
-        event_comments = EventComment.objects.filter(event=event)
+        if not comments:
+            comments = []
+            account = Account.objects.get(user=request.user)
+            event = Event.objects.get(pk=event_id)
+            is_authorized = checkIfAuthorized(event, account)
 
-        for event_comment in event_comments:
-            comments.append(model_to_dict(event_comment))
+            event_comments = EventComment.objects.filter(event=event)
+
+            for event_comment in event_comments:
+                comments.append(model_to_dict(event_comment))
+
         rtn_dict['comments'] = comments
         rtn_dict['success'] = True
         rtn_dict['msg'] = 'successfully retrieved comments for event {0}'.format(event_id)

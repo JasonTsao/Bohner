@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 
 urlpatterns = patterns("events.api",
 						url(r"^(\d+)", "getEvent"),
-                        url(r"^upcoming", "upcomingEvents"),
+                        url(r"^upcoming/(\d+)", "upcomingEvents"),
                         url(r"^new", "createEvent"),
                         url(r"^update/(\d+)", "updateEvent"),
                         url(r"^attending/(\d+)", "selectAttending"),
