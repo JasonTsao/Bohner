@@ -144,12 +144,17 @@ def createEvent(request):
                         account_link.save()
 
                         redis_friend_key = 'event.{0}.invited_friends.set'.format(event.id)
-                        invited_friend_dict =  {'invited_friend_id': invited_friend.id, 'friend_id':friend.id, 'pf_pic': friend.profile_pic, 'name': friend.display_name, "attending": False}
-                        invited_friend_dict = json.dumps(invited_friend_dict)
+                        invited_friend_dict = json.dumps({
+                                                'invited_friend_id': invited_friend.id,
+                                                'friend_id':friend.id,
+                                                'pf_pic': friend.profile_pic,
+                                                'name': friend.display_name,
+                                                "attending": False})
                         pushToNOSQLSet(redis_friend_key, invited_friend_dict, account_link.invited_count)
                         redis_user_events_key = 'account.{0}.events.set'.format(friend.id)
-                        event_dict = {'event_id': event.id, 'event_name': event.name, 'start_time': str(event.start_time)}
-                        event_dict = json.dumps(event_dict)
+                        event_dict = json.dumps({'event_id': event.id, 
+                                        'event_name': event.name,
+                                        'start_time': str(event.start_time)})
                         pushToNOSQLSet(redis_user_events_key, event_dict, 0)
                     except Exception as e:
                         logger.info('Error adding user {0}: {1}'.format(user,e))
@@ -209,13 +214,20 @@ def inviteFriends(request, event_id):
                         account_link.invited_count += 1
                         account_link.save()
 
+                        #Save to Redis
                         redis_key = 'event.{0}.invited_friends.set'.format(event_id)
-                        invited_friend_dict = {'invited_friend_id': invited_friend.id, 'friend_id':friend.id, 'pf_pic': friend.profile_pic, 'name': friend.display_name, "attending": False}
-                        invited_friend_dict = json.dumps(invited_friend_dict)
+                        invited_friend_dict = json.dumps({
+                                                'invited_friend_id': invited_friend.id,
+                                                'friend_id':friend.id,
+                                                'pf_pic': friend.profile_pic,
+                                                'name': friend.display_name,
+                                                "attending": False})
                         pushToNOSQLSet(redis_key, invited_friend_dict, account_link.invited_count)
                         redis_user_events_key = 'account.{0}.events.set'.format(friend.id)
-                        event_dict = {'event_id': event.id, 'event_name': event.name, 'start_time': str(event.start_time)}
-                        event_dict = json.dumps(event_dict)
+                        event_dict = json.dumps({
+                                        'event_id': event.id,
+                                        'event_name': event.name,
+                                        'start_time': str(event.start_time)})
                         pushToNOSQLSet(redis_user_events_key, event_dict, 0)
                         rtn_dict['success'] = True
                         rtn_dict['msg'] = 'Successfully added users'
