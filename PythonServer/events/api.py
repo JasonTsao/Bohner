@@ -40,14 +40,22 @@ def getEvent(request, event_id):
         account = Account.objects.get(user=request.user)
         event = Event.objects.get(pk=event_id)
         is_authorized = checkIfAuthorized(event, account)
-        #is_authorized = True
         if is_authorized:
-            invited_friends_list = []
-            invited_friends = InvitedFriend.objects.filter(event=event)
-            for invited_friend in invited_friends:
-                invited_friends_list.append(model_to_dict(invited_friend))
-            rtn_dict['invited_friends'] = invited_friends_list
-            rtn_dict['event'] = model_to_dict(event)
+            r = R.r
+            redis_event_key = 'event.{0}.hash'.format(event_id)
+            redis_event = r.hgetall(redis_event_key)
+            redis_invited_friends_key = 'event.{0}.invited_friends.set'.format(event_id)
+            redis_invited_friends = r.zrange(redis_invited_friends_key, 0, 10)
+            if not redis_event and not redis_invited_friends:
+                invited_friends_list = []
+                invited_friends = InvitedFriend.objects.filter(event=event)
+                for invited_friend in invited_friends:
+                    invited_friends_list.append(model_to_dict(invited_friend))
+                rtn_dict['invited_friends'] = invited_friends_list
+                rtn_dict['event'] = model_to_dict(event)
+            else:
+                rtn_dict['invited_friends'] = redis_invited_friends
+                rtn_dict['event'] = redis_event
             rtn_dict['success'] = True
             rtn_dict['msg'] = 'successfully got event'
     except Exception as e:
