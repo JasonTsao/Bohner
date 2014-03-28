@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.forms.models import model_to_dict
 from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth.models import User
-from accounts.models import Account
+from accounts.models import Account, AccountLink
 from accounts.api import pushToNOSQLSet, pushToNOSQLHash
 from models import Event, EventComment, EventNotification, InvitedFriend
 from rediscli import r as R
@@ -70,23 +70,25 @@ def upcomingEvents(request, account_id):
     rtn_dict = {'success': False, "msg": ""}
     try:
         r = R.r
-        redis_key = 'account.{0}.events.set'.format(account_id)
-        upcoming_events = r.zrange(redis_key, 0, 10)
+        upcoming_events_key = 'account.{0}.events.set'.format(account_id)
+        upcoming_events = r.zrange(upcoming_events_key, 0, 10)
+        owned_upcoming_events_key = 'account.{0}.owned_events.set'.format(account_id)
+        owned_upcoming_events = r.zrange(owned_upcoming_events_key, 0, 10)
 
         if not upcoming_events:
             upcoming_events = []
-
-            owned_events = Event.objects.filter(creator=account).order_by('start_time')
+            owned_events = Event.objects.filter(creator=account_id).order_by('start_time')
             for event in owned_events:
                 if not event.event_over and not event.cancelled:
                     upcoming_events.append(model_to_dict(event)) 
 
-            invited_users = InvitedFriend.objects.select_related('event').filter(user=account)
+            invited_users = InvitedFriend.objects.select_related('event').filter(user=account_id)
             for invited_user in invited_users:
                 if not invited_user.event.event_over and not invited_user.event.cancelled:
-                    if invited_user.event.creator != account:
+                    if invited_user.event.creator != account_id:
                         upcoming_events.append(model_to_dict(invited_user.event))
         rtn_dict['upcoming_events'] = upcoming_events
+        rtn_dict['owned_upcoming_events'] = owned_upcoming_events
         rtn_dict['success'] = True
         rtn_dict['message'] = 'Successfully retrieved upcoming events'
     except Exception as e:
@@ -121,6 +123,11 @@ def createEvent(request):
             redis_key = 'event.{0}.hash'.format(event.id)
             r.hmset(redis_key, model_to_dict(event))
 
+            created_events_key = 'account.{0}.owned_events.set'.format(user.id)
+            event_dict = {'event_id': event.id, 'event_name': event.name, 'start_time': str(event.start_time)}
+            event_dict = json.dumps(event_dict)
+            pushToNOSQLSet(created_events_key, event_dict, 0)
+
             try:
                 invited_friends = request.POST['invited_friends']
                 for user_dict in invited_friends:
@@ -128,16 +135,20 @@ def createEvent(request):
                         # save user link to event
                         user_id = user_dict['user_id']
                         can_invite_friends = user_dict['can_invite_friends']
-                        account = Account.objects.get(pk=user_id)
-                        invited_friend = InvitedFriend(event=event, user=account, can_invite_friends=can_invite_friends)
+                        friend = Account.objects.get(pk=user_id)
+                        invited_friend = InvitedFriend(event=event, user=friend, can_invite_friends=can_invite_friends)
                         invited_friend.save()
 
+                        account_link = AccountLink.objects.get(account_user=user, friend=friend)
+                        account_link.invited_count += 1
+                        account_link.save()
+
                         redis_friend_key = 'event.{0}.invited_friends.set'.format(event.id)
-                        invited_friend_dict = {'id': invited_friend.id, 'pf_pic': invited_friend.profile_pic, 'name': invited_friend.display_name, "attending": False}
+                        invited_friend_dict =  {'invited_friend_id': invited_friend.id, 'friend_id':friend.id, 'pf_pic': friend.profile_pic, 'name': friend.display_name, "attending": False}
                         invited_friend_dict = json.dumps(invited_friend_dict)
-                        pushToNOSQLSet(redis_friend_key, invited_friend_dict, 0)
-                        redis_user_events_key = 'account.{0}.events.set'.format(account.id)
-                        event_dict = {'event_id': event.id, 'event_name': event.name}
+                        pushToNOSQLSet(redis_friend_key, invited_friend_dict, account_link.invited_count)
+                        redis_user_events_key = 'account.{0}.events.set'.format(friend.id)
+                        event_dict = {'event_id': event.id, 'event_name': event.name, 'start_time': str(event.start_time)}
                         event_dict = json.dumps(event_dict)
                         pushToNOSQLSet(redis_user_events_key, event_dict, 0)
                     except Exception as e:
@@ -175,12 +186,13 @@ def inviteFriends(request, event_id):
             except:
                 pass
 
-            try:
-                invited_friend = InvitedFriend.objects.get(event=Event, user=account)
-                if inivited_friend.can_invite_friends:
-                    is_authorized = True
-            except:
-                pass
+            if not is_authorized:
+                try:
+                    invited_friend = InvitedFriend.objects.get(event=Event, user=account)
+                    if inivited_friend.can_invite_friends:
+                        is_authorized = True
+                except:
+                    pass
 
             if is_authorized:
                 r = R.r
@@ -189,16 +201,20 @@ def inviteFriends(request, event_id):
                         #print user_dict
                         user_id = user_dict['user_id']
                         can_invite_friends = user_dict['can_invite_friends']
-                        account = Account.objects.get(pk=user_id)
-                        invited_friend = InvitedFriend(event=event, user=account, can_invite_friends=can_invite_friends)
+                        friend = Account.objects.get(pk=user_id)
+                        invited_friend = InvitedFriend(event=event, user=friend, can_invite_friends=can_invite_friends)
                         invited_friend.save()
 
+                        account_link = AccountLink.objects.get(account_user=account, friend=friend)
+                        account_link.invited_count += 1
+                        account_link.save()
+
                         redis_key = 'event.{0}.invited_friends.set'.format(event_id)
-                        invited_friend_dict = {'id': invited_friend.id, 'pf_pic': invited_friend.profile_pic, 'name': invited_friend.display_name, "attending": False}
+                        invited_friend_dict = {'invited_friend_id': invited_friend.id, 'friend_id':friend.id, 'pf_pic': friend.profile_pic, 'name': friend.display_name, "attending": False}
                         invited_friend_dict = json.dumps(invited_friend_dict)
-                        pushToNOSQLSet(redis_key, invited_friend_dict, 0)
-                        redis_user_events_key = 'account.{0}.events.set'.format(account.id)
-                        event_dict = {'event_id': event.id, 'event_name': event.name}
+                        pushToNOSQLSet(redis_key, invited_friend_dict, account_link.invited_count)
+                        redis_user_events_key = 'account.{0}.events.set'.format(friend.id)
+                        event_dict = {'event_id': event.id, 'event_name': event.name, 'start_time': str(event.start_time)}
                         event_dict = json.dumps(event_dict)
                         pushToNOSQLSet(redis_user_events_key, event_dict, 0)
                         rtn_dict['success'] = True
