@@ -11,6 +11,7 @@ GENDER = (
 class Account(models.Model):
     user = models.OneToOneField(User)
     user_name = models.CharField(max_length=255, unique=True)
+    display_name = models.CharField(max_length=255, null=True, blank=True)
     first_name = models.CharField(max_length=255, null=True, blank=True)
     last_name = models.CharField(max_length=255, null=True, blank=True)
     phone_number = models.CharField(max_length=255, null=True, blank=True)
@@ -27,6 +28,11 @@ class Account(models.Model):
     modified = models.DateTimeField(auto_now=True, blank=True, null=True)
     def __unicode__(self):
         return str('{0} : {1} {2}'.format(self.user_name,self.first_name, self.last_name))
+    def save(self, user=None, *args, **kwargs):
+        if self.pk:
+            if not self.display_name:
+                self.display_name = '{0} {1}'.format(self.first_name, self.last_name)
+        super(Account, self).save()
 
 
 class AccountSettings(models.Model):

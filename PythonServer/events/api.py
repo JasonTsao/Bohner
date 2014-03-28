@@ -11,6 +11,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth.models import User
 from accounts.models import Account
 from models import Event, EventComment, EventNotification, InvitedFriend
+from rediscli import r as R
 
 logger = logging.getLogger("django.request")
 

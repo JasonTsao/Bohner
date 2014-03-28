@@ -163,15 +163,21 @@ def addFriend(request):
 		try:
 			account = Account.objects.get(user=request.user, is_active=True)
 			friend = Account.objects.get(pk=request.POST['friend_id'], is_active=True)
-			link = AccountLink(account_user=account, friend=friend)
-			link.save()
+			if account.id != friend.id:
+				link = AccountLink(account_user=account, friend=friend)
+				link.save()
 
-			redis_key = 'account.{0}.friends.set'.format(account.id)
-			friend_dict = {'id': friend.id, 'pf_pic': freind.profile_pic, 'name': friend.display_name}
-			pushToNOSQLSet(redis_key, friend_dict, 0)
+				redis_key = 'account.{0}.friends.set'.format(account.id)
+				friend_dict = {'id': friend.id, 'pf_pic': friend.profile_pic, 'name': friend.display_name}
+				friend_dict = json.dumps(friend_dict)
+				pushToNOSQLSet(redis_key, friend_dict, 0)
 
-			rtn_dict['success'] = True
-			rtn_dict['msg'] = 'successfully added friend {0}'.format(friend.id)
+				rtn_dict['success'] = True
+				rtn_dict['msg'] = 'successfully added friend {0}'.format(friend.id)
+			else:
+				print 'Error adding friend: User and friend are the same person'
+				logger.info('Error adding friend: User and friend are the same person')
+				rtn_dict['msg'] = 'Error adding friend: User and friend are the same person'
 		except Exception as e:
 			print 'Error searching for useres: {0}'.format(e)
 			logger.info('Error searching for useres: {0}'.format(e))
@@ -185,28 +191,32 @@ def addFriend(request):
 def getFriends(request):
 	rtn_dict = {'success': False, "msg": "", "friends": []}
 
-	r = R.r
-	user_id = request.user.id
-	redis_key = 'account.{0}.friends.set'.format(user_id)
-	friends_list = r.smembers(redis_key)
+	try:
+		account = Account.objects.get(user=request.user)
+		user_id = account.id
+		r = R.r
+		redis_key = 'account.{0}.friends.set'.format(user_id)
+		friends_list = r.zrange(redis_key, 0, 10)
 
-	if not friends_list:
-		try:
-			friends_list = []
-			friend_links = AccountLink.objects.select_related('friend').filter(account_user=request.user).order_by('invited_count')
-			for link in friend_links:
-				if link.friend.is_active:
-					friends_list.append(model_to_dict(link.friend))
+		if not friends_list:
+			try:
+				friends_list = []
+				friend_links = AccountLink.objects.select_related('friend').filter(account_user=request.user).order_by('invited_count')
+				for link in friend_links:
+					if link.friend.is_active:
+						friends_list.append(model_to_dict(link.friend))
+				rtn_dict['success'] = True
+				rtn_dict['msg'] = 'successfully retrieved friend list'
+				rtn_dict['friends'] = friends_list
+			except:
+				logger.info('Error getting friend list: {0}'.format(e))
+				rtn_dict['msg'] = 'Error getting friend list: {0}'.format(e)
+		else:
+			rtn_dict['friends'] = friends_list
 			rtn_dict['success'] = True
 			rtn_dict['msg'] = 'successfully retrieved friend list'
-			rtn_dict['friends'] = friends_list
-		except:
-			logger.info('Error getting friend list: {0}'.format(e))
-			rtn_dict['msg'] = 'Error getting friend list: {0}'.format(e)
-	else:
-		rtn_dict['friends'] = friends_list
-		rtn_dict['success'] = True
-		rtn_dict['msg'] = 'successfully retrieved friend list'
+	except Exception as e:
+		rtn_dict['msg'] = 'Error retrieving list of friends: {0}'.format(e)
 
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
