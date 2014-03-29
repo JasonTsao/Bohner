@@ -292,9 +292,10 @@ def addUsersToGroup(request, group_id):
 	if request.method == 'POST':
 		try:
 			creator = Account.objects.get(user=request.user, is_active=True)
-			group = Group.objects.get(pk=group_id, group_creator=creator)
+			group = Group.objects.get(pk=group_id)
 
-			members_to_add = request.POST['new_members']
+			members_to_add = ast.literal_eval(json.loads(request.POST['new_members']))
+
 			for member_id in members_to_add:
 				new_member = Account.objects.get(pk=member_id)
 				link = AccountLink.objects.get(account_user=creator, friend=new_member)
@@ -312,6 +313,7 @@ def addUsersToGroup(request, group_id):
 			rtn_dict['success'] = True
 			rtn_dict['msg'] = 'successfully added users to group {0}'.format(group_id)
 		except Exception as e:
+			print 'Error adding users to group: {0}'.format(e)
 			logger.info('Error adding users to group: {0}'.format(e))
 			rtn_dict['msg'] = 'Error adding users to group: {0}'.format(e)
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
