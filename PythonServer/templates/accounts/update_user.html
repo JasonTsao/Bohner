@@ -1,0 +1,38 @@
+
+<script src="/static/js/jquery.min.js"></script>
+<script type="text/javascript" >
+	$(document).ready(function(){
+		$('#update_user').click(function(){
+			var event_dict = {
+                "name": "",
+                "phone_number": "111-111-1111",
+                "email": "update@gmail.com",
+                "home_town": "middle_of_nowhere!",
+                "csrfmiddlewaretoken": "{{csrf_token}}"}
+			//var dict = {};
+			//dict['user_id'] = 2;
+			//dict['can_invite_friends'] = false;
+			//invited_friends.push(dict);
+			$.ajax({
+            type:"POST",
+                    url:"/acct/update",
+                    data: event_dict,
+            success: function(data){
+                        //alert(data['status']);
+                        console.log('success!');
+                        console.log(data);
+                    },
+            error: function(data){
+            		console.log('error');
+            		console.log(data);
+                //alert("Server side error");
+            }
+        });
+		})
+	})
+</script>
+
+
+
+	<input type="text" id="search_field"></input>
+	<input type="button" value="Press" id="update_user" class="btn btn-primary">
