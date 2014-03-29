@@ -6,6 +6,7 @@ urlpatterns = patterns("accounts.views",
                         url(r"^update_user", "updateUser"),
                         url(r"^search_by_email", "searchByEmail"),
                         url(r"^add_friend", "addFriend"),
+                        url(r"^create_group", "createGroup"),
                         )
 
 urlpatterns += patterns("accounts.api",

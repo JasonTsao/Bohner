@@ -1,5 +1,6 @@
 import json
 import logging
+import ast
 from celery import task
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader, Context, RequestContext
@@ -213,14 +214,24 @@ def createGroup(request):
 	if request.method == 'POST':
 		try:
 			account = Account.objects.get(user=request.user)
-			group = Group(creator=account)
+			group = Group(group_creator=account)
 			group.name = request.POST['name']
 			group.save()
-			members = request.POST['members']
+			members = ast.literal_eval(request.POST['members'])
 			for member_id in members:
 				friend = Account.objects.get(pk=member_id, is_active=True)
 				group.members.add(friend)
+			group.members.add(account)
+			r = R.r
+			r_group_key = 'group.{0}.hash'.format(group.id)
+			pushToNOSQLHash(r_group_key, model_to_dict(group))
+
+			#add group to groups for members
+			for member in group.members.all():
+				r_groups_key = 'account.{0}.groups.set'.format(member.id)
+				pushToNOSQLSet(r_groups_key, group.id, False, 0)
 		except Exception as e:
+			print 'Error creating group: {0}'.format(e)
 			logger.info('Error creating group: {0}'.format(e))
 			rtn_dict['msg'] = 'Error creating group: {0}'.format(e)
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
@@ -230,9 +241,14 @@ def createGroup(request):
 def getGroup(request, group_id):
 	rtn_dict = {'success': False, "msg": "", "group": ""}
 	try:
-		creator = Account.objects.get(user=request.user, is_active=True)
-		group = Group.objects.get(pk=group_id, creator=creator)
-		rtn_dict['group'] = model_to_dict(group)
+		r = R.r
+		r_group_key = 'group.{0}.hash'.format(group_id)
+		group = r.hgetall(r_group_key)
+		if not group:
+			account = Account.objects.get(user=request.user, is_active=True)
+			group = Group.objects.get(pk=group_id)
+			group = model_to_dict(group)
+		rtn_dict['group'] = group
 		rtn_dict['success'] = True
 		rtn_dict['msg'] = 'successfully retrieved group {0}'.format(group_id)
 	except Exception as e:
@@ -245,15 +261,25 @@ def getGroup(request, group_id):
 def getGroups(request):
 	rtn_dict = {'success': False, "msg": "", "groups": []}
 	try:
-		groups_list = []
-		creator = Account.objects.get(user=request.user, is_active=True)
-		groups = Group.objects.filter(creator=request.creator)
-		for group in groups:
-			groups_list.append(model_to_dict(group))
+		group_list = []
+		account = Account.objects.get(user=request.user)
+		r = R.r
+		r_groups_key = 'account.{0}.groups.set'.format(account.id)
+		r_groups = r.zrange(r_groups_key, 0, 10)
 
-		rtn_dict['groups'] = groups_list
+		if not r_groups:
+			account = Account.objects.get(user=request.user, is_active=True)
+			groups = Group.objects.filter(members__id=account.id)
+			for group in groups:
+				group_list.append(model_to_dict(group))
+		else:
+			for group_id in r_groups:
+				r_group_key = 'group.{0}.hash'.format(group_id)
+				group_list.append(json.dumps(r.hgetall(r_group_key)))
+
+		rtn_dict['groups'] = group_list
 		rtn_dict['success'] = True
-		rtn_dict['msg'] = 'successfully retrieved group {0}'.format(group_id)
+		rtn_dict['msg'] = 'successfully retrieved groups'
 	except Exception as e:
 		logger.info('Error retrieving groups: {0}'.format(e))
 		rtn_dict['msg'] = 'Error retrieving groups: {0}'.format(e)
@@ -266,7 +292,7 @@ def addUsersToGroup(request, group_id):
 	if request.method == 'POST':
 		try:
 			creator = Account.objects.get(user=request.user, is_active=True)
-			group = Group.objects.get(pk=group_id, creator=creator)
+			group = Group.objects.get(pk=group_id, group_creator=creator)
 
 			members_to_add = request.POST['new_members']
 			for member_id in members_to_add:
@@ -287,7 +313,7 @@ def removeUsersFromGroup(request, group_id):
 	if request.method == 'POST':
 		try:
 			creator = Account.objects.get(user=request.user, is_active=True)
-			group = Group.objects.get(pk=group_id, creator=creator)
+			group = Group.objects.get(pk=group_id, group_creator=creator)
 			members_to_remove = request.POST['members_to_remove']
 			for member_id in members_to_remove:
 				member_to_remove = Account.objects.get(pk=member_id)
@@ -306,7 +332,7 @@ def editGroup(request, group_id):
 	if request.method == 'POST':
 		try:
 			creator = Account.objects.get(user=request.user, is_active=True)
-			group = Group.objects.get(pk=group_id, creator=creator)
+			group = Group.objects.get(pk=group_id, group_creator=creator)
 			group.name = request.POST['new_name']
 			group.save()
 			rtn_dict['success'] = True

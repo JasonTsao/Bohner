@@ -1,0 +1,41 @@
+
+<script src="/static/js/jquery.min.js"></script>
+<script type="text/javascript" >
+	$(document).ready(function(){
+		$('#new_comment').click(function(){
+			var group_name = $('#group_name').val()
+            var group_members = [2, 3,4];
+            console.log(group_name);
+            console.log($('#group_name').text())
+			//var dict = {};
+			//dict['user_id'] = 2;
+			//dict['can_invite_friends'] = false;
+			//invited_friends.push(dict);
+            group_members = JSON.stringify(group_members)
+			$.ajax({
+            type:"POST",
+                    url:"group/new",
+                    data:{
+                        "name": group_name,
+                        "members": group_members,
+                    	"csrfmiddlewaretoken": "{{csrf_token}}",	
+                    },
+            success: function(data){
+                        //alert(data['status']);
+                        console.log('success!');
+                        console.log(data);
+                    },
+            error: function(data){
+            		console.log('error');
+            		console.log(data);
+                //alert("Server side error");
+            }
+        });
+		})
+	})
+</script>
+
+
+
+	<input type="text" id="group_name"></input>
+	<input type="button" value="Press" id="new_comment" class="btn btn-primary">
