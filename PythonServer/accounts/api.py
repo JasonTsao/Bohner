@@ -300,6 +300,15 @@ def addUsersToGroup(request, group_id):
 				link = AccountLink.objects.get(account_user=creator, friend=new_member)
 				group.members.add(new_member)
 
+			r = R.r
+			r_group_key = 'group.{0}.hash'.format(group.id)
+			pushToNOSQLHash(r_group_key, model_to_dict(group))
+
+			#add group to groups for members
+			for member in group.members.all():
+				r_groups_key = 'account.{0}.groups.set'.format(member.id)
+				pushToNOSQLSet(r_groups_key, group.id, False, 0)
+
 			rtn_dict['success'] = True
 			rtn_dict['msg'] = 'successfully added users to group {0}'.format(group_id)
 		except Exception as e:
@@ -319,6 +328,9 @@ def removeUsersFromGroup(request, group_id):
 				member_to_remove = Account.objects.get(pk=member_id)
 				group.members.remove(new_member)
 
+			'''
+				TODO: Write redis code for removing users from group
+			'''
 			rtn_dict['success'] = True
 			rtn_dict['msg'] = 'successfully removed users from group {0}'.format(group_id)
 		except Exception as e:
@@ -327,7 +339,7 @@ def removeUsersFromGroup(request, group_id):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-def editGroup(request, group_id):
+def updateGroup(request, group_id):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
@@ -335,11 +347,17 @@ def editGroup(request, group_id):
 			group = Group.objects.get(pk=group_id, group_creator=creator)
 			group.name = request.POST['new_name']
 			group.save()
+			r = R.r
+			r_group_key = 'group.{0}.hash'.format(group_id)
+			group['name'] = request.POST['new_name']
+			pushToNOSQLHash(r_group_key, model_to_dict(group))
 			rtn_dict['success'] = True
 			rtn_dict['msg'] = 'successfully edited group {0}'.format(group_id)
 		except Exception as e:
 			logger.info('Error retrieving groups: {0}'.format(e))
 			rtn_dict['msg'] = 'Error retrieving groups: {0}'.format(e)
+	else:
+		rtn_dict['msg'] = 'Not POST'
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 

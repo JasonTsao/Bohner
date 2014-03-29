@@ -7,6 +7,7 @@ urlpatterns = patterns("accounts.views",
                         url(r"^search_by_email", "searchByEmail"),
                         url(r"^add_friend", "addFriend"),
                         url(r"^create_group", "createGroup"),
+                        url(r"^update_group/(\d+)", "updateGroup"),
                         )
 
 urlpatterns += patterns("accounts.api",
@@ -20,6 +21,6 @@ urlpatterns += patterns("accounts.api",
                         url(r"^group/list", "getGroups"),
                         url(r"^group/(\d+)/members/add", "addUsersToGroup"),
                         url(r"^group/(\d+)/members/remove", "removeUsersFromGroup"),
-                        url(r"^group/(\d+)/edit", "editGroup"),
+                        url(r"^group/(\d+)/update", "updateGroup"),
                         url(r"^group/(\d+)", "getGroup"),
                         )

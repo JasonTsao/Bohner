@@ -1,0 +1,36 @@
+
+<script src="/static/js/jquery.min.js"></script>
+<script type="text/javascript" >
+	$(document).ready(function(){
+		$('#new_name').click(function(){
+			var new_name = $('#name').val()
+			//var dict = {};
+			//dict['user_id'] = 2;
+			//dict['can_invite_friends'] = false;
+			//invited_friends.push(dict);
+			$.ajax({
+            type:"POST",
+                    url:"/acct/group/{{group_id}}/update",
+                    data:{
+                        "new_name": new_name,
+                    	"csrfmiddlewaretoken": "{{csrf_token}}",	
+                    },
+            success: function(data){
+                        //alert(data['status']);
+                        console.log('success!');
+                        console.log(data);
+                    },
+            error: function(data){
+            		console.log('error');
+            		console.log(data);
+                //alert("Server side error");
+            }
+        });
+		})
+	})
+</script>
+
+
+
+	<input type="text" id="name"></input>
+	<input type="button" value="Press" id="new_name" class="btn btn-primary">
