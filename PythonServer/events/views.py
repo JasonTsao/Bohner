@@ -29,10 +29,12 @@ def createEventComment(request):
 
 def updateEvent(request, event_id):
     return render_to_response("events/update_event.html", {}, context_instance=RequestContext(request))
+
+
+def selectAttending(request, event_id):
+    return render_to_response("events/select_attending.html", {"event_id": event_id}, context_instance=RequestContext(request))
 '''
 def UpcomingEvents(request):
     pass
 
-def selectAttending(request):
-    pass
 '''
