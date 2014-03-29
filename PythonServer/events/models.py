@@ -22,6 +22,15 @@ class Event(models.Model):
         return str('{0} : {1}'.format(self.pk,self.name))
 
 
+class EventCreatorLocation(models.Model):
+    event = models.ForeignKey(Event)
+    coordinates = models.CharField(max_length=255, null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+
 class EventNotification(models.Model):
     event = models.ForeignKey(Event)
     recipient = models.ForeignKey(Account)

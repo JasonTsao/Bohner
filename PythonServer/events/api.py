@@ -12,6 +12,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth.models import User
 from accounts.models import Account, AccountLink
 from accounts.api import pushToNOSQLSet, pushToNOSQLHash
+from notifications.api import eventPushNotification, sendPushNotification
 from models import Event, EventComment, EventNotification, InvitedFriend
 from rediscli import r as R
 
