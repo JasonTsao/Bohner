@@ -6,6 +6,7 @@ import ast
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader, Context, RequestContext
 from django.contrib.auth.decorators import login_required
+from django.db.models import Max
 from django.forms.models import model_to_dict
 from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth.models import User
@@ -293,6 +294,38 @@ def updateEvent(request, event_id):
     except Exception as e:
         logger.info('Error updating event {0}: {1}'.format(event_id, e))
         rtn_dict['msg'] = 'Error updating event {0}: {1}'.format(event_id, e)
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+def updateEventCreatorLocation(request, event_id):
+    rtn_dict = {'success': False, "msg": ""}
+
+    if request.method == 'POST':
+        try:
+            event = Event.objects.get(pk=event_id)
+            location = EventCreatorLocation(event=event)
+            location.latitude = request.POST['latitude']
+            location.longitude = request.POST['longitude']
+            location.coordinates = request.POST['coordinates']
+            location.save()
+        except Exception as e:
+            logger.info('Error updating event creator location for event {0}: {1}'.format(event_id, e))
+            rtn_dict['msg'] = 'Error updating event creator location for event {0}: {1}'.format(event_id, e)
+    else:
+        rtn_dict['msg'] = 'Not POST'
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+def getEventCreatorLocation(request, event_id):
+    rtn_dict = {'success': False, "msg": ""}
+
+    try:
+        location = EventCreatorLocation.objects.get(event=event_id).latest('id')
+        rtn_dict['location'] = location.coordinates
+    except Exception as e:
+        logger.info('Error getting event creator location for event {0}: {1}'.format(event_id, e))
+        rtn_dict['msg'] = 'Error getting event creator location for event {0}: {1}'.format(event_id, e)
+
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 

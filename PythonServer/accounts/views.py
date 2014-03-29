@@ -29,8 +29,8 @@ def createGroup(request):
 	return render_to_response("accounts/create_group.html", {}, context_instance=RequestContext(request))
 
 
-def addUsersToGroup(request):
-	return render_to_response("accounts/add_users_to_group.html", {}, context_instance=RequestContext(request))
+def addUsersToGroup(request, group_id):
+	return render_to_response("accounts/group_add_users.html", {"group_id": group_id}, context_instance=RequestContext(request))
 
 
 def removeUsersFromGroup(request):
