@@ -24,9 +24,11 @@ def pushToNOSQLHash(key, push_item):
 
 
 @task
-def pushToNOSQLSet(key, push_item, score):
+def pushToNOSQLSet(key, push_item, delete_item, score):
 	r = R.r
 	r.zadd(key, push_item, score)
+	if delete_item:
+		r.zrem(key, delete_item)
 
 
 def registerUser(request):
@@ -159,7 +161,7 @@ def addFriend(request):
 
 				redis_key = 'account.{0}.friends.set'.format(account.id)
 				friend_dict = json.dumps({'id': friend.id, 'pf_pic': friend.profile_pic, 'name': friend.display_name})
-				pushToNOSQLSet(redis_key, friend_dict, 0)
+				pushToNOSQLSet(redis_key, friend_dict, False,0)
 
 				rtn_dict['success'] = True
 				rtn_dict['msg'] = 'successfully added friend {0}'.format(friend.id)

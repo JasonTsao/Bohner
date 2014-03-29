@@ -126,7 +126,7 @@ def createEvent(request):
             created_events_key = 'account.{0}.owned_events.set'.format(user.id)
             event_dict = {'event_id': event.id, 'event_name': event.name, 'start_time': str(event.start_time)}
             event_dict = json.dumps(event_dict)
-            pushToNOSQLSet(created_events_key, event_dict, 0)
+            pushToNOSQLSet(created_events_key, event_dict, False,0)
 
             try:
                 invited_friends = request.POST['invited_friends']
@@ -150,12 +150,12 @@ def createEvent(request):
                                                 'pf_pic': friend.profile_pic,
                                                 'name': friend.display_name,
                                                 "attending": False})
-                        pushToNOSQLSet(redis_friend_key, invited_friend_dict, account_link.invited_count)
+                        pushToNOSQLSet(redis_friend_key, invited_friend_dict, False, account_link.invited_count)
                         redis_user_events_key = 'account.{0}.events.set'.format(friend.id)
                         event_dict = json.dumps({'event_id': event.id, 
                                         'event_name': event.name,
                                         'start_time': str(event.start_time)})
-                        pushToNOSQLSet(redis_user_events_key, event_dict, 0)
+                        pushToNOSQLSet(redis_user_events_key, event_dict, False, 0)
                     except Exception as e:
                         logger.info('Error adding user {0}: {1}'.format(user,e))
             except Exception as e:
@@ -222,13 +222,13 @@ def inviteFriends(request, event_id):
                                                 'pf_pic': friend.profile_pic,
                                                 'name': friend.display_name,
                                                 "attending": False})
-                        pushToNOSQLSet(redis_key, invited_friend_dict, account_link.invited_count)
+                        pushToNOSQLSet(redis_key, invited_friend_dict, False, account_link.invited_count)
                         redis_user_events_key = 'account.{0}.events.set'.format(friend.id)
                         event_dict = json.dumps({
                                         'event_id': event.id,
                                         'event_name': event.name,
                                         'start_time': str(event.start_time)})
-                        pushToNOSQLSet(redis_user_events_key, event_dict, 0)
+                        pushToNOSQLSet(redis_user_events_key, event_dict, False, 0)
                         rtn_dict['success'] = True
                         rtn_dict['msg'] = 'Successfully added users'
                     except Exception as e:
@@ -299,20 +299,36 @@ def updateEvent(request, event_id):
 @login_required
 def selectAttending(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
-
     if request.method == 'POST':
         try:
+            attending = False
             user = Account.objects.get(user=request.user)
             event = Event.objects.get(pk=event_id)
             invited_friend = InvitedFriend.objects.get(event=event, user=user)
-            if request.POST['attending']:
+
+            if request.POST['attending'] == "true":
+                attending = True
                 invited_friend.attending = True
-            else:
+            elif request.POST['attending'] == "false":
+                attending = False
                 invited_friend.attending = False
             invited_friend.save()
+            
+            r = R.r
+            r_key = 'event.{0}.invited_friends.set'.format(event_id)
+            r_invited_friends = r.zrange(r_key, 0, 10)
+            for r_invited_friend in r_invited_friends:
+                invited_friend_dict = json.loads(r_invited_friend)
+                #update method has hole in that something breaks while removing old member there will be duplicates
+                if invited_friend_dict['friend_id'] == user.id:
+                    invited_friend_dict['attending'] = attending
+                    invited_friend_dict = json.dumps(invited_friend_dict)
+                    pushToNOSQLSet(r_key, invited_friend_dict, r_invited_friend, 0)
+
         except Exception as e:
-            logger.info('Error selected attending for event {0}: user {1}'.format(event.id, user.id , e))
-            rtn_dict['msg'] = 'Error selected attending for event {0}: user {1}'.format(event.id, user.id , e)
+            print 'Error selected attending for event {0}: user {1}: {2}'.format(event.id, user.id , e)
+            logger.info('Error selected attending for event {0}: user {1}: {2}'.format(event.id, user.id , e))
+            rtn_dict['msg'] = 'Error selected attending for event {0}: user {1}: {2}'.format(event.id, user.id , e)
 
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
@@ -326,14 +342,16 @@ def createEventComment(request, event_id):
             event = Event.objects.get(pk=event_id)
             is_authorized = checkIfAuthorized(event, account)
             if is_authorized:
+                #creating event in SQL DB
                 new_comment = EventComment(event=event,user=account)
                 new_comment.description = request.POST['description']
                 new_comment.save()
+                # creating comment in redis
                 r = R.r
                 redis_key = 'event.{0}.comments.set'.format(event_id)
                 new_comment_dict = model_to_dict(new_comment)
                 comment_dict = json.dumps(new_comment_dict)
-                pushToNOSQLSet(redis_key, comment_dict, 0)
+                pushToNOSQLSet(redis_key, comment_dict, False, 0)
 
                 rtn_dict['success'] = True
                 rtn_dict['msg'] = 'successfully created comment for event {0}'.format(event_id)

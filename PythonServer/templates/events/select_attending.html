@@ -2,19 +2,13 @@
 <script src="/static/js/jquery.min.js"></script>
 <script type="text/javascript" >
 	$(document).ready(function(){
-		$('#invite_friends').click(function(){
-			var invited_friends = '[{"user_id": 2, "can_invite_friends": False},{"user_id": 4, "can_invite_friends": False}]';
-			//var dict = {};
-			//dict['user_id'] = 2;
-			//dict['can_invite_friends'] = false;
-			//invited_friends.push(dict);
-			invited_friends = JSON.stringify(invited_friends)
-			console.log(invited_friends)
+		$('#select_attending').click(function(){
+
 			$.ajax({
             type:"POST",
-                    url:"/events/invite_friends/2",
+                    url:"/events/attending/{{event_id}}",
                     data:{
-                        "invited_friends": invited_friends,
+                        "attending": true,
                     	"csrfmiddlewaretoken": "{{csrf_token}}",	
                     },
             success: function(data){
@@ -30,8 +24,4 @@
 		})
 	})
 </script>
-
-
-
-	<input type="text" id="search_field"></input>
-	<input type="button" value="Press" id="invite_friends" class="btn btn-primary">
+	<input type="button" value="Press" id="select_attending" class="btn btn-primary">
