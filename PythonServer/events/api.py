@@ -34,7 +34,7 @@ def checkIfAuthorized(event, account):
     return is_authorized
 
 
-@login_required
+#login_required
 def getEvent(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
 
@@ -67,7 +67,7 @@ def getEvent(request, event_id):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-@login_required
+#login_required
 def upcomingEvents(request, account_id):
     rtn_dict = {'success': False, "msg": ""}
     try:
@@ -101,7 +101,7 @@ def upcomingEvents(request, account_id):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-@login_required
+#login_required
 def createEvent(request):
     rtn_dict = {'success': False, "msg": ""}
     if request.method == 'POST':
@@ -176,7 +176,7 @@ def createEvent(request):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-@login_required
+#@login_required
 def inviteFriends(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     is_authorized = False
@@ -248,7 +248,7 @@ def inviteFriends(request, event_id):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-@login_required
+#@login_required
 def updateEvent(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     try:
@@ -330,7 +330,7 @@ def getEventCreatorLocation(request, event_id):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-@login_required
+#@login_required
 def selectAttending(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     if request.method == 'POST':
@@ -367,7 +367,7 @@ def selectAttending(request, event_id):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-@login_required
+#@login_required
 def createEventComment(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     if request.method == 'POST':
@@ -398,7 +398,7 @@ def createEventComment(request, event_id):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-@login_required
+#@login_required
 def getEventComments(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     try:

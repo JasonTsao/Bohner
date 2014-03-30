@@ -65,7 +65,7 @@ def registerUser(request):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-@login_required
+#login_required
 def updateUser(request):
     rtn_dict = {'success': False, "msg": ""}
 
@@ -129,7 +129,7 @@ def updateUser(request):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-@login_required
+#login_required
 def searchUsersByEmail(request):
 	rtn_dict = {'success': False, "msg": "", "users": []}
 	if request.method == 'POST':
@@ -149,7 +149,7 @@ def searchUsersByEmail(request):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-@login_required
+#login_required
 def addFriend(request):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
@@ -179,7 +179,7 @@ def addFriend(request):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-@login_required
+#login_required
 def getFriends(request, user_id):
 	rtn_dict = {'success': False, "msg": "", "friends": []}
 
@@ -208,7 +208,7 @@ def getFriends(request, user_id):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-@login_required
+#login_required
 def createGroup(request):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
@@ -237,7 +237,7 @@ def createGroup(request):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-@login_required
+#@login_required
 def getGroup(request, group_id):
 	rtn_dict = {'success': False, "msg": "", "group": ""}
 	try:
@@ -257,7 +257,7 @@ def getGroup(request, group_id):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-@login_required
+#@login_required
 def getGroups(request):
 	rtn_dict = {'success': False, "msg": "", "groups": []}
 	try:
@@ -286,7 +286,7 @@ def getGroups(request):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-@login_required
+#@login_required
 def addUsersToGroup(request, group_id):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
