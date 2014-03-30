@@ -77,12 +77,13 @@ def upcomingEvents(request, account_id):
         owned_upcoming_events_key = 'account.{0}.owned_events.set'.format(account_id)
         owned_upcoming_events = r.zrange(owned_upcoming_events_key, 0, 10)
 
-        if not upcoming_events:
-            upcoming_events = []
+        if not owned_upcoming_events:
+            owned_upcoming_events = []
             owned_events = Event.objects.filter(creator=account_id, event_over=False, cancelled=False).order_by('start_time')
             for event in owned_events:
-                upcoming_events.append(model_to_dict(event)) 
+                owned_upcoming_events.append(model_to_dict(event)) 
 
+        if not upcoming_events:
             invited_users = InvitedFriend.objects.select_related('event').filter(user=account_id)
             for invited_user in invited_users:
                 if not invited_user.event.event_over and not invited_user.event.cancelled:
