@@ -79,10 +79,9 @@ def upcomingEvents(request, account_id):
 
         if not upcoming_events:
             upcoming_events = []
-            owned_events = Event.objects.filter(creator=account_id).order_by('start_time')
+            owned_events = Event.objects.filter(creator=account_id, event_over=False, cancelled=False).order_by('start_time')
             for event in owned_events:
-                if not event.event_over and not event.cancelled:
-                    upcoming_events.append(model_to_dict(event)) 
+                upcoming_events.append(model_to_dict(event)) 
 
             invited_users = InvitedFriend.objects.select_related('event').filter(user=account_id)
             for invited_user in invited_users:
