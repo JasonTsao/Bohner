@@ -165,7 +165,7 @@ def createEvent(request):
                         event_dict = json.dumps({'event_id': event.id, 
                                         'event_name': event.name,
                                         'start_time': str(event.start_time)})
-                        pushToNOSQLSet(redis_user_events_key, event_dict, False, 0)
+                        pushToNOSQLSet(redis_user_events_key, event_dict, False, score)
                     except Exception as e:
                         logger.info('Error adding user {0}: {1}'.format(user,e))
             except Exception as e:
@@ -429,7 +429,8 @@ def createEventComment(request, event_id):
                 redis_key = 'event.{0}.comments.set'.format(event_id)
                 new_comment_dict = model_to_dict(new_comment)
                 comment_dict = json.dumps(new_comment_dict)
-                pushToNOSQLSet(redis_key, comment_dict, False, 0)
+                score = int(new_comment.created.strftime("%s"))
+                pushToNOSQLSet(redis_key, comment_dict, False, score)
 
                 rtn_dict['success'] = True
                 rtn_dict['msg'] = 'successfully created comment for event {0}'.format(event_id)
