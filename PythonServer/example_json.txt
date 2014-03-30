@@ -49,6 +49,15 @@ updateEvent:  /events/update/(\d+)
 		"msg": "String"
 	}
 
+invitedFriends: /events/invited_friends/(\d+)
+	GET:
+
+	Response:
+		{
+			"success": Boolean,
+			"msg": "String",
+		}
+
 inviteFriends: /events/invite_friends/(\d+)
 	POST:
 		{
@@ -61,6 +70,14 @@ inviteFriends: /events/invite_friends/(\d+)
 		}
 	Response:
 		{
+			"invited_friends": [{
+				'invited_friend_id': integer,
+                'friend_id': integer,
+                'pf_pic': string,
+                'name': string,
+                'attending': boolean
+			},
+			],
 			"success": Boolean,
 			"msg": "String",
 		}

@@ -198,6 +198,7 @@ def getInvitedFriends(request, event_id):
                             "attending": invited_friend.attenting})
                 invited_friends.append(invited_friend_dict)
         rtn_dict['success'] = True
+        rtn_dict['msg'] = "successfully got list of invited friends for event {0}".format(event_id)
         rtn_dict['invited_friends'] = invited_friends
     except Exception as e:
         print 'Error getting invited friends for event {0}: {1}'.format(event_id, e)
