@@ -12,6 +12,7 @@ from django.forms.models import model_to_dict
 from accounts.models import Account, AccountLink, Group, AccountSetting, AccountSettings
 from events.models import Event, InvitedFriend
 from django.contrib.auth.hashers import make_password
+from django.views.decorators.csrf import csrf_exempt
 from forms import RegisterForm
 from rediscli import r as R
 
@@ -32,6 +33,7 @@ def pushToNOSQLSet(key, push_item, delete_item, score):
 		r.zrem(key, delete_item)
 
 
+@csrf_exempt
 def registerUser(request):
 	rtn_dict = {'success': False, "msg": ""}
 
@@ -66,6 +68,7 @@ def registerUser(request):
 
 
 #login_required
+@csrf_exempt
 def updateUser(request):
     rtn_dict = {'success': False, "msg": ""}
 
@@ -130,6 +133,7 @@ def updateUser(request):
 
 
 #login_required
+@csrf_exempt
 def searchUsersByEmail(request):
 	rtn_dict = {'success': False, "msg": "", "users": []}
 	if request.method == 'POST':
@@ -150,6 +154,7 @@ def searchUsersByEmail(request):
 
 
 #login_required
+@csrf_exempt
 def addFriend(request):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
@@ -209,6 +214,7 @@ def getFriends(request, user_id):
 
 
 #login_required
+@csrf_exempt
 def createGroup(request):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
@@ -287,6 +293,7 @@ def getGroups(request):
 
 
 #@login_required
+@csrf_exempt
 def addUsersToGroup(request, group_id):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
@@ -319,6 +326,7 @@ def addUsersToGroup(request, group_id):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@csrf_exempt
 def removeUsersFromGroup(request, group_id):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
@@ -341,6 +349,7 @@ def removeUsersFromGroup(request, group_id):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@csrf_exempt
 def updateGroup(request, group_id):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':

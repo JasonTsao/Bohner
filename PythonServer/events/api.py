@@ -14,6 +14,7 @@ from accounts.models import Account, AccountLink
 from accounts.api import pushToNOSQLSet, pushToNOSQLHash
 from notifications.api import eventPushNotification, sendPushNotification
 from models import Event, EventComment, EventNotification, InvitedFriend
+from django.views.decorators.csrf import csrf_exempt
 from rediscli import r as R
 
 logger = logging.getLogger("django.request")
@@ -102,6 +103,7 @@ def upcomingEvents(request, account_id):
 
 
 #login_required
+@csrf_exempt
 def createEvent(request):
     rtn_dict = {'success': False, "msg": ""}
     if request.method == 'POST':
@@ -177,6 +179,7 @@ def createEvent(request):
 
 
 #@login_required
+@csrf_exempt
 def inviteFriends(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     is_authorized = False
@@ -249,6 +252,7 @@ def inviteFriends(request, event_id):
 
 
 #@login_required
+@csrf_exempt
 def updateEvent(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     try:
@@ -298,6 +302,7 @@ def updateEvent(request, event_id):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@csrf_exempt
 def updateEventCreatorLocation(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
 
@@ -331,6 +336,7 @@ def getEventCreatorLocation(request, event_id):
 
 
 #@login_required
+@csrf_exempt
 def selectAttending(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     if request.method == 'POST':
@@ -368,6 +374,7 @@ def selectAttending(request, event_id):
 
 
 #@login_required
+@csrf_exempt
 def createEventComment(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     if request.method == 'POST':
