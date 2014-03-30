@@ -178,6 +178,34 @@ def createEvent(request):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@csrf_exempt
+def getInvitedFriends(request, event_id):
+    rtn_dict = {'success': False, "msg": "", "invited_friends": []}
+    try:
+        r = R.r
+        r_invited_friends_key = 'event.{0}.invited_friends.set'.format(event_id)
+        invited_friends = r.zrange(r_invited_friends_key, 0, 10)
+        invited_friends = False
+        if not invited_friends:
+            invited_friends = []
+            invited_friends_list = InvitedFriend.objects.select_related('user').filter(event=event_id)
+            for invited_friend in invited_friends_list:
+                invited_friend_dict = json.dumps({
+                            'invited_friend_id': invited_friend.id,
+                            'friend_id':invited_friend.user.id,
+                            'pf_pic': invited_friend.user.profile_pic,
+                            'name': invited_friend.user.display_name,
+                            "attending": invited_friend.attenting})
+                invited_friends.append(invited_friend_dict)
+        rtn_dict['success'] = True
+        rtn_dict['invited_friends'] = invited_friends
+    except Exception as e:
+        print 'Error getting invited friends for event {0}: {1}'.format(event_id, e)
+        logger.info('Error getting invited friends for event {0}: {1}'.format(event_id, e))
+        rtn_dict['msg'] = 'Error getting invited friends for event {0}: {1}'.format(event_id, e)
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
 #@login_required
 @csrf_exempt
 def inviteFriends(request, event_id):
