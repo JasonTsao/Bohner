@@ -20,21 +20,21 @@ logger = logging.getLogger("django.request")
 def populateUserUpcomingEvents(account_id):
 	try:
 		upcoming_events = []
-        owned_events = Event.objects.filter(creator=account_id, event_over=False,cancelled=False).order_by('start_time')
-        for event in owned_events:
-            upcoming_events.append(model_to_dict(event)) 
+		owned_events = Event.objects.filter(creator=account_id, event_over=False,cancelled=False).order_by('start_time')
+		for event in owned_events:
+			upcoming_events.append(model_to_dict(event)) 
 
-        invited_users = InvitedFriend.objects.select_related('event').filter(user=account_id)
-        for invited_user in invited_users:
-            if not invited_user.event.event_over and not invited_user.event.cancelled:
-                if invited_user.event.creator != account_id:
-               		upcoming_events.append(json.dumps(model_to_dict(invited_user.event)))
+		invited_users = InvitedFriend.objects.select_related('event').filter(user=account_id)
+		for invited_user in invited_users:
+			if not invited_user.event.event_over and not invited_user.event.cancelled:
+				if invited_user.event.creator != account_id:
+					upcoming_events.append(json.dumps(model_to_dict(invited_user.event)))
 
-       	r = R.r
-       	r_upcoming_events_key = 'account.{0}.events.set'.format(account_id)
-       	r.delete(r_upcoming_events_key)
-       	for upcoming_event in upcoming_events:
-       		r.zadd(r_upcoming_events_key, upcoming_event, 0)
+		r = R.r
+		r_upcoming_events_key = 'account.{0}.events.set'.format(account_id)
+		r.delete(r_upcoming_events_key)
+		for upcoming_event in upcoming_events:
+			r.zadd(r_upcoming_events_key, upcoming_event, 0)
 	except Exception as e:
 		print 'Error populating NOSQL layer with upcoming events for user {0}: {1}'.format(account_id, e)
 		return False
