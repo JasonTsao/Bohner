@@ -73,10 +73,12 @@ def upcomingEvents(request, account_id):
     rtn_dict = {'success': False, "msg": ""}
     try:
         r = R.r
+        event_range_start = int(request.GET.get('range_start', 0))
+        event_range_end = event_range_start + 10
         upcoming_events_key = 'account.{0}.events.set'.format(account_id)
-        upcoming_events = r.zrange(upcoming_events_key, 0, 10)
+        upcoming_events = r.zrange(upcoming_events_key, event_range_start, event_range_end)
         owned_upcoming_events_key = 'account.{0}.owned_events.set'.format(account_id)
-        owned_upcoming_events = r.zrange(owned_upcoming_events_key, 0, 10)
+        owned_upcoming_events = r.zrange(owned_upcoming_events_key, event_range_start, event_range_end)
 
         if not owned_upcoming_events:
             owned_upcoming_events = []
@@ -195,7 +197,7 @@ def getInvitedFriends(request, event_id):
                             'friend_id':invited_friend.user.id,
                             'pf_pic': invited_friend.user.profile_pic,
                             'name': invited_friend.user.display_name,
-                            "attending": invited_friend.attenting})
+                            "attending": invited_friend.attending})
                 invited_friends.append(invited_friend_dict)
         rtn_dict['success'] = True
         rtn_dict['msg'] = "successfully got list of invited friends for event {0}".format(event_id)
