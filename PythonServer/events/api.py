@@ -3,6 +3,7 @@ import logging
 import pickle
 import simplejson
 import ast
+from PythonServer.settings import RETURN_LIST_SIZE
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader, Context, RequestContext
 from django.contrib.auth.decorators import login_required
@@ -74,11 +75,10 @@ def upcomingEvents(request, account_id):
     try:
         r = R.r
         event_range_start = int(request.GET.get('range_start', 0))
-        event_range_end = event_range_start + 10
         upcoming_events_key = 'account.{0}.events.set'.format(account_id)
-        upcoming_events = r.zrange(upcoming_events_key, event_range_start, event_range_end)
+        upcoming_events = r.zrange(upcoming_events_key, event_range_start, event_range_start + RETURN_LIST_SIZE)
         owned_upcoming_events_key = 'account.{0}.owned_events.set'.format(account_id)
-        owned_upcoming_events = r.zrange(owned_upcoming_events_key, event_range_start, event_range_end)
+        owned_upcoming_events = r.zrange(owned_upcoming_events_key, event_range_start, event_range_start + RETURN_LIST_SIZE)
 
         if not owned_upcoming_events:
             owned_upcoming_events = []
@@ -184,9 +184,10 @@ def createEvent(request):
 def getInvitedFriends(request, event_id):
     rtn_dict = {'success': False, "msg": "", "invited_friends": []}
     try:
+        friend_range_start = int(request.GET.get('range_start', 0))
         r = R.r
         r_invited_friends_key = 'event.{0}.invited_friends.set'.format(event_id)
-        invited_friends = r.zrange(r_invited_friends_key, 0, 10)
+        invited_friends = r.zrange(r_invited_friends_key, friend_range_start, friend_range_start + RETURN_LIST_SIZE)
         invited_friends = False
         if not invited_friends:
             invited_friends = []
@@ -441,9 +442,10 @@ def createEventComment(request, event_id):
 def getEventComments(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     try:
+        comment_range_start = int(request.GET.get('range_start', 0))
         r = R.r
         redis_key = 'event.{0}.comments.set'.format(event_id)
-        comments = r.zrange(redis_key, 0, 10)
+        comments = r.zrange(redis_key, comment_range_start, comment_range_start + RETURN_LIST_SIZE)
 
         if not comments:
             comments = []

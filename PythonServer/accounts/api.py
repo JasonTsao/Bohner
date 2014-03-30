@@ -2,6 +2,7 @@ import json
 import logging
 import ast
 from celery import task
+from PythonServer.settings import RETURN_LIST_SIZE
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader, Context, RequestContext
 from django.contrib.auth.decorators import login_required
@@ -189,9 +190,10 @@ def getFriends(request, user_id):
 	rtn_dict = {'success': False, "msg": "", "friends": []}
 
 	try:
+		friends_range_start = int(request.GET.get('range_start', 0))
 		r = R.r
 		redis_key = 'account.{0}.friends.set'.format(user_id)
-		friends_list = r.zrange(redis_key, 0, 10)
+		friends_list = r.zrange(redis_key, friends_range_start, friends_range_start + RETURN_LIST_SIZE)
 
 		if not friends_list:
 			friends_list = []
@@ -267,11 +269,12 @@ def getGroup(request, group_id):
 def getGroups(request):
 	rtn_dict = {'success': False, "msg": "", "groups": []}
 	try:
+		groups_range_start = int(request.GET.get('range_start', 0))
 		group_list = []
 		account = Account.objects.get(user=request.user)
 		r = R.r
 		r_groups_key = 'account.{0}.groups.set'.format(account.id)
-		r_groups = r.zrange(r_groups_key, 0, 10)
+		r_groups = r.zrange(r_groups_key, groups_range_start, groups_range_start + RETURN_LIST_SIZE)
 
 		if not r_groups:
 			account = Account.objects.get(user=request.user, is_active=True)
@@ -337,7 +340,6 @@ def removeUsersFromGroup(request, group_id):
 			for member_id in members_to_remove:
 				member_to_remove = Account.objects.get(pk=member_id)
 				group.members.remove(new_member)
-
 			'''
 				TODO: Write redis code for removing users from group
 			'''
