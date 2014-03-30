@@ -11,7 +11,8 @@ urlpatterns = patterns("events.api",
                         url(r"^invite_friends/(\d+)", "inviteFriends"),
                         url(r"^comments/new/(\d+)", "createEventComment"),
                         url(r"^comments/(\d+)", "getEventComments"),
-                        
+                        url(r"^creator_location/update/(\d+)", "updateEventCreatorLocation"),
+                        url(r"^creator_location/(\d+)", "getEventCreatorLocation"),
                         )
 
 urlpatterns += patterns("events.views",

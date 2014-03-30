@@ -353,10 +353,11 @@ def updateEventCreatorLocation(request, event_id):
 
 def getEventCreatorLocation(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
-
     try:
         location = EventCreatorLocation.objects.get(event=event_id).latest('id')
         rtn_dict['location'] = location.coordinates
+        rtn_dict['success'] = True
+        rtn_dict['msg'] = 'successfully pulled event creator location'
     except Exception as e:
         logger.info('Error getting event creator location for event {0}: {1}'.format(event_id, e))
         rtn_dict['msg'] = 'Error getting event creator location for event {0}: {1}'.format(event_id, e)

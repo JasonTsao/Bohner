@@ -15,7 +15,7 @@ class Account(models.Model):
     first_name = models.CharField(max_length=255, null=True, blank=True)
     last_name = models.CharField(max_length=255, null=True, blank=True)
     phone_number = models.CharField(max_length=255, null=True, blank=True)
-    email = models.CharField(max_length=255, unique=True) 
+    email = models.CharField(max_length=255, unique=True)
     facebook_id = models.CharField(max_length=255, null=True, blank=True)
     uber = models.CharField(max_length=255, null=True, blank=True)
     profile_pic =  models.CharField(max_length=255, null=True, blank=True)
@@ -33,6 +33,13 @@ class Account(models.Model):
             if not self.display_name:
                 self.display_name = '{0} {1}'.format(self.first_name, self.last_name)
         super(Account, self).save()
+
+
+class AccountDeviceID(models.Model):
+    account = models.ForeignKey(Account)
+    device_id = models.CharField(max_length=255, null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True, blank=True, null=True)
 
 
 class AccountSettings(models.Model):
