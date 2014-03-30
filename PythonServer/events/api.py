@@ -118,6 +118,7 @@ def createEvent(request):
             event.start_time = request.POST['start_time']
             event.end_time = request.POST['end_time']
             event.description = request.POST['description']
+            event.meetup_spot = request.POST['meetup_spot']
             event.location_name = request.POST['location_name']
             event.location_address = request.POST['location_address']
             event.location_coordinates = request.POST['location_coordinates']
@@ -309,6 +310,10 @@ def updateEvent(request, event_id):
             pass
         try:
             event.description = request.POST['description']
+        except:
+            pass
+        try:
+            event.location_name = request.POST['meetup_spot']
         except:
             pass
         try:

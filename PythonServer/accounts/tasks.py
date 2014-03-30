@@ -27,7 +27,7 @@ def populateUserFriends(account_id):
 		for link in friend_links:
 			if link.friend.is_active:
 				friend_dict = json.loads(model_to_dict(link.friend))
-	    		pushToNOSQLSet(r_user_friends_key, friend_dict, False, 0)
+	    		pushToNOSQLSet(r_user_friends_key, friend_dict, False, link.friend.invited_count)
 	except Exception as e:
 		print 'Error populating NOSQL layer with invited friends for event {0}: {1}'.format(event_id, e)
 		return False

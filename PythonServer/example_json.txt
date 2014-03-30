@@ -7,6 +7,7 @@ createEvent: /events/new
 		"start_time": %Y-%m-%d,
 		"end_time": %Y-%m-%d,
 		"description" : string,
+		"meetup_spot": string,
 		"location_name": string,
 		"location_address": string,
 		"location_coordinates": string,
@@ -36,6 +37,7 @@ updateEvent:  /events/update/(\d+)
 		"start_time": %Y-%m-%d:%h:%M:%s,
 		"end_time": %Y-%m-%d:%h:%M:%s,
 		"description" : string,
+		"meetup_spot": string,
 		"location_name": string,
 		"location_address": string,
 		"location_coordinates": string,
@@ -49,14 +51,53 @@ updateEvent:  /events/update/(\d+)
 		"msg": "String"
 	}
 
+
+getEvent: /events/(\d+)
+	GET:
+	Response:
+	{	
+		"invited_friends": [{
+			"id": integer,
+			"user": integer,
+			"event": integer,
+			"can_invite_friends": boolean
+			"attending": boolean,
+		},
+		],
+		"event": {
+			"name": string,
+			"start_time": %Y-%m-%d:%h:%M:%s,
+			"end_time": %Y-%m-%d:%h:%M:%s,
+			"description" : string,
+			"meetup_spot": string,
+			"location_name": string,
+			"location_address": string,
+			"location_coordinates": string,
+			"private"; boolean,
+			"friends_can_invite": boolean,
+		}
+		"success": Boolean,
+		"msg": "String"
+	}
+
+
 invitedFriends: /events/invited_friends/(\d+)
 	GET:
 
 	Response:
-		{
+		{	
+			"invited_friends": [{
+				'invited_friend_id': integer,
+                'friend_id': integer,
+                'pf_pic': string,
+                'name': string,
+                'attending': boolean
+			},
+			],
 			"success": Boolean,
 			"msg": "String",
 		}
+
 
 inviteFriends: /events/invite_friends/(\d+)
 	POST:
@@ -70,14 +111,6 @@ inviteFriends: /events/invite_friends/(\d+)
 		}
 	Response:
 		{
-			"invited_friends": [{
-				'invited_friend_id': integer,
-                'friend_id': integer,
-                'pf_pic': string,
-                'name': string,
-                'attending': boolean
-			},
-			],
 			"success": Boolean,
 			"msg": "String",
 		}
@@ -96,6 +129,34 @@ selectAttending: /events/attending/(\d+)
 		"msg": "String"
 	}
 
+
+updateEventCreatorLocation: /events/creator_location/update/(\d+)
+
+	POST:
+	{
+		"latitude": float,
+		"longitude": float,
+		"coordinates": string,
+	}
+
+	Response:
+	{
+		"success": Boolean,
+		"msg": "String"
+	}
+
+
+getEventCreatorLocation: /events/creator_location/(\d+)
+	GET:
+
+	Response:
+	{
+		"location": String,
+		"success": Boolean,
+		"msg": "String"
+	}
+
+
 upcomingEvents: /events/upcoming
 	
 	GET:
@@ -108,6 +169,24 @@ upcomingEvents: /events/upcoming
 									"start_time": %Y-%m-%d:%h:%M:%s,
 									"end_time": %Y-%m-%d:%h:%M:%s,
 									"description" : string,
+									"meetup_spot": string,
+									"location_name": string,
+									"location_address": string,
+									"location_coordinates": string,
+									"friends_can_invite": boolean,
+									"event_over": boolean,
+									"cancelled": boolean,
+									"private"; boolean,
+									"friends_can_invite": boolean,
+								}, 
+							],
+			"owned_events": [
+								{
+									"name": string,
+									"start_time": %Y-%m-%d:%h:%M:%s,
+									"end_time": %Y-%m-%d:%h:%M:%s,
+									"description" : string,
+									"meetup_spot": string,
 									"location_name": string,
 									"location_address": string,
 									"location_coordinates": string,
