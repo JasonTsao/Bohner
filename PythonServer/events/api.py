@@ -3,6 +3,8 @@ import logging
 import pickle
 import simplejson
 import ast
+import datetime
+import time
 from PythonServer.settings import RETURN_LIST_SIZE
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader, Context, RequestContext
@@ -124,7 +126,7 @@ def createEvent(request):
             event.cancelled = request.POST['cancelled']
             event.private = request.POST['private']
             event.save()
-
+            
             r = R.r
             redis_key = 'event.{0}.hash'.format(event.id)
             r.hmset(redis_key, model_to_dict(event))
@@ -132,7 +134,9 @@ def createEvent(request):
             created_events_key = 'account.{0}.owned_events.set'.format(user.id)
             event_dict = {'event_id': event.id, 'event_name': event.name, 'start_time': str(event.start_time)}
             event_dict = json.dumps(event_dict)
-            pushToNOSQLSet(created_events_key, event_dict, False,0)
+            # will probably have to change when we decide how time data will come int
+            score = int(time.mktime(time.strptime(event.start_time, "%Y-%m-%d"))) if event.start_time else int(event.created.strftime("%s"))
+            pushToNOSQLSet(created_events_key, event_dict, False,score)
 
             try:
                 invited_friends = request.POST['invited_friends']
