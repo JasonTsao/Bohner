@@ -166,8 +166,15 @@ def addFriend(request):
 				link = AccountLink(account_user=account, friend=friend)
 				link.save()
 
+				second_link = AccountLink(account_user=friend, friend=account)
+				second_link.save()
+
 				redis_key = 'account.{0}.friends.set'.format(account.id)
 				friend_dict = json.dumps({'id': friend.id, 'pf_pic': friend.profile_pic, 'name': friend.display_name})
+				pushToNOSQLSet(redis_key, friend_dict, False,0)
+
+				redis_key = 'account.{0}.friends.set'.format(friend.id)
+				friend_dict = json.dumps({'id': account.id, 'pf_pic': account.profile_pic, 'name': account.display_name})
 				pushToNOSQLSet(redis_key, friend_dict, False,0)
 
 				rtn_dict['success'] = True
