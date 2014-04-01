@@ -138,6 +138,7 @@ INSTALLED_APPS = (
     'accounts',
     'events',
     'notifications',
+    'ios_notifications',
     # Uncomment the next line to enable the admin:
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
