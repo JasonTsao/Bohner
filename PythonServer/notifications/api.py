@@ -2,36 +2,105 @@ import json
 import logging
 import ast
 import urllib2
+import os
+
+from ios_notifications.management.commands.push_ios_notification import Command
+from ios_notifications.models import APNService, Notification, Device
+from ios_notifications.utils import generate_cert_and_pkey
+from django.test.client import Client
+
 from celery import task
 from django.http import HttpResponse
+from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.serializers.json import DjangoJSONEncoder
 from django.forms.models import model_to_dict
-from ios_notifications.management.commands.push_ios_notification import Command
 from accounts.api import pushToNOSQLHash, pushToNOSQLSet
 from accounts.models import Account, AccountLink, Group, AccountSetting, AccountSettings
 from events.models import Event, EventNotification, EventCreatorLocation, EventComment, InvitedFriend
-from notifications.models import Notification
+from notifications.models import Notification as MeepNotification
 from rediscli import r as R
 
 logger = logging.getLogger("django.request")
 
+TOKEN = '0fd12510cfe6b0a4a89dc7369c96df956f991e66131dab63398734e8000d0029'
+TEST_PEM = os.path.abspath(os.path.join(os.path.dirname(__file__), 'test.pem'))
+
+SSL_SERVER_COMMAND = ('openssl', 's_server', '-accept', '2195', '-cert', TEST_PEM)
+
+
+def testIOSNotificationAPI(request):
+	rtn_dict = {'success': False, "msg": ""}
+	try:
+		pass
+	except Exception as e:
+		print 'Error running ios notification test: {0}'.format(e)
+		rtn_dict['msg'] = 'Error running ios notification test: {0}'.format(e)
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+def createAPNService(request):
+	cert, key = generate_cert_and_pkey()
+	service = APNService.objects.create(name='test-service', hostname='127.0.0.1', certificate=cert, private_key=key)
+
 
 def createNotification(request):
 	rtn_dict = {'success': False, "msg": ""}
-
-	command = Command()
-	
-
+	service = APNService.objects.get(pk=2)
+	notification = Notification.objects.create(message='Test message', service=service)
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
 def registerDevice(request):
 	rtn_dict = {'success': False, "msg": ""}
 	url = 'http://127.0.0.1:8000/ios-notifications/device/'
-	device_data = urllib2.urlopen(url)
-	print device_data
+
+	if request.method == 'POST':
+		try:
+			TOKEN = request.POST['token']
+			service_id = request.POST['service_id']
+			service_id = 2
+			service = APNService.objects.get(pk=service_id)
+			device = Device.objects.create(token=TOKEN, service=service)
+
+			#NEED TO CHANGE TO ACTUALLY POSTING TO DEVICE CREATE METHOD IN CLASS
+			client = Client()
+			resp = client.post(reverse('ios-notifications-device-create'),
+	                                {'token': device.token,
+	                                 'service': service.id})
+			content = resp.content
+			device_json = json.loads(content)
+			#device_data = urllib2.urlopen(url)
+		except Exception as e:
+			print 'Error retrieving device data: {0}'.format(e)
+	else:
+		rtn_dict['msg'] = 'Called using GET instead of POST'
+
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+def updateDevice(request):
+	rtn_dict = {'success': False, "msg": ""}
+	try:
+		#device_id = request.POST['device_id']
+		device_id = 1
+		device = Device.objects.get(pk=device_id)
+		#token = device.token
+		token = TOKEN
+		#service_id = request.POST['service_id']
+		service_id = 2
+		service = APNService.objects.get(pk=service_id)
+		
+		kwargs = {'token': token, 'service__id': service.id}
+		url = reverse('ios-notifications-device', kwargs=kwargs)
+		client = Client()
+		resp = client.put(url, 'users=%d&platform=iPhone' % request.user.id,
+                               content_type='application/x-www-form-urlencode')
+		device_json = json.loads(resp.content)
+		print device_json
+	except Exception as e:
+		print 'Error updating device: {0}'.format(e)
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 

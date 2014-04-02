@@ -27,7 +27,8 @@ class BaseResource(object):
         if method in self.allowed_methods:
             if hasattr(self, method.lower()):
                 if method == 'PUT':
-                    request.PUT = QueryDict(request.raw_post_data).copy()
+
+                    request.PUT = QueryDict(request.body).copy()
                 return getattr(self, method.lower())(request, **kwargs)
 
             return HttpResponseNotImplemented()
