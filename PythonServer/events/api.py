@@ -377,6 +377,40 @@ def getEventCreatorLocation(request, event_id):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@csrf_exempt
+def updateInvitedFriendLocation(request, invited_friend_id):
+    rtn_dict = {'success': False, "msg": ""}
+
+    if request.method == 'POST':
+        try:
+            invited_friend = InvitedFriend.objects.get(pk=invited_friend_id)
+
+            invited_friend.latitude = request.POST['latitude']
+            invited_friend.longitude = request.POST['longitude']
+            invited_friend.coordinates = request.POST['coordinates']
+            invited_friend.save()
+        except Exception as e:
+            logger.info('Error updating invited friend {0} location: {1}'.format(invited_friend_id, e))
+            rtn_dict['msg'] = 'Error updating invited friend {0} location: {1}'.format(invited_friend_id, e)
+    else:
+        rtn_dict['msg'] = 'Not POST'
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+def getInvitedFriendLocation(request, invited_friend_id):
+    rtn_dict = {'success': False, "msg": ""}
+    try:
+        invited_friend = InvitedFriend.objects.get(pk=invited_friend_id)
+        rtn_dict['location'] = invited_friend.coordinates
+        rtn_dict['success'] = True
+        rtn_dict['msg'] = 'successfully pulled invited friend location'
+    except Exception as e:
+        logger.info('Error getting event invited friend {0} location: {1}'.format(invited_friend_id, e))
+        rtn_dict['msg'] = 'Error getting event invited friend {0} location: {1}'.format(invited_friend_id, e)
+
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
 #@login_required
 @csrf_exempt
 def selectAttending(request, event_id):

@@ -12,6 +12,7 @@ class Event(models.Model):
     location_name = models.CharField(max_length=255, null=True, blank=True)
     location_address = models.CharField(max_length=255, null=True, blank=True)
     location_coordinates = models.CharField(max_length=255, null=True, blank=True)
+    event_type = models.CharField(max_length=255, null=True, blank=True)
     event_over = models.NullBooleanField(default=False)
     cancelled = models.NullBooleanField(default=False)
     private = models.NullBooleanField(default=False)
@@ -46,6 +47,9 @@ class InvitedFriend(models.Model):
     user = models.ForeignKey(Account)
     event = models.ForeignKey(Event)
     can_invite_friends = models.NullBooleanField(default=True)
+    coordinates = models.CharField(max_length=255, null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
     attending = models.NullBooleanField(null=True, blank=True, default=False) # need to be changed to attending!!
     class Meta:
         unique_together = (('user', 'event',),)
