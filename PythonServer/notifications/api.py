@@ -72,6 +72,8 @@ def registerDevice(request):
 			content = resp.content
 			device_json = json.loads(content)
 			#device_data = urllib2.urlopen(url)
+			rtn_dict['success'] = True
+			rtn_dict['msg'] = 'Successfully registered device :{0}'.format(device.id)
 		except Exception as e:
 			print 'Error retrieving device data: {0}'.format(e)
 	else:
@@ -99,18 +101,29 @@ def updateDevice(request):
                                content_type='application/x-www-form-urlencode')
 		device_json = json.loads(resp.content)
 		print device_json
+		rtn_dict['success'] = True
+		rtn_dict['msg'] = 'Successfully updated device {0}'.format(device.id)
 	except Exception as e:
 		print 'Error updating device: {0}'.format(e)
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-def getDeviceDetails(request):
+def getDeviceDetails(request, device_id):
 	rtn_dict = {'success': False, "msg": ""}
-	device_token = "2"
-	device_service= "5"
-	url = '/ios-notifications/device/{0}/{1}/'.format(device_token, device_service)
-	device_data = urllib2.urlopen(url)
-	print device_data
+	try:
+		device = Device.objects.get(pk=device_id)
+		kwargs = {'token': device.token, 'service__id': device.service.id}
+		url = reverse('ios-notifications-device', kwargs=kwargs)
+		client = Client()
+		resp = client.get(url)
+		content = resp.content
+		device_json = json.loads(content)
+		print device_json
+		rtn_dict['success'] = True
+		rtn_dict['msg'] = 'Successfully got device details for device {0}'.format(device_id)
+	except Exception as e:
+		print 'Error getting device details for device {0}'.format(device_id)
+		rtn_dict['msg'] = 'Error getting device details for device {0}'.format(device_id)
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
