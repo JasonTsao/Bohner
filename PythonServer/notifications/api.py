@@ -52,6 +52,20 @@ def createNotification(request):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+def sendNotification(devices_to_notify):
+	rtn_dict = {'success': False, "msg": ""}
+	service = APNService.objects.get(pk=2)
+	notification = Notification.objects.create(message='Test message', service=service)
+	devices = []
+	for device in devices_to_notify:
+		try:
+			devices.append(Device.objects.get(pk=device))
+		except Exception as e:
+			print "Couldn't grab device with device id {0}: {1}".format(device, e)
+	service.push_notification_to_devices(notification=notification, devices=devices)
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
 def registerDevice(request):
 	rtn_dict = {'success': False, "msg": ""}
 	url = 'http://127.0.0.1:8000/ios-notifications/device/'
