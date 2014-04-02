@@ -377,6 +377,13 @@ def getEventCreatorLocation(request, event_id):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+# TODO
+def requestInvitedFriendLocation(request, invited_friend_id):
+    rtn_dict = {'success': False, "msg": ""}
+    #send notification to invited friend ti request their location 
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
 @csrf_exempt
 def updateInvitedFriendLocation(request, invited_friend_id):
     rtn_dict = {'success': False, "msg": ""}

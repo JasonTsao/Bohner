@@ -15,6 +15,7 @@ urlpatterns = patterns("events.api",
                         url(r"^creator_location/(\d+)", "getEventCreatorLocation"),
                         url(r"^invited_friend_location/update/(\d+)", "updateInvitedFriendLocation"),
                         url(r"^invited_friend_location/(\d+)", "getInvitedFriendLocation"),
+                        url(r"^request/invited_friend_location/(\d+)", "requestInvitedFriendLocation"),
                         )
 
 urlpatterns += patterns("events.views",
