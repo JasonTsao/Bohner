@@ -57,7 +57,7 @@ def registerUser(request):
 
 			r = R.r
 			#PUSH NOTIFICATIONS
-			token = request.POST.get('device_token', "abcdefg")
+			token = request.POST.get('device_token', None)
 			if token is not None:
 				# Strip out any special characters that may be in the token
 				token = re.sub('<|>|\s', '', token)
