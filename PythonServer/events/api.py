@@ -13,6 +13,7 @@ from django.db.models import Max
 from django.forms.models import model_to_dict
 from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth.models import User
+from ios_notifications.models import APNService, Notification, Device
 from accounts.models import Account, AccountLink
 from accounts.api import pushToNOSQLSet, pushToNOSQLHash
 from notifications.api import eventPushNotification, sendPushNotification

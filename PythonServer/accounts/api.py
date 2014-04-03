@@ -10,6 +10,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from django.core.serializers.json import DjangoJSONEncoder
 from django.forms.models import model_to_dict
+from ios_notifications.models import APNService, Notification, Device
 from accounts.models import Account, AccountLink, Group, AccountSetting, AccountSettings
 from events.models import Event, InvitedFriend
 from django.contrib.auth.hashers import make_password
@@ -167,7 +168,7 @@ def addFriend(request):
 				link.save()
 
 				second_link = AccountLink(account_user=friend, friend=account)
-				second_link.save()
+				second_link.save(create_notification=True)
 
 				redis_key = 'account.{0}.friends.set'.format(account.id)
 				friend_dict = json.dumps({'id': friend.id, 'pf_pic': friend.profile_pic, 'name': friend.display_name})

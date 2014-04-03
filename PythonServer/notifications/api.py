@@ -45,24 +45,28 @@ def createAPNService(request):
 	service = APNService.objects.create(name='test-service', hostname='127.0.0.1', certificate=cert, private_key=key)
 
 
-def createNotification(request):
-	rtn_dict = {'success': False, "msg": ""}
-	service = APNService.objects.get(pk=2)
-	notification = Notification.objects.create(message='Test message', service=service)
-	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+def createNotification(message, custom_payload=False):
+	service = APNService.objects.get(hostname='gateway.push.apple.com', name='sandbox')
+	notification = Notification(message=message, service=service)
+	if custom_payload:
+		notification.custom_payload = custom_payload
+	notification.badge = None
+	notification.save()
+	return notification
 
 
-def sendNotification(devices_to_notify):
+def sendNotification(notification, device_tokens):
 	rtn_dict = {'success': False, "msg": ""}
-	service = APNService.objects.get(pk=2)
-	notification = Notification.objects.create(message='Test message', service=service)
-	devices = []
-	for device in devices_to_notify:
-		try:
-			devices.append(Device.objects.get(pk=device))
-		except Exception as e:
-			print "Couldn't grab device with device id {0}: {1}".format(device, e)
-	service.push_notification_to_devices(notification=notification, devices=devices)
+
+	try:
+		service = APNService.objects.get(hostname='gateway.push.apple.com', name='sandbox')
+		devices = Device.objects.filter(token__in=device_tokens, service=service)
+		service.push_notification_to_devices(notification=notification, devices=devices, chunk_size=200)
+		rtn_dict['success'] = True
+		rtn_dict['msg'] = 'successfully pushed notifications to devices {0}'.format(device_tokens)
+	except Exception as e:
+			print "Error sending push notifications: {1}".format(e)
+			rtn_dict['msg'] = "Error sending push notifications: {1}".format(e)
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
@@ -73,10 +77,9 @@ def registerDevice(request):
 	if request.method == 'POST':
 		try:
 			TOKEN = request.POST['token']
-			service_id = request.POST['service_id']
-			service_id = 2
-			service = APNService.objects.get(pk=service_id)
+			service = APNService.objects.get(hostname='gateway.push.apple.com', name='sandbox')
 			device = Device.objects.create(token=TOKEN, service=service)
+			device.add(request.user)
 
 			#NEED TO CHANGE TO ACTUALLY POSTING TO DEVICE CREATE METHOD IN CLASS
 			client = Client()
@@ -104,9 +107,7 @@ def updateDevice(request):
 		device = Device.objects.get(pk=device_id)
 		#token = device.token
 		token = TOKEN
-		#service_id = request.POST['service_id']
-		service_id = 2
-		service = APNService.objects.get(pk=service_id)
+		service = APNService.objects.get(hostname='gateway.push.apple.com', name='sandbox')
 		
 		kwargs = {'token': token, 'service__id': service.id}
 		url = reverse('ios-notifications-device', kwargs=kwargs)
@@ -114,7 +115,6 @@ def updateDevice(request):
 		resp = client.put(url, 'users=%d&platform=iPhone' % request.user.id,
                                content_type='application/x-www-form-urlencode')
 		device_json = json.loads(resp.content)
-		print device_json
 		rtn_dict['success'] = True
 		rtn_dict['msg'] = 'Successfully updated device {0}'.format(device.id)
 	except Exception as e:

@@ -1,6 +1,8 @@
 import timedelta
 from django.db import models
 from django.contrib.auth.models import User
+from ios_notifications.models import APNService, Notification, Device
+from notifications.api import createNotification, sendNotification
 
 GENDER = (
     ('male', 'Male'),
@@ -69,6 +71,19 @@ class AccountLink(models.Model):
     invited_count = models.IntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
     blocked = models.NullBooleanField(default=False)
+
+    def save(self, create_notification=None, *args, **kwargs):
+        if not self.pk and create_notification:
+            message = "You have just been joined by {0} on Meep".format(self.friend.user_name)
+            custom_payload = {"joined_by_name": friend.user_name, "joined_by_id": friend.id}
+            custom_payload = json.dumps(custom_payload)
+            notification = createNotification(message, custom_payload)
+            tokens = []
+            user = account_user.user
+            device = Device.objects.get(users__pk=user.id)
+            tokens.append(device.token)
+            sendNotification(notification, tokens)
+        super(AccountLink, self).save()
 
     def __unicode__(self):
         return str('{0} : {1}'.format(self.account_user.user_name,self.friend.user_name))

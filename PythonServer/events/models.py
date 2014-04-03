@@ -1,5 +1,6 @@
 from django.db import models
 from accounts.models import Account
+from ios_notifications.models import APNService, Notification, Device
 
 
 class Event(models.Model):
