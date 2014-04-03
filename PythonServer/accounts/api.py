@@ -1,6 +1,7 @@
 import json
 import logging
 import ast
+import re
 from celery import task
 from PythonServer.settings import RETURN_LIST_SIZE
 from django.http import HttpResponse, HttpResponseRedirect
@@ -13,6 +14,7 @@ from django.forms.models import model_to_dict
 from ios_notifications.models import APNService, Notification, Device
 from accounts.models import Account, AccountLink, Group, AccountSetting, AccountSettings
 from events.models import Event, InvitedFriend
+from notifications.api import registerDevice
 from django.contrib.auth.hashers import make_password
 from django.views.decorators.csrf import csrf_exempt
 from forms import RegisterForm
@@ -54,6 +56,16 @@ def registerUser(request):
 			account.save()
 
 			r = R.r
+			#PUSH NOTIFICATIONS
+			token = request.POST.get('device_token', "abcdefg")
+			if token is not None:
+				# Strip out any special characters that may be in the token
+				token = re.sub('<|>|\s', '', token)
+				registerDevice(user, token)
+				device_token_key = 'account.{0}.device_tokens.hash'.format(account.id)
+				token_dict = {str(token): True}
+				r.hmset(device_token_key, token_dict)
+			
 			user_key = 'account.{0}.hash'.format(account.id)
 			r.hmset(user_key, model_to_dict(account))
 

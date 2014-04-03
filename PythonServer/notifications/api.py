@@ -70,55 +70,39 @@ def sendNotification(notification, device_tokens):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-def registerDevice(request):
-	rtn_dict = {'success': False, "msg": ""}
-	url = 'http://127.0.0.1:8000/ios-notifications/device/'
-
-	if request.method == 'POST':
-		try:
-			TOKEN = request.POST['token']
-			service = APNService.objects.get(hostname='gateway.push.apple.com', name='sandbox')
-			device = Device.objects.create(token=TOKEN, service=service)
-			device.add(request.user)
-
-			#NEED TO CHANGE TO ACTUALLY POSTING TO DEVICE CREATE METHOD IN CLASS
-			client = Client()
-			resp = client.post(reverse('ios-notifications-device-create'),
-	                                {'token': device.token,
-	                                 'service': service.id})
-			content = resp.content
-			device_json = json.loads(content)
-			#device_data = urllib2.urlopen(url)
-			rtn_dict['success'] = True
-			rtn_dict['msg'] = 'Successfully registered device :{0}'.format(device.id)
-		except Exception as e:
-			print 'Error retrieving device data: {0}'.format(e)
-	else:
-		rtn_dict['msg'] = 'Called using GET instead of POST'
-
-	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+def registerDevice(user, token):
+	service = APNService.objects.get(hostname='gateway.push.apple.com', name='sandbox')
+	device = Device(token=token, service=service)
+	device.save()
+	device.users.add(user)
+	return True
 
 
 def updateDevice(request):
 	rtn_dict = {'success': False, "msg": ""}
-	try:
-		#device_id = request.POST['device_id']
-		device_id = 1
-		device = Device.objects.get(pk=device_id)
-		#token = device.token
-		token = TOKEN
-		service = APNService.objects.get(hostname='gateway.push.apple.com', name='sandbox')
-		
-		kwargs = {'token': token, 'service__id': service.id}
-		url = reverse('ios-notifications-device', kwargs=kwargs)
-		client = Client()
-		resp = client.put(url, 'users=%d&platform=iPhone' % request.user.id,
-                               content_type='application/x-www-form-urlencode')
-		device_json = json.loads(resp.content)
-		rtn_dict['success'] = True
-		rtn_dict['msg'] = 'Successfully updated device {0}'.format(device.id)
-	except Exception as e:
-		print 'Error updating device: {0}'.format(e)
+	if request.method == 'PUT':
+		try:
+			device = Device.objects.get(token=request.PUT['token'], service=request.PUT['service'])
+		except Device.DoesNotExist:
+			return JSONResponse({'error': 'Device with token %s and service %s does not exist' %
+                                (request.PUT['token'], request.PUT['service__id'])}, status=400)
+
+		if 'users' in request.PUT:
+			try:
+				user_ids = request.PUT.getlist('users')
+				device.users.remove(*[u.id for u in device.users.all()])
+				device.users.add(*User.objects.filter(id__in=user_ids))
+			except (ValueError, IntegrityError) as e:
+				return JSONResponse({'error': e.message}, status=400)
+			del request.PUT['users']
+
+		device.is_active = request.PUT['is_active']
+		device.platform = request.PUT['platform']
+		device.display = request.PUT['display']
+		device.os_version = request.PUT['os_version']
+		device.save()
+	else:
+		'Request method was {0} not PUT'.format(request.method)
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
@@ -126,13 +110,7 @@ def getDeviceDetails(request, device_id):
 	rtn_dict = {'success': False, "msg": ""}
 	try:
 		device = Device.objects.get(pk=device_id)
-		kwargs = {'token': device.token, 'service__id': device.service.id}
-		url = reverse('ios-notifications-device', kwargs=kwargs)
-		client = Client()
-		resp = client.get(url)
-		content = resp.content
-		device_json = json.loads(content)
-		print device_json
+		rtn_dict['device'] = model_to_dict(device)
 		rtn_dict['success'] = True
 		rtn_dict['msg'] = 'Successfully got device details for device {0}'.format(device_id)
 	except Exception as e:
