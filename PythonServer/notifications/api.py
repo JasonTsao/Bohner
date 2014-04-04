@@ -16,10 +16,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.serializers.json import DjangoJSONEncoder
 from django.forms.models import model_to_dict
-from accounts.api import pushToNOSQLHash, pushToNOSQLSet
-from accounts.models import Account, AccountLink, Group, AccountSetting, AccountSettings
-from events.models import Event, EventNotification, EventCreatorLocation, EventComment, InvitedFriend
-from notifications.models import Notification as MeepNotification
+#from accounts.api import pushToNOSQLHash, pushToNOSQLSet
+#from accounts.models import Account, AccountLink, Group, AccountSetting, AccountSettings
+#from events.models import Event, EventNotification, EventCreatorLocation, EventComment, InvitedFriend
+#from notifications.models import Notification as MeepNotification
 from rediscli import r as R
 
 logger = logging.getLogger("django.request")
@@ -119,7 +119,7 @@ def getDeviceDetails(request, device_id):
 		rtn_dict['msg'] = 'Error getting device details for device {0}'.format(device_id)
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
-
+'''
 def createEventNotificationDict(notification):
 	notification_dict = {}
 	try:
@@ -184,3 +184,4 @@ def eventPushNotification(event, notification_type, notification_creator):
 
 def sendPushNotification(recipient, notification):
 	pass
+'''

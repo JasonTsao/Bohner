@@ -1,6 +1,6 @@
 from django.db import models
-from events.models import *
-from accounts.models import *
+from events.models import Event
+from accounts.models import Account
 
 
 # Create your models here.
