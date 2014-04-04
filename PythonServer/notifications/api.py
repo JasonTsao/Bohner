@@ -26,6 +26,7 @@ logger = logging.getLogger("django.request")
 
 TOKEN = '0fd12510cfe6b0a4a89dc7369c96df956f991e66131dab63398734e8000d0029'
 TEST_PEM = os.path.abspath(os.path.join(os.path.dirname(__file__), 'test.pem'))
+DEV_PEM = os.path.abspath(os.path.join(os.path.dirname(__file__), 'meep_dev_key.pem'))
 
 SSL_SERVER_COMMAND = ('openssl', 's_server', '-accept', '2195', '-cert', TEST_PEM)
 
