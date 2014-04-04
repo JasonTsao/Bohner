@@ -238,6 +238,7 @@ registerUser: /acct/register
 			"username": string,
 			"password1": string,
 			"email": email,
+			"device_token": string(64 bit),
 		}
 	Response:
 		{
