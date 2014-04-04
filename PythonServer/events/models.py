@@ -21,6 +21,25 @@ class Event(models.Model):
 
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+    def save(self, invited_friends=None,*args, **kwargs):
+        if self.pk and invited_friends:
+            message = "{0} updated {1}".format(self.creator.user_name, event.name)
+            custom_payload = {
+                            "creator_name": self.creator.user_name,
+                            "creator_id": self.creator.id,
+                            "event_name": self.name,
+                            "event_id": self.id}
+            custom_payload = json.dumps(custom_payload)
+            notification = createNotification(message, custom_payload)
+            tokens = []
+            devices = []
+            for invited_friend in invited_friends:
+                device = Device.objects.get(users__pk=invited_friend.user.user.id)
+                tokens.append(device.token)
+            sendNotification(notification, tokens)
+        super(Event, self).save()
+
     def __unicode__(self):
         return str('{0} : {1}'.format(self.pk,self.name))
 
@@ -55,11 +74,21 @@ class InvitedFriend(models.Model):
     class Meta:
         unique_together = (('user', 'event',),)
 
-    def save(self, user=None, *args, **kwargs):
-        if not self.pk:
-            event_notification = EventNotification(recipient=self.user, event=self.event)
-            event_notification.message = '{0} has invited you to {1}'.format(self.event.creator.user_name, self.event.name)
-            event_notification.save()
+    def save(self, create_notification=None, *args, **kwargs):
+        if not self.pk and create_notification:
+            message = "You have been invited by {0} to go to {1}".format(self.event.creator.user_name, self.event.name)
+            custom_payload = {
+                            "invited_by_name": self.event.creator.user_name,
+                            "invited_by_id": self.event.creator.id,
+                            "event_name": self.event.name,
+                            "event_id": self.event.id}
+            custom_payload = json.dumps(custom_payload)
+            notification = createNotification(message, custom_payload)
+            tokens = []
+            user = user.user
+            device = Device.objects.get(users__pk=user.id)
+            tokens.append(device.token)
+            sendNotification(notification, tokens)
         super(InvitedFriend, self).save()
 
 
