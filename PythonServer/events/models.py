@@ -24,20 +24,23 @@ class Event(models.Model):
 
     def save(self, invited_friends=None,*args, **kwargs):
         if self.pk and invited_friends:
-            message = "{0} updated {1}".format(self.creator.user_name, event.name)
-            custom_payload = {
-                            "creator_name": self.creator.user_name,
-                            "creator_id": self.creator.id,
-                            "event_name": self.name,
-                            "event_id": self.id}
-            custom_payload = json.dumps(custom_payload)
-            notification = createNotification(message, custom_payload)
-            tokens = []
-            devices = []
-            for invited_friend in invited_friends:
-                device = Device.objects.get(users__pk=invited_friend.user.user.id)
-                tokens.append(device.token)
-            sendNotification(notification, tokens)
+            try:
+                message = "{0} updated {1}".format(self.creator.user_name, event.name)
+                custom_payload = {
+                                "creator_name": self.creator.user_name,
+                                "creator_id": self.creator.id,
+                                "event_name": self.name,
+                                "event_id": self.id}
+                custom_payload = json.dumps(custom_payload)
+                notification = createNotification(message, custom_payload)
+                tokens = []
+                devices = []
+                for invited_friend in invited_friends:
+                    device = Device.objects.get(users__pk=invited_friend.user.user.id)
+                    tokens.append(device.token)
+                sendNotification(notification, tokens)
+            except Exception as e:
+                print 'Unable to send push notification when updateing event {0}'.format(self.id)
         super(Event, self).save()
 
     def __unicode__(self):
@@ -75,20 +78,23 @@ class InvitedFriend(models.Model):
         unique_together = (('user', 'event',),)
 
     def save(self, create_notification=None, *args, **kwargs):
-        if not self.pk and create_notification:
-            message = "You have been invited by {0} to go to {1}".format(self.event.creator.user_name, self.event.name)
-            custom_payload = {
-                            "invited_by_name": self.event.creator.user_name,
-                            "invited_by_id": self.event.creator.id,
-                            "event_name": self.event.name,
-                            "event_id": self.event.id}
-            custom_payload = json.dumps(custom_payload)
-            notification = createNotification(message, custom_payload)
-            tokens = []
-            user = user.user
-            device = Device.objects.get(users__pk=user.id)
-            tokens.append(device.token)
-            sendNotification(notification, tokens)
+        try:
+            if not self.pk and create_notification:
+                message = "You have been invited by {0} to go to {1}".format(self.event.creator.user_name, self.event.name)
+                custom_payload = {
+                                "invited_by_name": self.event.creator.user_name,
+                                "invited_by_id": self.event.creator.id,
+                                "event_name": self.event.name,
+                                "event_id": self.event.id}
+                custom_payload = json.dumps(custom_payload)
+                notification = createNotification(message, custom_payload)
+                tokens = []
+                user = user.user
+                device = Device.objects.get(users__pk=user.id)
+                tokens.append(device.token)
+                sendNotification(notification, tokens)
+        except Exception as e:
+                print 'Unable to send push notification to {0} abouve updating event {1}'.format(self.user.id, self.event.id)
         super(InvitedFriend, self).save()
 
 
@@ -99,8 +105,29 @@ class EventComment(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     private =  models.NullBooleanField(default=False)
     modified = models.DateTimeField(auto_now=True, blank=True, null=True)
-    def save(self, user=None, *args, **kwargs):
+    def save(self, invited_friends=None, *args, **kwargs):
         if not self.pk:
+            try:
+                message = "{0} added comment to event {1}".format(self.user.user_name, self.event.name)
+                custom_payload = {
+                                "creator_name": self.user.user_name,
+                                "creator_id": self.user.id,
+                                "event_name": self.event.name,
+                                "event_id": self.event.id}
+                custom_payload = json.dumps(custom_payload)
+                notification = createNotification(message, custom_payload)
+                tokens = []
+                devices = []
+                if self.user != self.event.creator:
+                    device = Device.objects.get(users__pk=self.user.user.id)
+                    tokens.append(device.token)
+                for invited_friend in invited_friends:
+                    device = Device.objects.get(users__pk=invited_friend.user.user.id)
+                    tokens.append(device.token)
+                sendNotification(notification, tokens)
+            except Exception as e:
+                print 'Unable to send push notification when updateing event {0}'.format(self.id)
+            '''
             if self.user != self.event.creator:
                 event_notification = EventNotification(recipient=self.event.creator, event=self.event)
                 event_notification.message = '{0} said on event {1} : {2}'.format(self.user.user_name, self.event.name, self.description)
@@ -112,6 +139,7 @@ class EventComment(models.Model):
                     event_notification = EventNotification(recipient=invited_friend.user, event=self.event)
                     event_notification.message = '{0} said on event {1} : {2}'.format(self.user.user_name, self.event.name, self.description)
                     event_notification.save()
+            '''
         super(EventComment, self).save()
 
 

@@ -74,15 +74,18 @@ class AccountLink(models.Model):
 
     def save(self, create_notification=None, *args, **kwargs):
         if not self.pk and create_notification:
-            message = "You have just been joined by {0} on Meep".format(self.friend.user_name)
-            custom_payload = {"joined_by_name": friend.user_name, "joined_by_id": friend.id}
-            custom_payload = json.dumps(custom_payload)
-            notification = createNotification(message, custom_payload)
-            tokens = []
-            user = account_user.user
-            device = Device.objects.get(users__pk=user.id)
-            tokens.append(device.token)
-            sendNotification(notification, tokens)
+            try:
+                message = "You have just been joined by {0} on Meep".format(self.friend.user_name)
+                custom_payload = {"joined_by_name": friend.user_name, "joined_by_id": friend.id}
+                custom_payload = json.dumps(custom_payload)
+                notification = createNotification(message, custom_payload)
+                tokens = []
+                user = account_user.user
+                device = Device.objects.get(users__pk=user.id)
+                tokens.append(device.token)
+                sendNotification(notification, tokens)
+            except Exception as e:
+                print 'Unable to send push notification when {0} tried adding friend {1}'.format(self.account_user, self.friend)
         super(AccountLink, self).save()
 
     def __unicode__(self):
