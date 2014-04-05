@@ -7,7 +7,6 @@ from binascii import hexlify, unhexlify
 
 from django.db import models
 from django.conf import settings
-
 try:
     from django.utils.timezone import now as dt_now
 except ImportError:
@@ -182,6 +181,7 @@ class Notification(models.Model):
     """
     service = models.ForeignKey(APNService)
     message = models.CharField(max_length=200, blank=True, help_text='Alert message to display to the user. Leave empty if no alert should be displayed to the user.')
+    recipients = models.ManyToManyField(getattr(settings, 'AUTH_USER_MODEL', 'auth.User'), null=True, blank=True)
     badge = models.PositiveIntegerField(null=True, blank=True, help_text='New application icon badge number. Set to None if the badge number must not be changed.')
     sound = models.CharField(max_length=30, blank=True, help_text='Name of the sound to play. Leave empty if no sound should be played.')
     created_at = models.DateTimeField(auto_now_add=True)

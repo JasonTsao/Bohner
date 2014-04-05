@@ -75,12 +75,13 @@ class AccountLink(models.Model):
     def save(self, create_notification=None, *args, **kwargs):
         if not self.pk and create_notification:
             try:
+                user = self.account_user.user
                 message = "You have just been joined by {0} on Meep".format(self.friend.user_name)
                 custom_payload = {"joined_by_name": friend.user_name, "joined_by_id": friend.id}
                 custom_payload = json.dumps(custom_payload)
                 notification = createNotification(message, custom_payload)
+                notification.recipients.add(user)
                 tokens = []
-                user = account_user.user
                 device = Device.objects.get(users__pk=user.id)
                 tokens.append(device.token)
                 sendNotification(notification, tokens)

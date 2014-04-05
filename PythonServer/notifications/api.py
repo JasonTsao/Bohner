@@ -79,6 +79,16 @@ def registerDevice(user, token):
 	return True
 
 
+def registerUserToDevice(request, device_id):
+	rtn_dict = {'success': False, "msg": ""}
+	try:
+		device = Device.objects.get(pk=device_id)
+		device.users.add(request.user)
+	except Exception as e:
+		rtn_dict['msg'] = "Error registering user to device: {0}".format(e)
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
 def updateDevice(request):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'PUT':

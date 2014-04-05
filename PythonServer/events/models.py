@@ -41,6 +41,7 @@ class Event(models.Model):
                 for invited_friend in invited_friends:
                     device = Device.objects.get(users__pk=invited_friend.user.user.id)
                     tokens.append(device.token)
+                    notification.recipients.add(invited_friend.user.user)
                 sendNotification(notification, tokens)
             except Exception as e:
                 print 'Unable to send push notification when updateing event {0}: {1}'.format(self.id, e)
@@ -91,8 +92,9 @@ class InvitedFriend(models.Model):
                                 "event_id": self.event.id}
                 custom_payload = json.dumps(custom_payload)
                 notification = createNotification(message, custom_payload)
+                notification.recipients.add(self.user.user)
                 tokens = []
-                user = user.user
+                user = self.user.user
                 device = Device.objects.get(users__pk=user.id)
                 tokens.append(device.token)
                 sendNotification(notification, tokens)
@@ -124,9 +126,11 @@ class EventComment(models.Model):
                 if self.user != self.event.creator:
                     device = Device.objects.get(users__pk=self.user.user.id)
                     tokens.append(device.token)
+                    notification.recipients.add(self.user.user)
                 for invited_friend in invited_friends:
                     device = Device.objects.get(users__pk=invited_friend.user.user.id)
                     tokens.append(device.token)
+                    notification.recipients.add(invited_friend.user.user)
                 sendNotification(notification, tokens)
             except Exception as e:
                 print 'Unable to send push notification when updateing event {0}'.format(self.id)
