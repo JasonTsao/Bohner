@@ -3,6 +3,7 @@ import logging
 import ast
 import urllib2
 import os
+import time
 
 from ios_notifications.management.commands.push_ios_notification import Command
 from ios_notifications.models import APNService, Notification, Device
@@ -17,7 +18,6 @@ from django.contrib.auth.models import User
 from django.core.serializers.json import DjangoJSONEncoder
 from django.forms.models import model_to_dict
 from ios_notifications.utils import generate_cert_and_pkey
-#from accounts.api import pushToNOSQLHash, pushToNOSQLSet
 #from accounts.models import Account, AccountLink, Group, AccountSetting, AccountSettings
 #from events.models import Event, EventNotification, EventCreatorLocation, EventComment, InvitedFriend
 #from notifications.models import Notification as MeepNotification
@@ -31,6 +31,19 @@ DEV_PEM = os.path.abspath(os.path.join(os.path.dirname(__file__), 'meep_dev_key.
 
 SSL_SERVER_COMMAND = ('openssl', 's_server', '-accept', '2195', '-cert', TEST_PEM)
 
+
+@task
+def pushToNOSQLHash(key, push_item):
+	r = R.r
+	r.hmset(key, push_item)
+
+
+@task
+def pushToNOSQLSet(key, push_item, delete_item, score):
+	r = R.r
+	r.zadd(key, push_item, score)
+	if delete_item:
+		r.zrem(key, delete_item)
 
 def testIOSNotificationAPI(request):
 	rtn_dict = {'success': False, "msg": ""}
@@ -55,6 +68,15 @@ def createNotification(message, custom_payload=False):
 	notification.badge = None
 	notification.save()
 	return notification
+
+
+def addNotificationToRedis(notification, user):
+	account = Account.objects.get(user=user)
+	redis_key = 'account.{0}.notifications.set'.format(account.id)
+	score = int(time.mktime(time.strptime(notification.created_at, "%Y-%m-%d"))) if notification.created_at else int(notification.created_at.strftime("%s"))
+	notification_dict = model_to_dict(notification)
+	notification_dict = json.dumps(notification_dict)
+	pushToNOSQLSet(redis_key, notification_dict, False,score)
 
 
 def sendNotification(notification, device_tokens):
