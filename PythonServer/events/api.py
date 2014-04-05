@@ -16,7 +16,7 @@ from django.contrib.auth.models import User
 from ios_notifications.models import APNService, Notification, Device
 from accounts.models import Account, AccountLink
 from accounts.api import pushToNOSQLSet, pushToNOSQLHash
-from notifications.api import eventPushNotification, sendPushNotification
+#from notifications.api import eventPushNotification, sendPushNotification
 from models import Event, EventComment, EventNotification, InvitedFriend
 from django.views.decorators.csrf import csrf_exempt
 from rediscli import r as R
@@ -334,7 +334,11 @@ def updateEvent(request, event_id):
         except:
             pass
 
-        event.save()
+        try:
+            invited_friends = InvitedFriend.objects.filter(event=event)
+            event.save(invited_friends=invited_friends)
+        except:
+            event.save()
         pushToNOSQLHash(redis_key, model_to_dict(event))
         rtn_dict['success'] = True
         rtn_dict['msg'] = 'Successfully updated {0}!'.format(event.name)

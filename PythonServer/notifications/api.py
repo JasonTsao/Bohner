@@ -16,6 +16,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.serializers.json import DjangoJSONEncoder
 from django.forms.models import model_to_dict
+from ios_notifications.utils import generate_cert_and_pkey
 #from accounts.api import pushToNOSQLHash, pushToNOSQLSet
 #from accounts.models import Account, AccountLink, Group, AccountSetting, AccountSettings
 #from events.models import Event, EventNotification, EventCreatorLocation, EventComment, InvitedFriend
@@ -43,7 +44,7 @@ def testIOSNotificationAPI(request):
 
 def createAPNService(request):
 	cert, key = generate_cert_and_pkey()
-	service = APNService.objects.create(name='test-service', hostname='127.0.0.1', certificate=cert, private_key=key)
+	service = APNService.objects.create(name='sandbox', hostname='gateway.push.apple.com', certificate=cert, private_key=key)
 
 
 def createNotification(message, custom_payload=False):
@@ -58,7 +59,6 @@ def createNotification(message, custom_payload=False):
 
 def sendNotification(notification, device_tokens):
 	rtn_dict = {'success': False, "msg": ""}
-
 	try:
 		service = APNService.objects.get(hostname='gateway.push.apple.com', name='sandbox')
 		devices = Device.objects.filter(token__in=device_tokens, service=service)

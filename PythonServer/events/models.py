@@ -1,6 +1,8 @@
+import json
 from django.db import models
 from accounts.models import Account
 from ios_notifications.models import APNService, Notification, Device
+from notifications.api import createNotification, sendNotification
 
 
 class Event(models.Model):
@@ -25,12 +27,13 @@ class Event(models.Model):
     def save(self, invited_friends=None,*args, **kwargs):
         if self.pk and invited_friends:
             try:
-                message = "{0} updated {1}".format(self.creator.user_name, event.name)
+                message = "{0} updated {1}".format(self.creator.user_name, self.name)
                 custom_payload = {
                                 "creator_name": self.creator.user_name,
                                 "creator_id": self.creator.id,
                                 "event_name": self.name,
                                 "event_id": self.id}
+
                 custom_payload = json.dumps(custom_payload)
                 notification = createNotification(message, custom_payload)
                 tokens = []
@@ -40,7 +43,7 @@ class Event(models.Model):
                     tokens.append(device.token)
                 sendNotification(notification, tokens)
             except Exception as e:
-                print 'Unable to send push notification when updateing event {0}'.format(self.id)
+                print 'Unable to send push notification when updateing event {0}: {1}'.format(self.id, e)
         super(Event, self).save()
 
     def __unicode__(self):
