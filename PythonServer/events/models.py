@@ -42,7 +42,7 @@ class Event(models.Model):
                     device = Device.objects.get(users__pk=invited_friend.user.user.id)
                     tokens.append(device.token)
                     notification.recipients.add(invited_friend.user.user)
-                    addNotificationToRedis(notification, invited_friend.user.user)
+                    addNotificationToRedis(notification, invited_friend.user.id)
                 sendNotification(notification, tokens)
             except Exception as e:
                 print 'Unable to send push notification when updateing event {0}: {1}'.format(self.id, e)
@@ -94,7 +94,7 @@ class InvitedFriend(models.Model):
                 custom_payload = json.dumps(custom_payload)
                 notification = createNotification(message, custom_payload)
                 notification.recipients.add(self.user.user)
-                addNotificationToRedis(notification, self.user.user)
+                addNotificationToRedis(notification, self.user.id)
                 tokens = []
                 user = self.user.user
                 device = Device.objects.get(users__pk=user.id)
@@ -129,28 +129,15 @@ class EventComment(models.Model):
                     device = Device.objects.get(users__pk=self.user.user.id)
                     tokens.append(device.token)
                     notification.recipients.add(self.user.user)
-                    addNotificationToRedis(notification, self.user.user)
+                    addNotificationToRedis(notification, self.user.id)
                 for invited_friend in invited_friends:
                     device = Device.objects.get(users__pk=invited_friend.user.user.id)
                     tokens.append(device.token)
                     notification.recipients.add(invited_friend.user.user)
-                    addNotificationToRedis(notification, self.user.user)
+                    addNotificationToRedis(notification, self.user.id)
                 sendNotification(notification, tokens)
             except Exception as e:
                 print 'Unable to send push notification when updateing event {0}'.format(self.id)
-            '''
-            if self.user != self.event.creator:
-                event_notification = EventNotification(recipient=self.event.creator, event=self.event)
-                event_notification.message = '{0} said on event {1} : {2}'.format(self.user.user_name, self.event.name, self.description)
-                event_notification.save()
-
-            invited_friends = InvitedFriend.objects.filter(event=self.event)
-            for invited_friend in invited_friends:
-                if invited_friend != self.user:
-                    event_notification = EventNotification(recipient=invited_friend.user, event=self.event)
-                    event_notification.message = '{0} said on event {1} : {2}'.format(self.user.user_name, self.event.name, self.description)
-                    event_notification.save()
-            '''
         super(EventComment, self).save()
 
 

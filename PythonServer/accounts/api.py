@@ -14,7 +14,7 @@ from django.forms.models import model_to_dict
 from ios_notifications.models import APNService, Notification, Device
 from accounts.models import Account, AccountLink, Group, AccountSetting, AccountSettings
 from events.models import Event, InvitedFriend
-from notifications.api import registerDevice
+from notifications.api import registerDevice, createNotification, sendNotification, addNotificationToRedis
 from django.contrib.auth.hashers import make_password
 from django.views.decorators.csrf import csrf_exempt
 from forms import RegisterForm
@@ -254,8 +254,19 @@ def createGroup(request):
 			r_group_key = 'group.{0}.hash'.format(group.id)
 			pushToNOSQLHash(r_group_key, model_to_dict(group))
 
+			message = "You have been added to group {0} by {1}".format(group.name, group.group_creator.user_name)
+			custom_payload = {'creator_name': group.group_creator.user_name,
+								'creator_id': group.group_creator.id,
+								'group_name': group.name,
+								'group_id': group.id}
+			custom_payload = json.dumps(custom_payload)
+			notification = createNotification(message, custom_payload)
 			#add group to groups for members
 			for member in group.members.all():
+				#creating notification to send to group members
+				recipient = member.user
+				notification.recipients.add(recipient)
+				addNotificationToRedis(notification, member.id)
 				r_groups_key = 'account.{0}.groups.set'.format(member.id)
 				pushToNOSQLSet(r_groups_key, group.id, False, 0)
 		except Exception as e:

@@ -70,10 +70,9 @@ def createNotification(message, custom_payload=False):
 	return notification
 
 
-def addNotificationToRedis(notification, user):
-	account = Account.objects.get(user=user)
-	redis_key = 'account.{0}.notifications.set'.format(account.id)
-	score = int(time.mktime(time.strptime(notification.created_at, "%Y-%m-%d"))) if notification.created_at else int(notification.created_at.strftime("%s"))
+def addNotificationToRedis(notification, account_id):
+	redis_key = 'account.{0}.notifications.set'.format(account_id)
+	score = int(notification.created_at.strftime("%s"))
 	notification_dict = model_to_dict(notification)
 	notification_dict = json.dumps(notification_dict)
 	pushToNOSQLSet(redis_key, notification_dict, False,score)

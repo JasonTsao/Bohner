@@ -81,7 +81,7 @@ class AccountLink(models.Model):
                 custom_payload = json.dumps(custom_payload)
                 notification = createNotification(message, custom_payload)
                 notification.recipients.add(user)
-                addNotificationToRedis(notification, user)
+                addNotificationToRedis(notification, self.account_user.id)
                 tokens = []
                 device = Device.objects.get(users__pk=user.id)
                 tokens.append(device.token)
