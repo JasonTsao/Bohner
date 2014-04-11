@@ -7,7 +7,7 @@ from notifications.api import createNotification, sendNotification
 
 class Event(models.Model):
     creator = models.ForeignKey(Account)
-    name = models.CharField(max_length=255, default='New Event')
+    name = models.CharField(max_length=255, null=True, blank=True)
     start_time = models.DateTimeField(db_index=True, null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
