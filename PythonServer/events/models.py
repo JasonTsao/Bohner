@@ -31,7 +31,7 @@ class Event(models.Model):
                 custom_payload = {
                                 "creator_name": self.creator.user_name,
                                 "creator_id": self.creator.id,
-                                "event_name": self.name,
+                                "event_description": self.description,
                                 "event_id": self.id}
 
                 custom_payload = json.dumps(custom_payload)
@@ -89,7 +89,7 @@ class InvitedFriend(models.Model):
                 custom_payload = {
                                 "invited_by_name": self.event.creator.user_name,
                                 "invited_by_id": self.event.creator.id,
-                                "event_name": self.event.name,
+                                "event_description": self.event.description,
                                 "event_id": self.event.id}
                 custom_payload = json.dumps(custom_payload)
                 notification = createNotification(message, custom_payload)
@@ -119,7 +119,7 @@ class EventComment(models.Model):
                 custom_payload = {
                                 "creator_name": self.user.user_name,
                                 "creator_id": self.user.id,
-                                "event_name": self.event.name,
+                                "event_description": self.event.description,
                                 "event_id": self.event.id}
                 custom_payload = json.dumps(custom_payload)
                 notification = createNotification(message, custom_payload)

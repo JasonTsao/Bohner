@@ -134,7 +134,7 @@ def createEvent(request):
             r.hmset(redis_key, model_to_dict(event))
 
             created_events_key = 'account.{0}.owned_events.set'.format(user.id)
-            event_dict = {'event_id': event.id, 'event_name': event.name, 'start_time': str(event.start_time)}
+            event_dict = {'event_id': event.id, 'event_description': event.description, 'start_time': str(event.start_time)}
             event_dict = json.dumps(event_dict)
             # will probably have to change when we decide how time data will come int
             score = int(time.mktime(time.strptime(event.start_time, "%Y-%m-%d"))) if event.start_time else int(event.created.strftime("%s"))
@@ -165,7 +165,7 @@ def createEvent(request):
                         pushToNOSQLSet(redis_friend_key, invited_friend_dict, False, account_link.invited_count)
                         redis_user_events_key = 'account.{0}.events.set'.format(friend.id)
                         event_dict = json.dumps({'event_id': event.id, 
-                                        'event_name': event.name,
+                                        'event_desription': event.description,
                                         'start_time': str(event.start_time)})
                         pushToNOSQLSet(redis_user_events_key, event_dict, False, score)
                     except Exception as e:
@@ -269,8 +269,8 @@ def inviteFriends(request, event_id):
                         redis_user_events_key = 'account.{0}.events.set'.format(friend.id)
                         event_dict = json.dumps({
                                         'event_id': event.id,
-                                        'event_name': event.name,
-                                        'start_time': str(event.start_time)})
+                                        'event_description': event.name,
+                                        'start_time': str(event.description)})
                         pushToNOSQLSet(redis_user_events_key, event_dict, False, 0)
                         rtn_dict['success'] = True
                         rtn_dict['msg'] = 'Successfully added users'
