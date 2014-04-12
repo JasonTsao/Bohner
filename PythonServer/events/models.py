@@ -85,7 +85,7 @@ class InvitedFriend(models.Model):
     def save(self, create_notification=None, *args, **kwargs):
         try:
             if not self.pk and create_notification:
-                message = "You have been invited by {0} to go to {1}".format(self.event.creator.user_name, self.event.name)
+                message = "{0} said {1}".format(self.event.creator.user_name, self.event.description)
                 custom_payload = {
                                 "invited_by_name": self.event.creator.user_name,
                                 "invited_by_id": self.event.creator.id,
@@ -115,7 +115,7 @@ class EventComment(models.Model):
     def save(self, invited_friends=None, *args, **kwargs):
         if not self.pk:
             try:
-                message = "{0} added comment to event {1}".format(self.user.user_name, self.event.name)
+                message = "{0} said {1}".format(self.user.user_name, self.description)
                 custom_payload = {
                                 "creator_name": self.user.user_name,
                                 "creator_id": self.user.id,
