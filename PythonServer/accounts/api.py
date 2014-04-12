@@ -225,13 +225,17 @@ def getFriends(request, user_id):
 		r = R.r
 		redis_key = 'account.{0}.friends.set'.format(user_id)
 		friends_list = r.zrange(redis_key, friends_range_start, friends_range_start + RETURN_LIST_SIZE)
-
 		if not friends_list:
 			friends_list = []
-			friend_links = AccountLink.objects.select_related('friend').filter(account_user=request.user).order_by('invited_count')
+			account = Account.objects.get(pk=user_id)
+			friend_links = AccountLink.objects.select_related('friend').filter(account_user=account).order_by('invited_count')
 			for link in friend_links:
 				if link.friend.is_active:
-					friends_list.append(model_to_dict(link.friend))
+					friend_dict = {'pf_pic': None, 'id':None, 'name': None}
+					friend_dict['pf_pic'] = link.friend.profile_pic
+					friend_dict['id'] = link.friend.id
+					friend_dict['name'] = link.friend.user_name
+					friends_list.append(json.dumps(friend_dict))
 			rtn_dict['success'] = True
 			rtn_dict['msg'] = 'successfully retrieved friend list'
 			rtn_dict['friends'] = friends_list

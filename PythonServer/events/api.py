@@ -133,10 +133,7 @@ def createEvent(request):
             event.friends_can_invite = request.POST['friends_can_invite'] # not saving nullboolean fields correctly 
             event.cancelled = request.POST['cancelled']
             event.private = request.POST['private']
-            print 'event'
-            print model_to_dict(event)
             event.save()
-            print 'created event in sql'
             r = R.r
             redis_key = 'event.{0}.hash'.format(event.id)
             r.hmset(redis_key, model_to_dict(event))
@@ -204,7 +201,6 @@ def getInvitedFriends(request, event_id):
         r = R.r
         r_invited_friends_key = 'event.{0}.invited_friends.set'.format(event_id)
         invited_friends = r.zrange(r_invited_friends_key, friend_range_start, friend_range_start + RETURN_LIST_SIZE)
-        invited_friends = False
         if not invited_friends:
             invited_friends = []
             invited_friends_list = InvitedFriend.objects.select_related('user').filter(event=event_id)
