@@ -40,8 +40,9 @@ def pushToNOSQLSet(key, push_item, delete_item, score):
 @csrf_exempt
 def registerUser(request):
 	rtn_dict = {'success': False, "msg": ""}
-
+	print 'registering user'
 	if request.method == 'POST':
+		print 'in the post'
 		try:
 			new_user = User(username=request.POST.get("username"))
 			new_user.is_active = True
@@ -54,7 +55,7 @@ def registerUser(request):
 			account.email = user.email
 			account.user_name = user.username
 			account.save()
-
+			print 'account saved!'
 			r = R.r
 			#PUSH NOTIFICATIONS
 			token = request.POST.get('device_token', None)
