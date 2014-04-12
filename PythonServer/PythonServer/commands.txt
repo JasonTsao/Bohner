@@ -1,3 +1,4 @@
 gunicorn -c gunicorn.conf PythonServer.wsgi:application
 sudo service nginx restart
-sudo nano /etc/nginx/sites-enabled/default 
+sudo nano /etc/nginx/sites-enabled/default
+https://github.com/beathan/Django-iOS-Auth
