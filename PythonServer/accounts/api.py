@@ -59,12 +59,15 @@ def registerUser(request):
 			#PUSH NOTIFICATIONS
 			token = request.POST.get('device_token', None)
 			if token is not None:
-				# Strip out any special characters that may be in the token
-				token = re.sub('<|>|\s', '', token)
-				registerDevice(user, token)
-				device_token_key = 'account.{0}.device_tokens.hash'.format(account.id)
-				token_dict = {str(token): True}
-				r.hmset(device_token_key, token_dict)
+				try:
+					# Strip out any special characters that may be in the token
+					token = re.sub('<|>|\s', '', token)
+					registerDevice(user, token)
+					device_token_key = 'account.{0}.device_tokens.hash'.format(account.id)
+					token_dict = {str(token): True}
+					r.hmset(device_token_key, token_dict)
+				except Exception as e:
+					print 'Error allowing push notifications {0}'.format(e)
 			
 			user_key = 'account.{0}.hash'.format(account.id)
 			r.hmset(user_key, model_to_dict(account))
@@ -88,7 +91,11 @@ def updateUser(request):
 
     if request.method == 'POST':
 		try:
-			user = User.objects.get(pk=request.user.id)
+			if not request.user:
+				user_id = request.POST['user']
+			else:
+				user_id = request.user.id
+			user = User.objects.get(pk=user_id)
 			account = Account.objects.get(user=user)
 			r = R.r 
 			redis_key = 'account.{0}.hash'.format(account.id)
@@ -173,7 +180,11 @@ def addFriend(request):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
-			account = Account.objects.get(user=request.user, is_active=True)
+			if not request.user:
+				user_id = request.POST['user']
+			else:
+				user_id = request.user.id
+			account = Account.objects.get(user=user_id, is_active=True)
 			friend = Account.objects.get(pk=request.POST['friend_id'], is_active=True)
 			if account.id != friend.id:
 				link = AccountLink(account_user=account, friend=friend)

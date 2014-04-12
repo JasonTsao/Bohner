@@ -113,11 +113,17 @@ def createEvent(request):
     rtn_dict = {'success': False, "msg": ""}
     if request.method == 'POST':
         try:
-            user = Account.objects.get(user=request.user)
+            if not request.user:
+                user_id = request.POST['user']
+            else:
+                user_id = request.user.id
+            user = Account.objects.get(user=user_id)
             event = Event(creator=user)
             event.name = request.POST['name']
-            event.start_time = request.POST['start_time']
-            event.end_time = request.POST['end_time']
+            if request.POST['start_time']:
+                event.start_time = request.POST['start_time']
+            if request.POST['end_time']:
+                event.end_time = request.POST['end_time']
             event.description = request.POST['description']
             event.meetup_spot = request.POST['meetup_spot']
             event.location_name = request.POST['location_name']
@@ -127,8 +133,10 @@ def createEvent(request):
             event.friends_can_invite = request.POST['friends_can_invite'] # not saving nullboolean fields correctly 
             event.cancelled = request.POST['cancelled']
             event.private = request.POST['private']
+            print 'event'
+            print model_to_dict(event)
             event.save()
-            
+            print 'created event in sql'
             r = R.r
             redis_key = 'event.{0}.hash'.format(event.id)
             r.hmset(redis_key, model_to_dict(event))
@@ -137,6 +145,7 @@ def createEvent(request):
             event_dict = {'event_id': event.id, 'event_name': event.name, 'event_description': event.description, 'start_time': str(event.start_time)}
             event_dict = json.dumps(event_dict)
             # will probably have to change when we decide how time data will come int
+            #score = int(time.mktime(time.strptime(event.start_time, "%Y-%m-%d"))) if event.start_time else int(event.created.strftime("%s"))
             score = int(time.mktime(time.strptime(event.start_time, "%Y-%m-%d"))) if event.start_time else int(event.created.strftime("%s"))
             pushToNOSQLSet(created_events_key, event_dict, False,score)
 

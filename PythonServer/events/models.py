@@ -49,7 +49,7 @@ class Event(models.Model):
         super(Event, self).save()
 
     def __unicode__(self):
-        return str('{0} : {1}'.format(self.pk,self.name))
+        return str('{0} : {1}'.format(self.pk,self.description))
 
 
 class EventCreatorLocation(models.Model):
