@@ -269,8 +269,8 @@ def inviteFriends(request, event_id):
                         redis_user_events_key = 'account.{0}.events.set'.format(friend.id)
                         event_dict = json.dumps({
                                         'event_id': event.id,
-                                        'event_description': event.name,
-                                        'start_time': str(event.description)})
+                                        'event_description': event.description,
+                                        'start_time': str(event.start_time)})
                         pushToNOSQLSet(redis_user_events_key, event_dict, False, 0)
                         rtn_dict['success'] = True
                         rtn_dict['msg'] = 'Successfully added users'
