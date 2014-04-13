@@ -44,9 +44,13 @@ def registerUser(request):
 		try:
 			print 'POST is'
 			print request.POST
+			logger.info('POST is')
+			logger.info(request.POST)
 
 			print 'request'
 			print request
+			logger.info('request is')
+			logger.info(request)
 			new_user = User(username=request.POST.get("username"))
 			new_user.is_active = True
 			new_user.password = make_password(request.POST.get('password1'))
