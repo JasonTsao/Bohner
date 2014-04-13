@@ -42,6 +42,11 @@ def registerUser(request):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
+			print 'POST is'
+			print request.POST
+
+			print 'request'
+			print request
 			new_user = User(username=request.POST.get("username"))
 			new_user.is_active = True
 			new_user.password = make_password(request.POST.get('password1'))
