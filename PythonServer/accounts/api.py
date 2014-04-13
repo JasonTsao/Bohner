@@ -81,15 +81,18 @@ def registerUser(request):
 
 
 			rtn_dict['success'] = True
+			rtn_dict['post'] = request.POST
 			rtn_dict['msg'] = 'Successfully registered new user'
 			rtn_dict['user_name'] = request.POST['username']
 			rtn_dict['password1'] = request.POST['password1']
 			rtn_dict['password2'] = request.POST['password2']
 			rtn_dict['email'] = request.POST['email']
+			
 		except Exception as e:
 			print 'Error registering new user: {0}'.format(e)
 			logger.info('Error registering new user: {0}'.format(e))
 			rtn_dict['msg'] = 'Error registering new user: {0}'.format(e)
+			rtn_dict['post'] = request.POST
 			try:
 				rtn_dict['user_name'] = request.POST['username']
 				rtn_dict['password1'] = request.POST['password1']
@@ -97,6 +100,7 @@ def registerUser(request):
 				rtn_dict['email'] = request.POST['email']
 			except Exception as e:
 				rtn_dict['extra_error'] = 'Error grabbing post data {0}'.format(e)
+				rtn_dict['post'] = request.POST
 	else:
 		rtn_dict['msg'] = 'Not POST'
 
