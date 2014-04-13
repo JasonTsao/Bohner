@@ -117,6 +117,8 @@ def createEvent(request):
     rtn_dict = {'success': False, "msg": ""}
     if request.method == 'POST':
         try:
+            logger.info('POST DATA')
+            logger.info(request.POST)
             if not request.user.id:
                 user_id = request.POST['user']
             else:
