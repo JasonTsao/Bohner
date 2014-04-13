@@ -156,10 +156,12 @@ def createEvent(request):
                         user_id = user_dict['user_id']
                         can_invite_friends = user_dict['can_invite_friends']
                         friend = Account.objects.get(pk=user_id)
+
+                        #check to see if the invited_friend is a real friend
+                        account_link = AccountLink.objects.get(account_user=user, friend=friend) 
                         invited_friend = InvitedFriend(event=event, user=friend, can_invite_friends=can_invite_friends)
                         invited_friend.save()
 
-                        account_link = AccountLink.objects.get(account_user=user, friend=friend)
                         account_link.invited_count += 1
                         account_link.save()
 
@@ -262,13 +264,13 @@ def inviteFriends(request, event_id):
                         user_id = user_dict['user_id']
                         can_invite_friends = user_dict['can_invite_friends']
                         friend = Account.objects.get(pk=user_id)
+                        account_link = AccountLink.objects.get(account_user=account, friend=friend)
                         invited_friend = InvitedFriend(event=event, user=friend, can_invite_friends=can_invite_friends)
                         invited_friend.save()
 
-                        account_link = AccountLink.objects.get(account_user=account, friend=friend)
+                        
                         account_link.invited_count += 1
                         account_link.save()
-
                         #Save to Redis
                         redis_key = 'event.{0}.invited_friends.set'.format(event_id)
                         invited_friend_dict = json.dumps({
