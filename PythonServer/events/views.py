@@ -14,7 +14,6 @@ logger = logging.getLogger("django.request")
 
 
 def createEvent(request):
-    account = Account.objects.get(user=request.user)
     form = EventForm()
     #form.creator = account
     return render_to_response("events/create_event.html", {'form': form}, context_instance=RequestContext(request))

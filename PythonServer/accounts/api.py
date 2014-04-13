@@ -42,11 +42,6 @@ def registerUser(request):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
-			logger.info('POST is')
-			logger.info(request.POST)
-
-			logger.info('request is')
-			logger.info(request)
 			new_user = User(username=request.POST.get("username"))
 			new_user.is_active = True
 			new_user.password = make_password(request.POST.get('password1'))
@@ -98,12 +93,11 @@ def updateUser(request):
 
     if request.method == 'POST':
 		try:
-			if not request.user:
-				user_id = request.POST['user']
-			else:
-				user_id = request.user.id
-			user = User.objects.get(pk=user_id)
-			account = Account.objects.get(user=user)
+			if not request.user.id:
+                user_id = request.POST['user']
+            else:
+                user_id = request.user.id
+			account = Account.objects.get(user__id=user_id)
 			r = R.r 
 			redis_key = 'account.{0}.hash'.format(account.id)
 			redis_account = r.hgetall(redis_key)
@@ -187,11 +181,11 @@ def addFriend(request):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
-			if not request.user:
-				user_id = request.POST['user']
-			else:
-				user_id = request.user.id
-			account = Account.objects.get(user=user_id, is_active=True)
+			if not request.user.id:
+                user_id = request.POST['user']
+            else:
+                user_id = request.user.id
+			account = Account.objects.get(user__id=user_id, is_active=True)
 			friend = Account.objects.get(pk=request.POST['friend_id'], is_active=True)
 			if account.id != friend.id:
 				link = AccountLink(account_user=account, friend=friend)
@@ -224,17 +218,17 @@ def addFriend(request):
 
 
 #login_required
-def getFriends(request, user_id):
+def getFriends(request, account_id):
 	rtn_dict = {'success': False, "msg": "", "friends": []}
 
 	try:
 		friends_range_start = int(request.GET.get('range_start', 0))
 		r = R.r
-		redis_key = 'account.{0}.friends.set'.format(user_id)
+		redis_key = 'account.{0}.friends.set'.format(account_id)
 		friends_list = r.zrange(redis_key, friends_range_start, friends_range_start + RETURN_LIST_SIZE)
 		if not friends_list:
 			friends_list = []
-			account = Account.objects.get(pk=user_id)
+			account = Account.objects.get(pk=account_id)
 			friend_links = AccountLink.objects.select_related('friend').filter(account_user=account).order_by('invited_count')
 			for link in friend_links:
 				if link.friend.is_active:
@@ -263,7 +257,11 @@ def createGroup(request):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
-			account = Account.objects.get(user=request.user)
+			if not request.user.id:
+                user_id = request.POST['user']
+            else:
+                user_id = request.user.id
+			account = Account.objects.get(user__id=user_id)
 			group = Group(group_creator=account)
 			group.name = request.POST['name']
 			group.save()
@@ -306,7 +304,11 @@ def getGroup(request, group_id):
 		r_group_key = 'group.{0}.hash'.format(group_id)
 		group = r.hgetall(r_group_key)
 		if not group:
-			account = Account.objects.get(user=request.user, is_active=True)
+			if not request.user.id:
+                user_id = request.POST['user']
+            else:
+                user_id = request.user.id
+			account = Account.objects.get(user__id=user_id, is_active=True)
 			group = Group.objects.get(pk=group_id)
 			group = model_to_dict(group)
 		rtn_dict['group'] = group
@@ -324,7 +326,11 @@ def getGroups(request):
 	try:
 		groups_range_start = int(request.GET.get('range_start', 0))
 		group_list = []
-		account = Account.objects.get(user=request.user)
+		if not request.user.id:
+            user_id = request.POST['user']
+        else:
+            user_id = request.user.id
+		account = Account.objects.get(user__id=user_id)
 		r = R.r
 		r_groups_key = 'account.{0}.groups.set'.format(account.id)
 		r_groups = r.zrange(r_groups_key, groups_range_start, groups_range_start + RETURN_LIST_SIZE)
@@ -354,7 +360,11 @@ def addUsersToGroup(request, group_id):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
-			creator = Account.objects.get(user=request.user, is_active=True)
+			if not request.user.id:
+                user_id = request.POST['user']
+            else:
+                user_id = request.user.id
+			creator = Account.objects.get(user__id=user_id, is_active=True)
 			group = Group.objects.get(pk=group_id)
 
 			members_to_add = ast.literal_eval(json.loads(request.POST['new_members']))
@@ -387,7 +397,11 @@ def removeUsersFromGroup(request, group_id):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
-			creator = Account.objects.get(user=request.user, is_active=True)
+			if not request.user.id:
+                user_id = request.POST['user']
+            else:
+                user_id = request.user.id
+			creator = Account.objects.get(user__id=user_id, is_active=True)
 			group = Group.objects.get(pk=group_id, group_creator=creator)
 			members_to_remove = request.POST['members_to_remove']
 			for member_id in members_to_remove:
@@ -409,7 +423,11 @@ def updateGroup(request, group_id):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
-			creator = Account.objects.get(user=request.user, is_active=True)
+			if not request.user.id:
+                user_id = request.POST['user']
+            else:
+                user_id = request.user.id
+			creator = Account.objects.get(user__id=user_id, is_active=True)
 			group = Group.objects.get(pk=group_id, group_creator=creator)
 			group.name = request.POST['new_name']
 			group.save()

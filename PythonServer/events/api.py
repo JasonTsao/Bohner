@@ -44,7 +44,11 @@ def getEvent(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
 
     try:
-        account = Account.objects.get(user=request.user)
+        if not request.user.id:
+            user_id = request.POST['user']
+        else:
+            user_id = request.user.id
+        account = Account.objects.get(user__id=user_id)
         event = Event.objects.get(pk=event_id)
         is_authorized = checkIfAuthorized(event, account)
         if is_authorized:
@@ -113,11 +117,11 @@ def createEvent(request):
     rtn_dict = {'success': False, "msg": ""}
     if request.method == 'POST':
         try:
-            if not request.user:
+            if not request.user.id:
                 user_id = request.POST['user']
             else:
                 user_id = request.user.id
-            user = Account.objects.get(user=user_id)
+            user = Account.objects.get(user__id=user_id)
             event = Event(creator=user)
             event.name = request.POST['name']
             if request.POST['start_time']:
@@ -232,9 +236,13 @@ def inviteFriends(request, event_id):
             invited_friends = ast.literal_eval(json.loads(request.POST['invited_friends']))
             event = Event.objects.get(pk=event_id)
 
+            if not request.user.id:
+                user_id = request.POST['user']
+            else:
+                user_id = request.user.id
             # check to see if this use is allowed to invite more friends to event
             try:
-                account = Account.objects.get(user=request.user)
+                account = Account.objects.get(user__id=user_id)
                 if event.creator == account:
                     is_authorized = True
             except:
@@ -437,7 +445,11 @@ def selectAttending(request, event_id):
     if request.method == 'POST':
         try:
             attending = False
-            user = Account.objects.get(user=request.user)
+            if not request.user.id:
+                user_id = request.POST['user']
+            else:
+                user_id = request.user.id
+            user = Account.objects.get(user__id=user_id)
             event = Event.objects.get(pk=event_id)
             invited_friend = InvitedFriend.objects.get(event=event, user=user)
 
@@ -474,7 +486,11 @@ def createEventComment(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     if request.method == 'POST':
         try:
-            account = Account.objects.get(user=request.user)
+            if not request.user.id:
+                user_id = request.POST['user']
+            else:
+                user_id = request.user.id
+            account = Account.objects.get(user__id=user_id)
             event = Event.objects.get(pk=event_id)
             is_authorized = checkIfAuthorized(event, account)
             if is_authorized:
