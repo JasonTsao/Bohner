@@ -191,6 +191,7 @@ def createEvent(request):
             print 'Error creating new event: {0}'.format(e)
             logger.info('Error creating new event: {0}'.format(e))
             rtn_dict['msg'] = 'Error creating new event: {0}'.format(e)
+            rtn_dict['post'] = request.POST
 
     else:
         rtn_dict['msg'] = 'Not POST'
