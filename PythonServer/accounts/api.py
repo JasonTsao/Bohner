@@ -40,9 +40,7 @@ def pushToNOSQLSet(key, push_item, delete_item, score):
 @csrf_exempt
 def registerUser(request):
 	rtn_dict = {'success': False, "msg": ""}
-	print 'registering user'
 	if request.method == 'POST':
-		print 'in the post'
 		try:
 			new_user = User(username=request.POST.get("username"))
 			new_user.is_active = True
@@ -55,7 +53,6 @@ def registerUser(request):
 			account.email = user.email
 			account.user_name = user.username
 			account.save()
-			print 'account saved!'
 			r = R.r
 			#PUSH NOTIFICATIONS
 			token = request.POST.get('device_token', None)
@@ -76,10 +73,21 @@ def registerUser(request):
 
 			rtn_dict['success'] = True
 			rtn_dict['msg'] = 'Successfully registered new user'
+			rtn_dict['user_name'] = request.POST['username']
+			rtn_dict['password1'] = request.POST['password1']
+			rtn_dict['password2'] = request.POST['password2']
+			rtn_dict['email'] = request.POST['email']
 		except Exception as e:
 			print 'Error registering new user: {0}'.format(e)
 			logger.info('Error registering new user: {0}'.format(e))
 			rtn_dict['msg'] = 'Error registering new user: {0}'.format(e)
+			try:
+				rtn_dict['user_name'] = request.POST['username']
+				rtn_dict['password1'] = request.POST['password1']
+				rtn_dict['password2'] = request.POST['password2']
+				rtn_dict['email'] = request.POST['email']
+			except Exception as e:
+				rtn_dict['extra_error'] = 'Error grabbing post data {0}'.format(e)
 	else:
 		rtn_dict['msg'] = 'Not POST'
 
