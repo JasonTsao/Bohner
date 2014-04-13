@@ -133,9 +133,7 @@ def createEvent(request):
             event.location_name = request.POST['location_name']
             event.location_address = request.POST['location_address']
             event.location_coordinates = request.POST['location_coordinates']
-            event.event_over = request.POST['event_over']
             event.friends_can_invite = request.POST['friends_can_invite'] # not saving nullboolean fields correctly 
-            event.cancelled = request.POST['cancelled']
             event.private = request.POST['private']
             event.save()
             r = R.r

@@ -255,6 +255,8 @@ updateUser: /acct/update
 			"first_name": string,
 			"last_name": string,
 			"phone_number": string,
+			"profile_pic": string,
+			"hometown": string,
 			"gender": string,
 			"birthday": %Y-%m-%d,
 			"is_active": boolean,
