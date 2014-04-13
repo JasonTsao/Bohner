@@ -94,9 +94,9 @@ def updateUser(request):
     if request.method == 'POST':
 		try:
 			if not request.user.id:
-                user_id = request.POST['user']
-            else:
-                user_id = request.user.id
+				user_id = request.POST['user']
+			else:
+				user_id = request.user.id
 			account = Account.objects.get(user__id=user_id)
 			r = R.r 
 			redis_key = 'account.{0}.hash'.format(account.id)
@@ -182,9 +182,9 @@ def addFriend(request):
 	if request.method == 'POST':
 		try:
 			if not request.user.id:
-                user_id = request.POST['user']
-            else:
-                user_id = request.user.id
+				user_id = request.POST['user']
+			else:
+				user_id = request.user.id
 			account = Account.objects.get(user__id=user_id, is_active=True)
 			friend = Account.objects.get(pk=request.POST['friend_id'], is_active=True)
 			if account.id != friend.id:
@@ -258,9 +258,9 @@ def createGroup(request):
 	if request.method == 'POST':
 		try:
 			if not request.user.id:
-                user_id = request.POST['user']
-            else:
-                user_id = request.user.id
+				user_id = request.POST['user']
+			else:
+				user_id = request.user.id
 			account = Account.objects.get(user__id=user_id)
 			group = Group(group_creator=account)
 			group.name = request.POST['name']
@@ -305,9 +305,9 @@ def getGroup(request, group_id):
 		group = r.hgetall(r_group_key)
 		if not group:
 			if not request.user.id:
-                user_id = request.POST['user']
-            else:
-                user_id = request.user.id
+				user_id = request.POST['user']
+			else:
+				user_id = request.user.id
 			account = Account.objects.get(user__id=user_id, is_active=True)
 			group = Group.objects.get(pk=group_id)
 			group = model_to_dict(group)
@@ -327,9 +327,9 @@ def getGroups(request):
 		groups_range_start = int(request.GET.get('range_start', 0))
 		group_list = []
 		if not request.user.id:
-            user_id = request.POST['user']
-        else:
-            user_id = request.user.id
+			user_id = request.POST['user']
+		else:
+			user_id = request.user.id
 		account = Account.objects.get(user__id=user_id)
 		r = R.r
 		r_groups_key = 'account.{0}.groups.set'.format(account.id)
@@ -361,9 +361,9 @@ def addUsersToGroup(request, group_id):
 	if request.method == 'POST':
 		try:
 			if not request.user.id:
-                user_id = request.POST['user']
-            else:
-                user_id = request.user.id
+				user_id = request.POST['user']
+			else:
+				user_id = request.user.id
 			creator = Account.objects.get(user__id=user_id, is_active=True)
 			group = Group.objects.get(pk=group_id)
 
@@ -398,9 +398,9 @@ def removeUsersFromGroup(request, group_id):
 	if request.method == 'POST':
 		try:
 			if not request.user.id:
-                user_id = request.POST['user']
-            else:
-                user_id = request.user.id
+				user_id = request.POST['user']
+			else:
+				user_id = request.user.id
 			creator = Account.objects.get(user__id=user_id, is_active=True)
 			group = Group.objects.get(pk=group_id, group_creator=creator)
 			members_to_remove = request.POST['members_to_remove']
@@ -424,9 +424,9 @@ def updateGroup(request, group_id):
 	if request.method == 'POST':
 		try:
 			if not request.user.id:
-                user_id = request.POST['user']
-            else:
-                user_id = request.user.id
+				user_id = request.POST['user']
+			else:
+				user_id = request.user.id
 			creator = Account.objects.get(user__id=user_id, is_active=True)
 			group = Group.objects.get(pk=group_id, group_creator=creator)
 			group.name = request.POST['new_name']
