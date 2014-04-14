@@ -41,6 +41,23 @@ APP_ID					= "1425290317728330"
 APP_SECRET				= "6af15c8c3a845b550379e011fc4f7a83"
 
 
+def syncFacebookFriends(friends, account):
+	for friend_dict in friends:
+		facebook_id = friend_dict['id']
+		print facebook_id
+		try:
+			#find friend with this fb id in our db
+			friend_account = Account.objects.get(facebook_id=facebook_id)
+			account_link = AccountLink(account_user=account,friend=friend_account)
+			account_link.save()
+			account_link = AccountLink(account_user=friend_account,friend=account)
+			account_link.save()
+		except Exception as e:
+			#print 'Trouble finding meep user for fb user {0}'.format(facebook_id)
+			logger.info('Trouble finding meep user for fb user {0}'.format(facebook_id))
+	return
+
+
 def getAccessToken(request):
 	print 'getting access token!'
 	rtn_dict = {"success": False, "msg": ""}
@@ -50,6 +67,7 @@ def getAccessToken(request):
 	redirect_uri = 'http://' + request.META['HTTP_HOST'] + '/acct/getAccessToken'
 	try:
 		graph = GraphAPI()
+		# getting access code
 		content = graph.get(
 			path='oauth/access_token',
 			client_id=APP_ID,
@@ -60,6 +78,7 @@ def getAccessToken(request):
 		access_token = dict(urlparse.parse_qsl(content))['access_token']
 		request_url = CHECK_AUTH + '?access_token=%s' % access_token
 
+		#getting user data dict
 		content_dict = graph.get(
 			path='me',
 			redirect_uri=redirect_uri,
@@ -72,6 +91,9 @@ def getAccessToken(request):
 		else:
 			user_id = request.user.id
 		account = Account.objects.get(user__id=user_id)
+		if not account.facebook_id:
+			account.facebook_id = str(userid)
+			account.save()
 		try:
 			myprofile = FacebookProfile.objects.get(user=account)
 			myprofile.active = True
@@ -81,8 +103,21 @@ def getAccessToken(request):
 			myprofile.get_remote_image()
 			myprofile.active = True
 			myprofile.save()
-			rtn_dict['success'] = True
-			rtn_dict['msg'] = 'successfully got access token'
+
+		# getting user friend list
+		path = str(userid) + '/friends'
+		content_dict = graph.get(
+			path=path,
+			redirect_uri=redirect_uri,
+			access_token=access_token
+		)
+		# getting list from dict of user friends
+		user_friend_list = content_dict['data']
+
+		syncFacebookFriends(user_friend_list, account)
+
+		rtn_dict['success'] = True
+		rtn_dict['msg'] = 'successfully got access token'
 	except Exception as e:
 		print 'error authorizing user: {0}'.format(e)
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
@@ -90,6 +125,7 @@ def getAccessToken(request):
 
 def facebookConnect(request):
 	rtn_dict = {"success": False, "msg": ""}
+	'''
 	try:
 		if not request.user.id:
 			user_id = request.POST['user']
@@ -104,6 +140,7 @@ def facebookConnect(request):
 		return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 	except Exception, e:
 		print e
+	'''
 	callback_url = 'http://localtest.channelfactory.com:8000/acct/getAccessToken'
 	return HttpResponseRedirect(REQUEST_TOKEN_URL + '?client_id=%s&redirect_uri=%s&scope=%s' % (APP_ID, urllib.quote_plus(callback_url),'email,read_friendlists, user_photos'))
 
