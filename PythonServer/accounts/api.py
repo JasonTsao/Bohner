@@ -62,6 +62,7 @@ def syncFacebookFriends(request):
 		user_id = request.POST['user']
 	else:
 		user_id = request.user.id
+	# Try to get a pre-existing Facebook Profile for the signed in user
 	try:
 		account = Account.objects.get(user__id=user_id)
 		facebook = FacebookProfile.objects.get(user=account)
@@ -89,10 +90,24 @@ def syncFacebookFriends(request):
 				try:
 					#find friend with this fb id in our db
 					friend_account = Account.objects.get(facebook_id=facebook_id)
-					account_link = AccountLink(account_user=account,friend=friend_account)
-					account_link.save()
-					account_link = AccountLink(account_user=friend_account,friend=account)
-					account_link.save()
+					try:
+						account_link = AccountLink(account_user=account,friend=friend_account)
+						account_link.save()
+						redis_key = 'account.{0}.friends.set'.format(account.id)
+						friend_dict = json.dumps({'id': friend_account.id, 'pf_pic': friend_account.profile_pic, 'name': friend_account.display_name})
+						pushToNOSQLSet(redis_key, friend_dict, False,0)
+					except:
+						logger.info('Tried creating an AccountLink that already exists')
+						print 'Tried creating an AccountLink that already exists'
+					try:
+						account_link = AccountLink(account_user=friend_account,friend=account)
+						account_link.save()
+						redis_key = 'account.{0}.friends.set'.format(friend_account.id)
+						friend_dict = json.dumps({'id': account.id, 'pf_pic': account.profile_pic, 'name': account.display_name})
+						pushToNOSQLSet(redis_key, friend_dict, False,0)
+					except:
+						logger.info('Tried creating an AccountLink that already exists')
+						print 'Tried creating an AccountLink that already exists'
 				except:
 					pass
 
