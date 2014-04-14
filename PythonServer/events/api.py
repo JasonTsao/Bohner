@@ -85,8 +85,10 @@ def yelpConnect(request):
 
     signed_url = oauth_request.to_url()
     print 'Signed URL: %s' % (signed_url,)
-
-    yelpRequest()
+    host = 'api.yelp.com'
+    path = ''
+    url_params = {}
+    yelpRequest(host, path,url_params, consumer_key, consumer_secret, token, token_secret)
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
