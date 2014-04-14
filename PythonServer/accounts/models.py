@@ -23,7 +23,7 @@ class Account(models.Model):
     email = models.CharField(max_length=255, unique=True)
     facebook_id = models.CharField(max_length=255, null=True, blank=True)
     uber = models.CharField(max_length=255, null=True, blank=True)
-    profile_pic =  models.CharField(max_length=255, null=True, blank=True)
+    profile_pic =  models.ImageField(upload_to="upload/facebook/pf_pic", null=True, blank=True)
     gender = models.CharField(max_length=255, null=True, blank=True, choices=GENDER)
     birthday = models.DateField(null=True,blank=True)
     home_town = models.CharField(max_length=255, null=True, blank=True)

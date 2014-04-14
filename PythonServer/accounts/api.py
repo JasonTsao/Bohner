@@ -7,6 +7,7 @@ import urllib
 import urlparse
 import oauth2 as oauth
 import httplib2
+import datetime
 from celery import task
 from facepy import GraphAPI
 from PythonServer.settings import RETURN_LIST_SIZE
@@ -151,18 +152,36 @@ def getAccessToken(request):
 		else:
 			user_id = request.user.id
 		account = Account.objects.get(user__id=user_id)
-		if not account.facebook_id:
-			account.facebook_id = str(userid)
-			account.save()
 		try:
 			myprofile = FacebookProfile.objects.get(user=account)
 			myprofile.active = True
 			myprofile.update_token(access_token)
+			# COULD POTENTIALLY UPDATE ACCOUNT WITH NEW FB DATA HERE TOO
 		except:
  			myprofile = FacebookProfile(user=account, facebook_id=userid, image_url=(GRAPH_URL + content_dict['username'] + '/picture'), access_token=access_token)
 			myprofile.get_remote_image()
 			myprofile.active = True
 			myprofile.save()
+			account.facebook_id = str(userid)
+			account.first_name = content_dict['first_name']
+			account.last_name = content_dict['last_name']
+			account.email = content_dict['email']
+			account.profile_pic = myprofile.profilePicture
+			try:
+				account.gender = content_dict['gender']
+			except:
+				pass
+			try:
+				birthday_str = content_dict['birthday']
+				birthday = datetime.datetime.strptime(birthday_str, "%m/%d/%Y").date()
+				account.birthday = birthday
+			except Exception as e:
+				print 'error saving birthday: {0}'.format(e)
+			try:
+				account.home_town = content_dict['hometown']['name']
+			except:
+				pass
+			account.save()
 
 		rtn_dict['success'] = True
 		rtn_dict['msg'] = 'successfully got access token'
@@ -188,7 +207,7 @@ def facebookConnect(request):
 	except Exception, e:
 		print 'Error getting user facebook profile: {0}'.format(e)
 	callback_url = 'http://localtest.channelfactory.com:8000/acct/getAccessToken'
-	return HttpResponseRedirect(REQUEST_TOKEN_URL + '?client_id=%s&redirect_uri=%s&scope=%s' % (APP_ID, urllib.quote_plus(callback_url),'email,read_friendlists, user_photos'))
+	return HttpResponseRedirect(REQUEST_TOKEN_URL + '?client_id=%s&redirect_uri=%s&scope=%s' % (APP_ID, urllib.quote_plus(callback_url),'email,read_friendlists, user_photos, user_birthday, user_events, user_groups'))
 
 
 @csrf_exempt
