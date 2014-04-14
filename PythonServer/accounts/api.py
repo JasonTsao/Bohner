@@ -2,7 +2,13 @@ import json
 import logging
 import ast
 import re
+import urllib2
+import urllib
+import urlparse
+import oauth2 as oauth
+import httplib2
 from celery import task
+from facepy import GraphAPI
 from PythonServer.settings import RETURN_LIST_SIZE
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader, Context, RequestContext
@@ -12,7 +18,7 @@ from django.contrib.auth import authenticate, login
 from django.core.serializers.json import DjangoJSONEncoder
 from django.forms.models import model_to_dict
 from ios_notifications.models import APNService, Notification, Device
-from accounts.models import Account, AccountLink, Group, AccountSetting, AccountSettings
+from accounts.models import Account, AccountLink, Group, AccountSetting, AccountSettings, FacebookProfile
 from events.models import Event, InvitedFriend
 from notifications.api import registerDevice, createNotification, sendNotification, addNotificationToRedis
 from django.contrib.auth.hashers import make_password
@@ -21,6 +27,94 @@ from forms import RegisterForm
 from rediscli import r as R
 
 logger = logging.getLogger("django.request")
+
+ACCESS_TOKEN_URL        = "https://graph.facebook.com/oauth/access_token"
+REQUEST_TOKEN_URL       = "https://www.facebook.com/dialog/oauth"
+CHECK_AUTH              = "https://graph.facebook.com/me"
+GRAPH_URL               = "https://graph.facebook.com/"
+VIEW_POSTS_URL          = "https://graph.facebook.com/search?access_token="
+FB_GET_URL              = "https://graph.facebook.com/?id="
+ANOTHER_FB_URL          = "https://api.facebook.com/method/fql.query?query="
+ALT_QUERY_URL           = "https://api-read.facebook.com/restserver.php?method=fql.query&query="
+
+APP_ID					= "1425290317728330"
+APP_SECRET				= "6af15c8c3a845b550379e011fc4f7a83"
+
+
+def getAccessToken(request):
+	print 'getting access token!'
+	rtn_dict = {"success": False, "msg": ""}
+	code = request.GET.get('code')
+	consumer = oauth.Consumer(key=APP_ID, secret=APP_SECRET)
+	client = oauth.Client(consumer)
+	redirect_uri = 'http://' + request.META['HTTP_HOST'] + '/acct/getAccessToken'
+	try:
+		graph = GraphAPI()
+		content = graph.get(
+			path='oauth/access_token',
+			client_id=APP_ID,
+			client_secret=APP_SECRET,
+			redirect_uri=redirect_uri,
+			code=code
+		)
+		access_token = dict(urlparse.parse_qsl(content))['access_token']
+		request_url = CHECK_AUTH + '?access_token=%s' % access_token
+
+		content_dict = graph.get(
+			path='me',
+			redirect_uri=redirect_uri,
+			access_token=access_token
+		)
+
+		userid = content_dict['id']
+		if not request.user.id:
+			user_id = request.POST['user']
+		else:
+			user_id = request.user.id
+		account = Account.objects.get(user__id=user_id)
+		try:
+			myprofile = FacebookProfile.objects.get(user=account)
+			myprofile.active = True
+			myprofile.update_token(access_token)
+		except:
+ 			myprofile = FacebookProfile(user=account, facebook_id=userid, image_url=(GRAPH_URL + content_dict['username'] + '/picture'), access_token=access_token)
+			myprofile.get_remote_image()
+			myprofile.active = True
+			myprofile.save()
+			rtn_dict['success'] = True
+			rtn_dict['msg'] = 'successfully got access token'
+	except Exception as e:
+		print 'error authorizing user: {0}'.format(e)
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+def facebookConnect(request):
+	rtn_dict = {"success": False, "msg": ""}
+	try:
+		if not request.user.id:
+			user_id = request.POST['user']
+		else:
+			user_id = request.user.id
+		account = Account.objects.get(user__id=user_id)
+		facebook = FacebookProfile.objects.get(user=account)
+		facebook.active = True
+		facebook.save()
+		rtn_dict['success'] = True
+		rtn_dict['msg'] = 'Successfully connected to facebook'
+		return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+	except Exception, e:
+		print e
+	callback_url = 'http://localtest.channelfactory.com:8000/acct/getAccessToken'
+	return HttpResponseRedirect(REQUEST_TOKEN_URL + '?client_id=%s&redirect_uri=%s&scope=%s' % (APP_ID, urllib.quote_plus(callback_url),'email,read_friendlists, user_photos'))
+
+
+def addFacebookFriends(request):
+	rtn_dict = {'success': False, "msg": ""} 
+	url = ""
+
+	facebook_friends = urllib2.urlopen(url)
+
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
 @task
@@ -447,7 +541,3 @@ def updateGroup(request, group_id):
 
 def updateAccount(request):
 	pass
-
-
-def syncUserFacebook(request):
-    pass

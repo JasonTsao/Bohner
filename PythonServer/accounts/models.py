@@ -1,8 +1,11 @@
 import timedelta
+import urllib
+import os
 from django.db import models
 from django.contrib.auth.models import User
 from ios_notifications.models import APNService, Notification, Device
 from notifications.api import createNotification, sendNotification
+from django.core.files import File
 
 GENDER = (
     ('male', 'Male'),
