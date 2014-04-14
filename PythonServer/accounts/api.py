@@ -55,25 +55,6 @@ def pushToNOSQLSet(key, push_item, delete_item, score):
 		r.zrem(key, delete_item)
 
 
-'''
-def syncFacebookFriends(friends, account):
-	for friend_dict in friends:
-		facebook_id = friend_dict['id']
-		print facebook_id
-		try:
-			#find friend with this fb id in our db
-			friend_account = Account.objects.get(facebook_id=facebook_id)
-			account_link = AccountLink(account_user=account,friend=friend_account)
-			account_link.save()
-			account_link = AccountLink(account_user=friend_account,friend=account)
-			account_link.save()
-		except Exception as e:
-			#print 'Trouble finding meep user for fb user {0}'.format(facebook_id)
-			logger.info('Trouble finding meep user for fb user {0}'.format(facebook_id))
-	return
-'''
-
-
 def syncFacebookFriends(request):
 	rtn_dict = {"success": False, "msg": "", "fb_pf": False}
 	facebook = None
@@ -105,7 +86,6 @@ def syncFacebookFriends(request):
 			friends = content_dict['data']
 			for friend_dict in friends:
 				facebook_id = friend_dict['id']
-				print facebook_id
 				try:
 					#find friend with this fb id in our db
 					friend_account = Account.objects.get(facebook_id=facebook_id)
@@ -116,8 +96,6 @@ def syncFacebookFriends(request):
 				except:
 					pass
 
-			print 'number of friends'
-			print len(friends)
 			rtn_dict['success'] = True
 			rtn_dict['msg'] = 'Successfully synced users facebook friends who have Meep accounts'
 		except Exception as e:
@@ -193,7 +171,7 @@ def facebookConnect(request):
 		rtn_dict['msg'] = 'Successfully connected to facebook'
 		return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 	except Exception, e:
-		print e
+		print 'Error getting user facebook profile: {0}'.format(e)
 	callback_url = 'http://localtest.channelfactory.com:8000/acct/getAccessToken'
 	return HttpResponseRedirect(REQUEST_TOKEN_URL + '?client_id=%s&redirect_uri=%s&scope=%s' % (APP_ID, urllib.quote_plus(callback_url),'email,read_friendlists, user_photos'))
 
