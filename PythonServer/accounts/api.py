@@ -41,6 +41,21 @@ APP_ID					= "1425290317728330"
 APP_SECRET				= "6af15c8c3a845b550379e011fc4f7a83"
 
 
+@task
+def pushToNOSQLHash(key, push_item):
+	r = R.r
+	r.hmset(key, push_item)
+
+
+@task
+def pushToNOSQLSet(key, push_item, delete_item, score):
+	r = R.r
+	r.zadd(key, push_item, score)
+	if delete_item:
+		r.zrem(key, delete_item)
+
+
+'''
 def syncFacebookFriends(friends, account):
 	for friend_dict in friends:
 		facebook_id = friend_dict['id']
@@ -56,10 +71,62 @@ def syncFacebookFriends(friends, account):
 			#print 'Trouble finding meep user for fb user {0}'.format(facebook_id)
 			logger.info('Trouble finding meep user for fb user {0}'.format(facebook_id))
 	return
+'''
+
+
+def syncFacebookFriends(request):
+	rtn_dict = {"success": False, "msg": "", "fb_pf": False}
+	facebook = None
+	if not request.user.id:
+		user_id = request.POST['user']
+	else:
+		user_id = request.user.id
+	try:
+		account = Account.objects.get(user__id=user_id)
+		facebook = FacebookProfile.objects.get(user=account)
+		rtn_dict['fb_pf'] = True
+	except Exception as e:
+		print 'User facebook profile does not exist for user {0}: {1}'.format(user_id, e)
+		rtn_dict['msg'] = 'User facebook profile does not exist for user {0}: {1}'.format(user_id, e)
+		#should be implied that user needs to sign in through fb and allow permissions before you can sync friends
+
+	if facebook:
+		try:
+			redirect_uri = 'http://' + request.META['HTTP_HOST'] + '/acct/syncFacebookFriends'
+			graph = GraphAPI()
+			# getting user friend list
+			path = str(facebook.facebook_id) + '/friends'
+			content_dict = graph.get(
+				path=path,
+				redirect_uri=redirect_uri,
+				access_token=facebook.access_token
+			)
+			# getting list from dict of user friends
+			friends = content_dict['data']
+			for friend_dict in friends:
+				facebook_id = friend_dict['id']
+				print facebook_id
+				try:
+					#find friend with this fb id in our db
+					friend_account = Account.objects.get(facebook_id=facebook_id)
+					account_link = AccountLink(account_user=account,friend=friend_account)
+					account_link.save()
+					account_link = AccountLink(account_user=friend_account,friend=account)
+					account_link.save()
+				except:
+					pass
+
+			print 'number of friends'
+			print len(friends)
+			rtn_dict['success'] = True
+			rtn_dict['msg'] = 'Successfully synced users facebook friends who have Meep accounts'
+		except Exception as e:
+			print 'Error with facebook graph api for user {0}: {1}'.format(facebook.facebook_id, e)
+
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
 def getAccessToken(request):
-	print 'getting access token!'
 	rtn_dict = {"success": False, "msg": ""}
 	code = request.GET.get('code')
 	consumer = oauth.Consumer(key=APP_ID, secret=APP_SECRET)
@@ -104,18 +171,6 @@ def getAccessToken(request):
 			myprofile.active = True
 			myprofile.save()
 
-		# getting user friend list
-		path = str(userid) + '/friends'
-		content_dict = graph.get(
-			path=path,
-			redirect_uri=redirect_uri,
-			access_token=access_token
-		)
-		# getting list from dict of user friends
-		user_friend_list = content_dict['data']
-
-		syncFacebookFriends(user_friend_list, account)
-
 		rtn_dict['success'] = True
 		rtn_dict['msg'] = 'successfully got access token'
 	except Exception as e:
@@ -125,7 +180,6 @@ def getAccessToken(request):
 
 def facebookConnect(request):
 	rtn_dict = {"success": False, "msg": ""}
-	'''
 	try:
 		if not request.user.id:
 			user_id = request.POST['user']
@@ -140,32 +194,8 @@ def facebookConnect(request):
 		return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 	except Exception, e:
 		print e
-	'''
 	callback_url = 'http://localtest.channelfactory.com:8000/acct/getAccessToken'
 	return HttpResponseRedirect(REQUEST_TOKEN_URL + '?client_id=%s&redirect_uri=%s&scope=%s' % (APP_ID, urllib.quote_plus(callback_url),'email,read_friendlists, user_photos'))
-
-
-def addFacebookFriends(request):
-	rtn_dict = {'success': False, "msg": ""} 
-	url = ""
-
-	facebook_friends = urllib2.urlopen(url)
-
-	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
-
-
-@task
-def pushToNOSQLHash(key, push_item):
-	r = R.r
-	r.hmset(key, push_item)
-
-
-@task
-def pushToNOSQLSet(key, push_item, delete_item, score):
-	r = R.r
-	r.zadd(key, push_item, score)
-	if delete_item:
-		r.zrem(key, delete_item)
 
 
 @csrf_exempt
@@ -203,7 +233,6 @@ def registerUser(request):
 
 
 			rtn_dict['success'] = True
-			rtn_dict['post'] = request.POST
 			rtn_dict['msg'] = 'Successfully registered new user'
 			
 		except Exception as e:
