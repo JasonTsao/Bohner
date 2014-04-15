@@ -108,6 +108,7 @@ def checkIfAuthorized(event, account):
 
 
 #login_required
+@csrf_exempt
 def getEvent(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
 
@@ -145,6 +146,7 @@ def getEvent(request, event_id):
 
 
 #login_required
+@csrf_exempt
 def upcomingEvents(request, account_id):
     rtn_dict = {'success': False, "msg": ""}
     try:
