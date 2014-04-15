@@ -41,7 +41,6 @@ def yelpRequest(host, path, url_params, consumer_key, consumer_secret, token, to
         print 'encoded params'
         print encoded_params
     url = 'http://%s%s?%s' % (host, path, encoded_params)
-    print 'URL: %s' % (url,)
 
     # Sign the URL
     consumer = oauth2.Consumer(consumer_key, consumer_secret)
@@ -54,7 +53,6 @@ def yelpRequest(host, path, url_params, consumer_key, consumer_secret, token, to
     token = oauth2.Token(token, token_secret)
     oauth_request.sign_request(oauth2.SignatureMethod_HMAC_SHA1(), consumer, token)
     signed_url = oauth_request.to_url()
-    print 'Signed URL: %s\n' % (signed_url,)
 
     # Connect
     try:
@@ -67,41 +65,54 @@ def yelpRequest(host, path, url_params, consumer_key, consumer_secret, token, to
         response = json.loads(error.read())
         return response
 
-    #response = request(options.host, '/v2/search', url_params, options.consumer_key, options.consumer_secret, options.token, options.token_secret)
     json_response = json.dumps(response, sort_keys=True, indent=2)
     return json_response
+
 
 #YELP API STUFF
 def yelpConnect(request):
     rtn_dict = {'success': False, "msg": ""}
 
+    country_code = 'US'
+    lang = 'en'
     location = '901 S Vermont Ave, Los Angeles, CA 90006'
+    location_array = location.split(',')
+    #location = 'los angeles 90012'
     host = 'api.yelp.com'
     path = '/v2/search'
     url_params = {}
-    url_params['terms'] = 'ma dang sae'
-    url_params['limit'] = 2
+    url_params['term'] = 'ma dang sae'
+    url_params['limit'] = 5
     url_params['location'] = location
-    #url_params['radius_filter'] = 30000
-    results = yelpRequest(host, path,url_params, consumer_key, consumer_secret, TOKEN, token_secret)
 
-    results = json.loads(results)
+    # run yelp search
+    search_results = json.loads(yelpRequest(host, path,url_params, consumer_key, consumer_secret, TOKEN, token_secret))
+
     list_results = []
+    result_dict = {}
+    business_id = ''
     
-    for business in results['businesses']:
-        result_dict = {}
-        result_dict['url'] = business['url']
-        result_dict['name'] = business['name']
-        result_dict['rating'] = business['rating']
-        result_dict['display_phone'] = business['display_phone']
-        result_dict['rating_img_url_large'] = business['rating_img_url_large']
-        result_dict['address'] = business['location']['address']
-        list_results.append(result_dict)
+    for business in search_results['businesses']:
+        if business['location']['address'][0] == location_array[0]:
+            business_id = business['id']
+            result_dict['id'] = business['id']
+            result_dict['url'] = business['url']
+            result_dict['name'] = business['name']
+            result_dict['rating'] = business['rating']
+            try:
+                result_dict['display_phone'] = business['display_phone']
+            except:
+                result_dict['display_phone'] = ''
+            result_dict['rating_img_url_large'] = business['rating_img_url_large']
+            result_dict['address'] = business['location']['address']
+            break
 
-    rtn_dict['results'] = list_results
-    
-    #path = '/v2/business/{0}'.format(business_id)
-    #url_params = 
+    path = '/v2/business/{0}'.format(business_id)
+    url_params = {}
+    url_params['cc'] = country_code
+    url_params['lang'] = lang
+    business_results = json.loads(yelpRequest(host, path,url_params, consumer_key, consumer_secret, TOKEN, token_secret))
+    rtn_dict['yelp_object'] = business_results
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
