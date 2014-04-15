@@ -6,6 +6,8 @@ import ast
 import datetime
 import time
 import oauth2
+import urllib
+import urllib2
 from PythonServer.settings import RETURN_LIST_SIZE
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader, Context, RequestContext
@@ -36,6 +38,8 @@ def yelpRequest(host, path, url_params, consumer_key, consumer_secret, token, to
     encoded_params = ''
     if url_params:
         encoded_params = urllib.urlencode(url_params)
+        print 'encoded params'
+        print encoded_params
     url = 'http://%s%s?%s' % (host, path, encoded_params)
     print 'URL: %s' % (url,)
 
@@ -61,34 +65,43 @@ def yelpRequest(host, path, url_params, consumer_key, consumer_secret, token, to
             conn.close()
     except urllib2.HTTPError, error:
         response = json.loads(error.read())
-
         return response
 
-    response = request(options.host, '/v2/search', url_params, options.consumer_key, options.consumer_secret, options.token, options.token_secret)
-    print json.dumps(response, sort_keys=True, indent=2)
+    #response = request(options.host, '/v2/search', url_params, options.consumer_key, options.consumer_secret, options.token, options.token_secret)
+    json_response = json.dumps(response, sort_keys=True, indent=2)
+    return json_response
 
 #YELP API STUFF
 def yelpConnect(request):
     rtn_dict = {'success': False, "msg": ""}
-    consumer = oauth2.Consumer(consumer_key, consumer_secret)
-    url = 'http://api.yelp.com/v2/search?term=bars&location=sf'
-    print 'URL: %s' % (url,)
-    oauth_request = oauth2.Request('GET', url, {})
-    oauth_request.update({'oauth_nonce': oauth2.generate_nonce(),
-                          'oauth_timestamp': oauth2.generate_timestamp(),
-                          'oauth_token': TOKEN,
-                          'oauth_consumer_key': consumer_key})
 
-    token = oauth2.Token(TOKEN, token_secret)
-
-    oauth_request.sign_request(oauth2.SignatureMethod_HMAC_SHA1(), consumer, token)
-
-    signed_url = oauth_request.to_url()
-    print 'Signed URL: %s' % (signed_url,)
+    location = '901 S Vermont Ave, Los Angeles, CA 90006'
     host = 'api.yelp.com'
-    path = ''
+    path = '/v2/search'
     url_params = {}
-    yelpRequest(host, path,url_params, consumer_key, consumer_secret, token, token_secret)
+    url_params['terms'] = 'ma dang sae'
+    url_params['limit'] = 2
+    url_params['location'] = location
+    #url_params['radius_filter'] = 30000
+    results = yelpRequest(host, path,url_params, consumer_key, consumer_secret, TOKEN, token_secret)
+
+    results = json.loads(results)
+    list_results = []
+    
+    for business in results['businesses']:
+        result_dict = {}
+        result_dict['url'] = business['url']
+        result_dict['name'] = business['name']
+        result_dict['rating'] = business['rating']
+        result_dict['display_phone'] = business['display_phone']
+        result_dict['rating_img_url_large'] = business['rating_img_url_large']
+        result_dict['address'] = business['location']['address']
+        list_results.append(result_dict)
+
+    rtn_dict['results'] = list_results
+    
+    #path = '/v2/business/{0}'.format(business_id)
+    #url_params = 
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
