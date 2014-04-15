@@ -95,16 +95,6 @@ def yelpConnect(request):
     for business in search_results['businesses']:
         if business['location']['address'][0] == location_array[0]:
             business_id = business['id']
-            result_dict['id'] = business['id']
-            result_dict['url'] = business['url']
-            result_dict['name'] = business['name']
-            result_dict['rating'] = business['rating']
-            try:
-                result_dict['display_phone'] = business['display_phone']
-            except:
-                result_dict['display_phone'] = ''
-            result_dict['rating_img_url_large'] = business['rating_img_url_large']
-            result_dict['address'] = business['location']['address']
             break
 
     path = '/v2/business/{0}'.format(business_id)
