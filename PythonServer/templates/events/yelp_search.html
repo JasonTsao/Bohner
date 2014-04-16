@@ -1,0 +1,39 @@
+
+<script src="/static/js/jquery.min.js"></script>
+<script type="text/javascript" >
+	$(document).ready(function(){
+		$('#search_yelp').click(function(){
+			var term = $('#term').val(), location = $('#location').val()
+			//var dict = {};
+			//dict['user_id'] = 2;
+			//dict['can_invite_friends'] = false;
+			//invited_friends.push(dict);
+
+			console.log(term)
+            console.log(location)
+			$.ajax({
+            type:"POST",
+                    url:"/events/yelpConnect",
+                    data:{
+                        "term": term,
+                        "location": location,
+                    	"csrfmiddlewaretoken": "{{csrf_token}}",	
+                    },
+            success: function(data){
+                        //alert(data['status']);
+                        console.log(data);
+                    },
+            error: function(data){
+            		console.log('error');
+            		console.log(data);
+                //alert("Server side error");
+            }
+        });
+		})
+	})
+</script>
+
+
+    Term:<input type="text" id="term"></input><br>
+	Location:<input type="text" id="location"></input><br>
+	<input type="button" value="Press" id="search_yelp" class="btn btn-primary">

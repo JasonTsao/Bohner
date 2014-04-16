@@ -26,4 +26,5 @@ urlpatterns += patterns("events.views",
                         url(r"^events/new_comment", "createEventComment"),
                         url(r"^events/update/(\d+)", "updateEvent"),
                         url(r"^events/select_attending/(\d+)", "selectAttending"),
+                        url(r"^yelp_search", "yelpSearch"),
                         )

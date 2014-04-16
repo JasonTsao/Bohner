@@ -32,6 +32,10 @@ def updateEvent(request, event_id):
 
 def selectAttending(request, event_id):
     return render_to_response("events/select_attending.html", {"event_id": event_id}, context_instance=RequestContext(request))
+
+
+def yelpSearch(request):
+	return render_to_response("events/yelp_search.html", {}, context_instance=RequestContext(request))
 '''
 def UpcomingEvents(request):
     pass

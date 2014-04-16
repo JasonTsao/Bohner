@@ -70,29 +70,31 @@ def yelpRequest(host, path, url_params, consumer_key, consumer_secret, token, to
 
 
 #YELP API STUFF
-def yelpConnect(request):
+def yelpSearch(term,location):
     rtn_dict = {'success': False, "msg": ""}
-
     country_code = 'US'
     lang = 'en'
-    location = '901 S Vermont Ave, Los Angeles, CA 90006'
     location_array = location.split(',')
-    #location = 'los angeles 90012'
     host = 'api.yelp.com'
     path = '/v2/search'
     url_params = {}
-    url_params['term'] = 'ma dang sae'
+    url_params['term'] = term
     url_params['limit'] = 5
     url_params['location'] = location
 
     # run yelp search
     search_results = json.loads(yelpRequest(host, path,url_params, consumer_key, consumer_secret, TOKEN, token_secret))
-
+    #print 'search results'
+    #print search_results['businesses']
     list_results = []
     result_dict = {}
     business_id = ''
-    
+    first_loop = True
+
     for business in search_results['businesses']:
+        if first_loop:
+            business_id = business['id']
+            first_loop = False
         if business['location']['address'][0] == location_array[0]:
             business_id = business['id']
             break
@@ -103,7 +105,17 @@ def yelpConnect(request):
     url_params['lang'] = lang
     business_results = json.loads(yelpRequest(host, path,url_params, consumer_key, consumer_secret, TOKEN, token_secret))
     rtn_dict['yelp_object'] = business_results
+    rtn_dict['success'] = True
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+def yelpConnect(request):
+    term = 'ma dang sae'
+    location = '901 S Vermont Ave, Los Angeles, CA 90006'
+    if request.method == 'POST':
+        term = request.POST['term']
+        location = request.POST['location']
+    return yelpSearch(term, location)
 
 
 def checkIfAuthorized(event, account):
