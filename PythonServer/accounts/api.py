@@ -246,7 +246,8 @@ def registerUser(request):
 
 			rtn_dict['success'] = True
 			rtn_dict['msg'] = 'Successfully registered new user'
-			
+			rtn_dict['user'] = new_user.id
+			rtn_dict['account'] = account.id
 		except Exception as e:
 			print 'Error registering new user: {0}'.format(e)
 			logger.info('Error registering new user: {0}'.format(e))
