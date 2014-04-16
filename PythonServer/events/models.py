@@ -25,6 +25,17 @@ class Event(models.Model):
     modified = models.DateTimeField(auto_now=True, blank=True, null=True)
 
     def save(self, invited_friends=None,*args, **kwargs):
+        if self.pk:
+            try:
+                event_historical = EventHistorical()
+                event_historical.parent_event = self
+                for field in self._meta.fields:
+                    if field.attname != 'id':
+                        setattr(event_historical, field.attname, getattr(self, field.attname))
+                event_historical.save()
+            except Exception, e:
+                'couldnt save historical Event'
+                print e
         if self.pk and invited_friends:
             try:
                 message = "{0} updated {1}".format(self.creator.user_name, self.name)
@@ -50,6 +61,27 @@ class Event(models.Model):
 
     def __unicode__(self):
         return str('{0} : {1}'.format(self.pk,self.description))
+
+
+class EventHistorical(models.Model):
+    parent_event = models.ForeignKey(Event)
+    creator = models.ForeignKey(Account)
+    name = models.CharField(max_length=255, null=True, blank=True)
+    start_time = models.DateTimeField(db_index=True, null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    meetup_spot = models.CharField(max_length=255, null=True, blank=True, default="In front")
+    location_name = models.CharField(max_length=255, null=True, blank=True)
+    location_address = models.CharField(max_length=255, null=True, blank=True)
+    location_coordinates = models.CharField(max_length=255, null=True, blank=True)
+    event_type = models.CharField(max_length=255, null=True, blank=True)
+    event_over = models.NullBooleanField(default=False)
+    cancelled = models.NullBooleanField(default=False)
+    private = models.NullBooleanField(default=False)
+    friends_can_invite = models.NullBooleanField(default=False)
+
+    created = models.DateTimeField(null=True, blank=True)
+    modified = models.DateTimeField(auto_now_add=True)
 
 
 class EventCreatorLocation(models.Model):
