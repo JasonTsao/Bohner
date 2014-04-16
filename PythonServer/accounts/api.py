@@ -42,6 +42,10 @@ ALT_QUERY_URL           = "https://api-read.facebook.com/restserver.php?method=f
 APP_ID					= "1425290317728330"
 APP_SECRET				= "6af15c8c3a845b550379e011fc4f7a83"
 
+VENMO_ACCESS_TOKEN 		= "LGS5yhZuaQh4gur9Qk2g9ntUCHgsQ9ev"
+VENMO_SECRET			= "rB5ffYe6LZUbWvjpADugLMUCL8gZPYst"
+VENMO_ID				= "1692"
+VENMO_ANDROID_RETURN_URL= "venmo1692://"
 
 @task
 def pushToNOSQLHash(key, push_item):
@@ -55,6 +59,49 @@ def pushToNOSQLSet(key, push_item, delete_item, score):
 	r.zadd(key, push_item, score)
 	if delete_item:
 		r.zrem(key, delete_item)
+
+
+def venmoGetAccessToken(request):
+	rtn_dict = {"success": False, "msg": ""}
+	print 'request'
+	print request
+	access_token = request.GET.get('access_token', '')
+
+	'''
+	try:
+		account = Account.objects.get(user=request.user)
+		try:
+			venmo_profile = VenmoProfile.objects.get(user=account)
+			venmo_profile.access_token = access_token
+			venmo_profile.save()
+		except:
+			venmo_profile = VenmoProfile(user=account)
+			venmo_profile.access_token = access_token
+			venmo_profile.save()
+	except Exception as e:
+		print 'No user account can be found: {0}'.format(e)
+	'''
+
+	rtn_dict['access_token'] = access_token
+
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+def venmoConnect(request):
+	url = "https://api.venmo.com/v1/oauth/authorize?client_id={0}&scope=make_payments%20aaccess_profile%20aaccess_friends".format(VENMO_ID)
+	return HttpResponseRedirect(url)
+	'''
+	try:
+		conn = urllib2.urlopen(url, None)
+		try:
+			response = json.loads(conn.read())
+		finally:
+			conn.close()
+	except urllib2.HTTPError, error:
+		response = json.loads(error.read())
+		return response
+	'''
+
 
 
 def syncFacebookFriends(request):

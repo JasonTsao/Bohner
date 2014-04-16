@@ -72,6 +72,19 @@ class FacebookProfile(models.Model):
         self.save()
 
 
+class VenmoProfile(models.Model):
+    user = models.ForeignKey(Account)
+    venmo_id = models.CharField(max_length=150)
+    first_name = models.CharField(max_length=255, null=True, blank=True)
+    last_name = models.CharField(max_length=255, null=True, blank=True)
+    email = models.CharField(max_length=255, null=True, blank=True)
+    access_token = models.CharField(max_length=255, null=True, blank=True)
+
+    def update_token(self, token):
+        self.access_token = token
+        self.save()
+
+
 class AccountDeviceID(models.Model):
     account = models.ForeignKey(Account)
     device_id = models.CharField(max_length=255, null=True, blank=True)
