@@ -1,5 +1,6 @@
 import json
 from django.db import models
+from django.forms.models import model_to_dict
 from accounts.models import Account
 from ios_notifications.models import APNService, Notification, Device
 from notifications.api import createNotification, sendNotification
@@ -29,9 +30,12 @@ class Event(models.Model):
             try:
                 event_historical = EventHistorical()
                 event_historical.parent_event = self
+
+                old_event = Event.objects.get(pk=self.id)
+
                 for field in self._meta.fields:
                     if field.attname != 'id':
-                        setattr(event_historical, field.attname, getattr(self, field.attname))
+                        setattr(event_historical, field.attname, getattr(old_event, field.attname))
                 event_historical.save()
             except Exception, e:
                 'couldnt save historical Event'
