@@ -12,10 +12,11 @@ from celery import task
 from facepy import GraphAPI
 from PythonServer.settings import RETURN_LIST_SIZE
 from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render_to_response
 from django.template import loader, Context, RequestContext
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login as auth_login
 from django.core.serializers.json import DjangoJSONEncoder
 from django.forms.models import model_to_dict
 from ios_notifications.models import APNService, Notification, Device
@@ -221,7 +222,7 @@ def registerUser(request):
 			new_user.email = request.POST.get('email')
 			new_user.save()
 			user = authenticate(username=request.POST.get("username"), password=request.POST.get("password1"))
-			login(request, user)
+			auth_login(request, user)
 			account = Account(user=user)
 			account.email = user.email
 			account.user_name = user.username
@@ -257,6 +258,36 @@ def registerUser(request):
 		rtn_dict['msg'] = 'Not POST'
 
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@csrf_exempt
+def login(request):
+	login_failed = False
+	if request.method == "POST":
+ 		username = request.POST.get('username')
+		password = request.POST.get('password')
+		user = authenticate(username=username, password=password)
+		if user is not None:
+			if user.is_active:
+				auth_login(request, user)
+			else:
+				return HttpResponseForbidden(\
+					content='Your account is not active.')
+		else:
+			login_failed = True
+
+	if request.user.is_authenticated():
+		status = 200
+	else:
+		status = 401
+
+	response = render_to_response('accounts/login.html', {},
+                                  context_instance=RequestContext(request))
+	response.status_code = status
+	if login_failed:
+		response['Auth-Response'] = 'Login failed'
+
+	return response
 
 
 #login_required
