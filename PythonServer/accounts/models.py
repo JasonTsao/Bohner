@@ -99,6 +99,7 @@ class AccountSettings(models.Model):
     reminder_on = models.NullBooleanField(default=True)
     reminder_delta = timedelta.fields.TimedeltaField(null=True,blank=True)
     vibrate_on_notification = models.NullBooleanField(default=True)
+    allow_charge = models.NullBooleanField(default=False, null=True,blank=True)
 
 
 class AccountSetting(models.Model):

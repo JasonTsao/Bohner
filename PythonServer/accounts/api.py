@@ -61,6 +61,40 @@ def pushToNOSQLSet(key, push_item, delete_item, score):
 		r.zrem(key, delete_item)
 
 
+def venmoTransaction(request):
+	rtn_dict = {"success": False, "msg": ""}
+	venmo_user_to_charge = {}
+	venmo_user_to_charge['user_id'] = "145434160922624933"
+	venmo_user_to_charge['email'] = "venmo@venmo.com"
+	venmo_user_to_charge['phone'] = 15555555555
+	venmo_user_to_charge['amount'] = .10
+	venmo_user_to_charge['note'] = "Test payment"
+	try:
+		account = Account.objects.get(user=request.user)
+		venmo_account = VenmoProfile.objects.get(user=account)
+		access_token = venmo_account.access_token
+		venmo_user_to_charge['access_token'] = access_token
+		#url = "https://api.venmo.com/v1/payments"
+		url = "https://sandbox-api.venmo.com/v1/payments"
+		data = {}
+		try:
+			data = urllib.urlencode(venmo_user_to_charge)
+			conn = urllib2.urlopen(url, data)
+			try:
+				response = json.loads(conn.read())
+				rtn_dict['msg'] = 'Successfully got venmo user info'
+				rtn_dict['success'] = True
+			finally:
+				conn.close()
+		except urllib2.HTTPError as error:
+			print 'Error pulling info from venmo api: {0}'.format(error)
+			rtn_dict['msg'] = 'Error pulling info from venmo api: {0}'.format(error)
+
+	except Exception as e:
+		print 'unable to get venmo user info {0}'.format(e)
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
 def venmoGetUserInfo(request):
 	rtn_dict = {"success": False, "msg": ""}
 	try:
@@ -141,6 +175,7 @@ def venmoGetAccessToken(request):
 
 def venmoConnect(request):
 	url = "https://api.venmo.com/v1/oauth/authorize?client_id={0}&scope=make_payments%20access_profile%20access_friends%20access_email".format(VENMO_ID)
+	#url = "https://sandbox-api.venmo.com/v1/oauth/authorize?client_id={0}&scope=make_payments%20access_profile%20access_friends%20access_email".format(VENMO_ID)
 	return HttpResponseRedirect(url)
 
 
