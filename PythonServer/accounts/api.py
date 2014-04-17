@@ -64,6 +64,7 @@ def pushToNOSQLSet(key, push_item, delete_item, score):
 def venmoTransaction(request):
 	rtn_dict = {"success": False, "msg": ""}
 	venmo_user_to_charge = {}
+	charged_id = 2
 	venmo_user_to_charge['user_id'] = "145434160922624933"
 	venmo_user_to_charge['email'] = "venmo@venmo.com"
 	venmo_user_to_charge['phone'] = 15555555555
@@ -71,9 +72,12 @@ def venmoTransaction(request):
 	venmo_user_to_charge['note'] = "Test payment"
 	try:
 		account = Account.objects.get(user=request.user)
+		#charged_account = Account.objects.get(pk=charged_id)
 		venmo_account = VenmoProfile.objects.get(user=account)
+		#charged_venmo_account = VenmoProfile.objects.get(user=charged_account)
 		access_token = venmo_account.access_token
 		venmo_user_to_charge['access_token'] = access_token
+
 		#url = "https://api.venmo.com/v1/payments"
 		url = "https://sandbox-api.venmo.com/v1/payments"
 		data = {}
@@ -82,6 +86,15 @@ def venmoTransaction(request):
 			conn = urllib2.urlopen(url, data)
 			try:
 				response = json.loads(conn.read())
+				'''
+				venmo_transaction = VenmoTransaction(charger=venmo_account, charged=charged_venmo_account)
+				venmo_transaction.payment_id = response['data']['payment']['id']
+				venmo_transaction.note = response['data']['payment']['note']
+				venmo_transaction.amount = response['data']['payment']['amount']
+				venmo_transaction.date_completed = response['data']['payment']['date_completed']
+				venmo_transaction.date_created = response['data']['payment']['date_created']
+				venmo_transaction.save()
+				'''
 				rtn_dict['msg'] = 'Successfully got venmo user info'
 				rtn_dict['success'] = True
 			finally:
@@ -174,8 +187,8 @@ def venmoGetAccessToken(request):
 
 
 def venmoConnect(request):
-	url = "https://api.venmo.com/v1/oauth/authorize?client_id={0}&scope=make_payments%20access_profile%20access_friends%20access_email".format(VENMO_ID)
-	#url = "https://sandbox-api.venmo.com/v1/oauth/authorize?client_id={0}&scope=make_payments%20access_profile%20access_friends%20access_email".format(VENMO_ID)
+	#url = "https://api.venmo.com/v1/oauth/authorize?client_id={0}&scope=make_payments%20access_profile%20access_friends%20access_email".format(VENMO_ID)
+	url = "https://sandbox-api.venmo.com/v1/oauth/authorize?client_id={0}&scope=make_payments%20access_profile%20access_friends%20access_email".format(VENMO_ID)
 	return HttpResponseRedirect(url)
 
 

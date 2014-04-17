@@ -85,6 +85,17 @@ class VenmoProfile(models.Model):
         self.save()
 
 
+class VenmoTransaction(models.Model):
+    charger = models.ForeignKey(VenmoProfile, related_name='charger')
+    charged = models.ForeignKey(VenmoProfile, related_name='charged')
+    payment_id = models.CharField(max_length=255)
+    note = models.CharField(max_length=255, null=True, blank=True)
+    amount = models.FloatField()
+    date_created = models.DateTimeField(null=True, blank=True)
+    date_completed = models.DateTimeField(null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+
 class AccountDeviceID(models.Model):
     account = models.ForeignKey(Account)
     device_id = models.CharField(max_length=255, null=True, blank=True)
