@@ -7,6 +7,7 @@ admin.site.register(AccountSettings)
 admin.site.register(AccountSetting)
 admin.site.register(AccountDeviceID)
 admin.site.register(FacebookProfile)
+admin.site.register(VenmoProfile)
 admin.site.register(Group)
 
 
