@@ -40,6 +40,8 @@ def removeUsersFromGroup(request):
 def updateGroup(request, group_id):
 	return render_to_response("accounts/update_group.html", {"group_id": group_id}, context_instance=RequestContext(request))
 
+def updateSettingField(request):
+	return render_to_response("accounts/account_setting_field_update.html", {}, context_instance=RequestContext(request))
 
 def syncUserFacebook(request):
     pass

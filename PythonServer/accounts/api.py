@@ -786,3 +786,53 @@ def updateGroup(request, group_id):
 
 def updateAccount(request):
 	pass
+
+
+@csrf_exempt
+def updateAccountSettingField(request):
+	rtn_dict = {'success': False, "msg": ""}
+
+	if request.method == 'POST':
+		field = request.POST['field']
+		try:
+			value = json.loads(request.POST['value']);
+		except:
+			value = request.POST['value']
+		try:
+			if not request.user.id:
+				user_id = request.POST['user']
+			else:
+				user_id = request.user.id
+			account = Account.objects.get(user__id=user_id)
+			try:
+				account_settings = AccountSettings.objects.get(account=account)
+			except:
+				account_settings = AccountSettings(account=account)
+
+			try:
+				getattr(account_settings, field)
+				setattr(account_settings, field, value)
+				account_settings.save()
+				rtn_dict['success'] = True
+				rtn_dict['updated_field'] = field
+				rtn_dict['updated_value'] = value
+			except AttributeError as e:
+				logger.error('Field does not exist: {0}'.format(e))
+				rtn_dict['message'] = 'Field does not exist: {0}'.format(e)
+			except Exception as e:
+				logger.error('Error updating field: {0}'.format(e))
+				rtn_dict['message'] = 'Error updating field: {0}'.format(e)
+
+			if rtn_dict['success'] == False:
+				try:
+					account_setting = AccountSetting.objects.get(account=account, setting_name=field)
+				except:
+					account_setting = AccountSetting(account=account, setting_name=field)
+				account_setting.setting_value = value
+				account_setting.save()
+		except Exception as e:
+			logger.info('Unable to update Account settings: {0}'.format(e));
+
+	else:
+		rtn_dict['msg'] = 'URL was accessed without being set as POST'
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
