@@ -22,7 +22,8 @@ def addFriend(request):
 
 
 def updateUser(request):
-    return render_to_response("accounts/update_user.html", {}, context_instance=RequestContext(request))
+	return render_to_response("accounts/account_update_field.html", {}, context_instance=RequestContext(request))
+    #return render_to_response("accounts/update_user.html", {}, context_instance=RequestContext(request))
 
 
 def createGroup(request):

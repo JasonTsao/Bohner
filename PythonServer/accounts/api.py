@@ -427,74 +427,6 @@ def login(request):
 
 #login_required
 @csrf_exempt
-def updateUser(request):
-    rtn_dict = {'success': False, "msg": ""}
-
-    if request.method == 'POST':
-		try:
-			if not request.user.id:
-				user_id = request.POST['user']
-			else:
-				user_id = request.user.id
-			account = Account.objects.get(user__id=user_id)
-			r = R.r 
-			redis_key = 'account.{0}.hash'.format(account.id)
-			redis_account = r.hgetall(redis_key)
-
-			try:
-				account.user_name = request.POST['username']
-			except:
-				pass
-			try:
-				account.first_name = request.POST['first_name']
-			except:
-				pass
-			try:
-				account.last_name = request.POST['last_name']
-			except:
-				pass
-			try:
-				account.phone_number = request.POST['phone_number']
-			except:
-				pass
-			try:
-				account.profile_pic = request.POST['profile_pic']
-			except:
-				pass
-			try:
-				account.email = request.POST['email']
-			except:
-				pass
-			try:
-				account.gender = request.POST['gender']
-			except:
-				pass
-			try:
-				account.birthday = request.POST['birthday']
-			except:
-				pass
-			try:
-				account.home_town = request.POST['home_town']
-			except:
-				pass
-			try:
-				account.is_active = request.POST['is_active']
-			except:
-				pass
-			account.save()
-
-			pushToNOSQLHash(redis_key, model_to_dict(account))
-
-			rtn_dict['success'] = True
-			rtn_dict['msg'] = 'successfully updated user {0}'.format(account)
-		except Exception as e:
-			logger.info('Error registering new user: {0}'.format(e))
-			rtn_dict['msg'] = 'Error registering new user: {0}'.format(e)
-    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
-
-
-#login_required
-@csrf_exempt
 def searchUsersByEmail(request):
 	rtn_dict = {'success': False, "msg": "", "users": []}
 	if request.method == 'POST':
@@ -784,8 +716,45 @@ def updateGroup(request, group_id):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-def updateAccount(request):
-	pass
+@csrf_exempt
+def updateAccountProfileField(request):
+	rtn_dict = {'success': False, "msg": ""}
+
+	if request.method == 'POST':
+		field = request.POST['field']
+		try:
+			value = json.loads(request.POST['value']);
+		except:
+			value = request.POST['value']
+		try:
+			if not request.user.id:
+				user_id = request.POST['user']
+			else:
+				user_id = request.user.id
+			account = Account.objects.get(user__id=user_id)
+
+			try:
+				getattr(account, field)
+				setattr(account, field, value)
+				account.save()
+				redis_key = 'account.{0}.hash'.format(account.id)
+				pushToNOSQLHash(redis_key, model_to_dict(account))
+
+				rtn_dict['success'] = True
+				rtn_dict['updated_field'] = field
+				rtn_dict['updated_value'] = value
+			except AttributeError as e:
+				logger.error('Field does not exist: {0}'.format(e))
+				rtn_dict['message'] = 'Field does not exist: {0}'.format(e)
+			except Exception as e:
+				logger.error('Error updating field: {0}'.format(e))
+				rtn_dict['message'] = 'Error updating field: {0}'.format(e)
+		except Exception as e:
+			logger.info('Unable to update Account settings: {0}'.format(e));
+
+	else:
+		rtn_dict['msg'] = 'URL was accessed without being set as POST'
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
 @csrf_exempt

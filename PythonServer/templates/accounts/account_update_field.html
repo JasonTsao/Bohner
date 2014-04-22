@@ -1,0 +1,35 @@
+<script src="/static/js/jquery.min.js"></script>
+<script type="text/javascript" >
+	$(document).ready(function(){
+		$('#update_account_field').click(function(){
+			var field = $('#field').val();
+            var value = $('#value').val();
+
+			$.ajax({
+            type:"POST",
+                    url:"/acct/update",
+                    data:{
+                        "field": field,
+                        "value": value,
+                    	"csrfmiddlewaretoken": "{{csrf_token}}",	
+                    },
+            success: function(data){
+                        //alert(data['status']);
+                        console.log('success!');
+                        console.log(data);
+                    },
+            error: function(data){
+            		console.log('error');
+            		console.log(data);
+                //alert("Server side error");
+            }
+        });
+		})
+	})
+</script>
+
+
+    Update Account Field <br>
+	field:<input type="text" id="field"></input><br>
+    value:<input type="text" id="value"></input><br>
+	<input type="button" value="Press" id="update_account_field" class="btn btn-primary">
