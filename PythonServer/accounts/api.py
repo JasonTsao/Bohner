@@ -807,7 +807,8 @@ def updateAccountSettingField(request):
 				account_setting.setting_value = value
 				account_setting.save()
 		except Exception as e:
-			logger.info('Unable to update Account settings: {0}'.format(e));
+			logger.info('Unable to update Account settings: {0}'.format(e))
+			rtn_dict['msg'] = 'Unable to update Account settings: {0}'.format(e)
 
 	else:
 		rtn_dict['msg'] = 'URL was accessed without being set as POST'
