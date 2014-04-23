@@ -347,7 +347,7 @@ def facebookConnect(request):
 	except Exception, e:
 		print 'Error getting user facebook profile: {0}'.format(e)
 	#callback_url = 'http://localtest.channelfactory.com:8000/acct/getAccessToken'
-	callback_url = 'http://50.112.180.63:8000/acct/getAccessToken'
+	callback_url = 'http://ec2-50-112-180-63.us-west-2.compute.amazonaws.com:8000/acct/getAccessToken'
 	return HttpResponseRedirect(REQUEST_TOKEN_URL + '?client_id=%s&redirect_uri=%s&scope=%s' % (APP_ID, urllib.quote_plus(callback_url),'email,read_friendlists, user_photos, user_birthday, user_events, user_groups'))
 
 
