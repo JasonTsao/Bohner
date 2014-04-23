@@ -774,17 +774,26 @@ def updateAccountSettingField(request):
 			value = json.loads(request.POST['value']);
 		except:
 			value = request.POST['value']
+
+		rtn_dict['post'] = request.POST
 		try:
-			if not request.user.id:
+			try:
+				if not request.user.id:
+					user_id = request.POST['user']
+				else:
+					user_id = request.user.id
+			except Exception as e:
+				rtn_dict['error'] = "Error getting user id from request: {0}".format(e)
 				user_id = request.POST['user']
-			else:
-				user_id = request.user.id
+
+			rtn_dict['msg_1'] = 'Got past getting user id'
 			account = Account.objects.get(user__id=user_id)
 			try:
 				account_settings = AccountSettings.objects.get(account=account)
 			except:
 				account_settings = AccountSettings(account=account)
 
+			rtn_dict['msg2'] = 'got account setting/created'
 			try:
 				getattr(account_settings, field)
 				setattr(account_settings, field, value)
