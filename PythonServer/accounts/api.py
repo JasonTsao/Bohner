@@ -262,6 +262,10 @@ def getAccessToken(request):
 	consumer = oauth.Consumer(key=APP_ID, secret=APP_SECRET)
 	client = oauth.Client(consumer)
 	redirect_uri = 'http://' + request.META['HTTP_HOST'] + '/acct/getAccessToken'
+	logger.info('redirect_uri')
+	logger.info(redirect_uri)
+	print 'redirect_uri'
+	print redirect_uri
 	try:
 		graph = GraphAPI()
 		# getting access code
@@ -343,7 +347,7 @@ def facebookConnect(request):
 	except Exception, e:
 		print 'Error getting user facebook profile: {0}'.format(e)
 	#callback_url = 'http://localtest.channelfactory.com:8000/acct/getAccessToken'
-	callback_url = '50.112.180.63:8000/acct/getAccessToken'
+	callback_url = 'http://50.112.180.63:8000/acct/getAccessToken'
 	return HttpResponseRedirect(REQUEST_TOKEN_URL + '?client_id=%s&redirect_uri=%s&scope=%s' % (APP_ID, urllib.quote_plus(callback_url),'email,read_friendlists, user_photos, user_birthday, user_events, user_groups'))
 
 
