@@ -38,8 +38,7 @@ def yelpRequest(host, path, url_params, consumer_key, consumer_secret, token, to
     encoded_params = ''
     if url_params:
         encoded_params = urllib.urlencode(url_params)
-        print 'encoded params'
-        print encoded_params
+
     url = 'http://%s%s?%s' % (host, path, encoded_params)
 
     # Sign the URL
@@ -152,6 +151,8 @@ def getEvent(request, event_id):
             redis_event = r.hgetall(redis_event_key)
             redis_invited_friends_key = 'event.{0}.invited_friends.set'.format(event_id)
             redis_invited_friends = r.zrange(redis_invited_friends_key, 0, 10)
+            redis_event = False
+            redis_invited_friends = False
             if not redis_event and not redis_invited_friends:
                 invited_friends_list = []
                 invited_friends = InvitedFriend.objects.filter(event=event)
@@ -183,12 +184,14 @@ def upcomingEvents(request, account_id):
         owned_upcoming_events_key = 'account.{0}.owned_events.set'.format(account_id)
         owned_upcoming_events = r.zrange(owned_upcoming_events_key, event_range_start, event_range_start + RETURN_LIST_SIZE)
 
+        owned_upcoming_events = False
         if not owned_upcoming_events:
             owned_upcoming_events = []
             owned_events = Event.objects.filter(creator=account_id, event_over=False, cancelled=False).order_by('start_time')
             for event in owned_events:
                 owned_upcoming_events.append(model_to_dict(event)) 
 
+        upcoming_events = False
         if not upcoming_events:
             invited_users = InvitedFriend.objects.select_related('event').filter(user=account_id)
             for invited_user in invited_users:
@@ -304,6 +307,7 @@ def getInvitedFriends(request, event_id):
         r = R.r
         r_invited_friends_key = 'event.{0}.invited_friends.set'.format(event_id)
         invited_friends = r.zrange(r_invited_friends_key, friend_range_start, friend_range_start + RETURN_LIST_SIZE)
+        invited_friends = False;
         if not invited_friends:
             invited_friends = []
             invited_friends_list = InvitedFriend.objects.select_related('user').filter(event=event_id)
@@ -624,7 +628,7 @@ def getEventComments(request, event_id):
         r = R.r
         redis_key = 'event.{0}.comments.set'.format(event_id)
         comments = r.zrange(redis_key, comment_range_start, comment_range_start + RETURN_LIST_SIZE)
-
+        comments = False
         if not comments:
             comments = []
             account = Account.objects.get(user=request.user)

@@ -342,7 +342,8 @@ def facebookConnect(request):
 		return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 	except Exception, e:
 		print 'Error getting user facebook profile: {0}'.format(e)
-	callback_url = 'http://localtest.channelfactory.com:8000/acct/getAccessToken'
+	#callback_url = 'http://localtest.channelfactory.com:8000/acct/getAccessToken'
+	callback_url = 'http://50.112.180.63:8000/acct/getAccessToken'
 	return HttpResponseRedirect(REQUEST_TOKEN_URL + '?client_id=%s&redirect_uri=%s&scope=%s' % (APP_ID, urllib.quote_plus(callback_url),'email,read_friendlists, user_photos, user_birthday, user_events, user_groups'))
 
 
@@ -497,6 +498,7 @@ def getFriends(request, account_id):
 		r = R.r
 		redis_key = 'account.{0}.friends.set'.format(account_id)
 		friends_list = r.zrange(redis_key, friends_range_start, friends_range_start + RETURN_LIST_SIZE)
+		friends_list = False
 		if not friends_list:
 			friends_list = []
 			account = Account.objects.get(pk=account_id)
@@ -574,6 +576,7 @@ def getGroup(request, group_id):
 		r = R.r
 		r_group_key = 'group.{0}.hash'.format(group_id)
 		group = r.hgetall(r_group_key)
+		group = False
 		if not group:
 			if not request.user.id:
 				user_id = request.POST['user']
