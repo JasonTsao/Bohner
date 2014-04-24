@@ -765,6 +765,35 @@ def updateAccountProfileField(request):
 
 
 @csrf_exempt
+def getAccountSettings(request):
+	rtn_dict = {'success': False, "msg": ""}
+	if request.method == 'POST':
+		try:
+			if not request.user.id:
+				user_id = request.POST['user']
+			else:
+				user_id = request.user.id
+
+			account = Account.objects.get(user__id=user_id)
+
+			account_settings = AccountSettings.objects.get(account=account)
+			account_settings_dict = model_to_dict(account_settings)
+
+			extra_account_settings = AccountSetting.objects.filter(account=account)
+			for setting in extra_account_settings:
+				account_settings_dict[setting.setting_name] = setting.setting_value
+			rtn_dict['settings'] = account_settings_dict
+			rtn_dict['success'] = True
+			rtn_dict['msg'] = 'Successfully retrieved user account settings'
+		except Exception as e:
+			logger.info('Unable to get Account settings: {0}'.format(e))
+			rtn_dict['msg'] = 'Unable to get Account settings: {0}'.format(e)
+	else:
+		rtn_dict['msg'] = 'URL was accessed without being set as POST'
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@csrf_exempt
 def updateAccountSettingField(request):
 	rtn_dict = {'success': False, "msg": ""}
 
@@ -777,23 +806,17 @@ def updateAccountSettingField(request):
 
 		rtn_dict['post'] = request.POST
 		try:
-			try:
-				if not request.user.id:
-					user_id = request.POST['user']
-				else:
-					user_id = request.user.id
-			except Exception as e:
-				rtn_dict['error'] = "Error getting user id from request: {0}".format(e)
+			if not request.user.id:
 				user_id = request.POST['user']
+			else:
+				user_id = request.user.id
 
-			rtn_dict['msg_1'] = 'Got past getting user id'
 			account = Account.objects.get(user__id=user_id)
 			try:
 				account_settings = AccountSettings.objects.get(account=account)
 			except:
 				account_settings = AccountSettings(account=account)
 
-			rtn_dict['msg2'] = 'got account setting/created'
 			try:
 				getattr(account_settings, field)
 				setattr(account_settings, field, value)
