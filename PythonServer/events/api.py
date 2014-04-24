@@ -224,19 +224,22 @@ def createEvent(request):
                 user_id = request.user.id
             user = Account.objects.get(user__id=user_id)
             event = Event(creator=user)
-            event.name = request.POST['name']
-            if request.POST['start_time']:
-                event.start_time = request.POST['start_time']
-            if request.POST['end_time']:
-                event.end_time = request.POST['end_time']
-            event.description = request.POST['description']
-            event.meetup_spot = request.POST['meetup_spot']
-            event.location_name = request.POST['location_name']
-            event.location_address = request.POST['location_address']
-            event.location_coordinates = request.POST['location_coordinates']
-            event.friends_can_invite = request.POST['friends_can_invite'] # not saving nullboolean fields correctly 
-            event.private = request.POST['private']
+            event.name = request.POST.get('name', "")
+            start_time = request.POST.get('start_time', None)
+            if start_time:
+                event.start_time = start_time
+            end_time = request.POST.get('end_time', None)
+            if end_time:
+                event.end_time = end_time
+            event.description = request.POST.get('description', None)
+            event.meetup_spot = request.POST.get('meetup_spot','In Front')
+            event.location_name = request.POST.get('location_name', None)
+            event.location_address = request.POST.get('location_address', None)
+            event.location_coordinates = request.POST.get('location_coordinates', None)
+            event.friends_can_invite = request.POST.get('friends_can_invite', False) # not saving nullboolean fields correctly 
+            event.private = request.POST.get('private', False)
             event.save()
+
             r = R.r
             redis_key = 'event.{0}.hash'.format(event.id)
             r.hmset(redis_key, model_to_dict(event))
