@@ -518,6 +518,7 @@ def getFriends(request, account_id):
 					friend_dict['name'] = link.friend.user_name
 					friend_dict['phone_number'] = link.friend.phone_number
 					friend_dict['invited_count'] = link.invited_count
+					friend_dict['bio'] = link.friend.bio
 					friends_list.append(json.dumps(friend_dict))
 			rtn_dict['success'] = True
 			rtn_dict['msg'] = 'successfully retrieved friend list'
