@@ -513,6 +513,11 @@ def getFriends(request, account_id):
 			for link in friend_links:
 				if link.friend.is_active:
 					friend_dict = {'pf_pic': None, 'id':None, 'name': None}
+					try:
+						fb_profile = FacebookProfile.objects.get(user=link.friend)
+						friend_dict['fb_pfpic_url'] = fb_profile.image_url
+					except:
+						friend_dict['fb_pfpic_url'] = ""
 					friend_dict['pf_pic'] = str(link.friend.profile_pic)
 					friend_dict['id'] = link.friend.id
 					friend_dict['name'] = link.friend.user_name
