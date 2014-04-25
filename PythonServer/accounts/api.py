@@ -494,13 +494,16 @@ def addFriend(request):
 
 
 #login_required
+@csrf_exempt
 def getFriends(request, account_id):
 	rtn_dict = {'success': False, "msg": "", "friends": []}
 
 	try:
-		friends_range_start = int(request.GET.get('range_start', 0))
+		#friends_range_start = int(request.GET.get('range_start', 0))
+		friends_range_start = 0;
 		r = R.r
 		redis_key = 'account.{0}.friends.set'.format(account_id)
+		RETURN_LIST_SIZE = 10;
 		friends_list = r.zrange(redis_key, friends_range_start, friends_range_start + RETURN_LIST_SIZE)
 		friends_list = False
 		if not friends_list:
