@@ -177,29 +177,33 @@ def getEvent(request, event_id):
 def upcomingEvents(request, account_id):
     rtn_dict = {'success': False, "msg": ""}
     try:
+        upcoming_events = []
+        '''
         r = R.r
         event_range_start = int(request.GET.get('range_start', 0))
         upcoming_events_key = 'account.{0}.events.set'.format(account_id)
         upcoming_events = r.zrange(upcoming_events_key, event_range_start, event_range_start + RETURN_LIST_SIZE)
         owned_upcoming_events_key = 'account.{0}.owned_events.set'.format(account_id)
         owned_upcoming_events = r.zrange(owned_upcoming_events_key, event_range_start, event_range_start + RETURN_LIST_SIZE)
+        '''
 
         owned_upcoming_events = False
         if not owned_upcoming_events:
-            owned_upcoming_events = []
+            #owned_upcoming_events = []
             owned_events = Event.objects.filter(creator=account_id, event_over=False, cancelled=False).order_by('start_time')
             for event in owned_events:
-                owned_upcoming_events.append(model_to_dict(event)) 
+                #owned_upcoming_events.append(model_to_dict(event)) 
+                upcoming_events.append(model_to_dict(event))
 
-        upcoming_events = False
-        if not upcoming_events:
+        #upcoming_events = False
+        if not upcoming_events or True:
             invited_users = InvitedFriend.objects.select_related('event').filter(user=account_id)
             for invited_user in invited_users:
                 if not invited_user.event.event_over and not invited_user.event.cancelled:
                     if invited_user.event.creator != account_id:
                         upcoming_events.append(model_to_dict(invited_user.event))
         rtn_dict['upcoming_events'] = upcoming_events
-        rtn_dict['owned_upcoming_events'] = owned_upcoming_events
+        #rtn_dict['owned_upcoming_events'] = owned_upcoming_events
         rtn_dict['success'] = True
         rtn_dict['message'] = 'Successfully retrieved upcoming events'
     except Exception as e:
@@ -207,6 +211,35 @@ def upcomingEvents(request, account_id):
         logger.info('Error grabbing upcoming events: {0}'.format(e))
         rtn_dict['msg'] = 'Error grabbing upcoming events: {0}'.format(e)
 
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@csrf_exempt
+def ownedUpcomingEvents(request, account_id):
+    rtn_dict = {'success': False, "msg": ""}
+    try:
+        owned_upcoming_events = []
+        '''
+        r = R.r
+        event_range_start = int(request.GET.get('range_start', 0))
+        owned_upcoming_events_key = 'account.{0}.owned_events.set'.format(account_id)
+        owned_upcoming_events = r.zrange(owned_upcoming_events_key, event_range_start, event_range_start + RETURN_LIST_SIZE)
+        '''
+        #owned_upcoming_events = False
+        if not owned_upcoming_events or True:
+            #owned_upcoming_events = []
+            owned_events = Event.objects.filter(creator=account_id, event_over=False, cancelled=False).order_by('start_time')
+            for event in owned_events:
+                #owned_upcoming_events.append(model_to_dict(event)) 
+                owned_upcoming_events.append(model_to_dict(event))
+
+        rtn_dict['owned_upcoming_events'] = owned_upcoming_events
+        rtn_dict['success'] = True
+        rtn_dict['message'] = 'Successfully retrieved upcoming events'
+    except Exception as e:
+        print 'Error grabbing owned upcoming events: {0}'.format(e)
+        logger.info('Error grabbing owned upcoming events: {0}'.format(e))
+        rtn_dict['msg'] = 'Error grabbing owned upcoming events: {0}'.format(e)
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
