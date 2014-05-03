@@ -519,7 +519,7 @@ def getFriends(request, account_id):
 					except:
 						friend_dict['fb_pfpic_url'] = ""
 					friend_dict['pf_pic'] = str(link.friend.profile_pic)
-					friend_dict['id'] = link.friend.id
+					friend_dict['account_id'] = link.friend.id
 					friend_dict['name'] = link.friend.user_name
 					friend_dict['phone_number'] = link.friend.phone_number
 					friend_dict['invited_count'] = link.invited_count
