@@ -292,13 +292,14 @@ def createEvent(request):
             try:
                 invited_friends = request.POST['invited_friends']
                 invited_friends = json.loads(invited_friends)
-                rtn_dict['started_inviting_friends'] = "Yes"
                 for user_dict in invited_friends:
                     try:
                         # save user link to event
-                        rtn_dict['last_user to invite'] = user_dict['user_id']
                         user_id = user_dict['user_id']
-                        can_invite_friends = user_dict['can_invite_friends']
+                        try:
+                            can_invite_friends = json.loads(user_dict['can_invite_friends']);
+                        except:
+                            can_invite_friends = user_dict['can_invite_friends']
                         friend = Account.objects.get(pk=user_id)
 
                         #check to see if the invited_friend is a real friend
