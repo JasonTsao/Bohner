@@ -558,6 +558,7 @@ def createGroup(request):
 				friend = Account.objects.get(pk=member_id, is_active=True)
 				group.members.add(friend)
 			group.members.add(account)
+			'''
 			r = R.r
 			r_group_key = 'group.{0}.hash'.format(group.id)
 			pushToNOSQLHash(r_group_key, model_to_dict(group))
@@ -577,6 +578,7 @@ def createGroup(request):
 				addNotificationToRedis(notification, member.id)
 				r_groups_key = 'account.{0}.groups.set'.format(member.id)
 				pushToNOSQLSet(r_groups_key, group.id, False, 0)
+			'''
 		except Exception as e:
 			print 'Error creating group: {0}'.format(e)
 			logger.info('Error creating group: {0}'.format(e))
@@ -620,10 +622,13 @@ def getGroups(request):
 		else:
 			user_id = request.user.id
 		account = Account.objects.get(user__id=user_id)
+
+		'''
 		r = R.r
 		r_groups_key = 'account.{0}.groups.set'.format(account.id)
 		r_groups = r.zrange(r_groups_key, groups_range_start, groups_range_start + RETURN_LIST_SIZE)
-
+		'''
+		r_groups = False
 		if not r_groups:
 			account = Account.objects.get(user=request.user, is_active=True)
 			groups = Group.objects.filter(members__id=account.id)
