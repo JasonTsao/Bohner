@@ -291,7 +291,6 @@ def createEvent(request):
             '''
             try:
                 invited_friends = request.POST['invited_friends']
-                rtn_dict['invited_friends'] = invited_friends
                 invited_friends = json.loads(invited_friends)
                 for user_dict in invited_friends:
                     try:
