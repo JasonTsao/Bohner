@@ -297,6 +297,7 @@ def createEvent(request):
             try:
                 invited_friends = request.POST['invited_friends']
                 invited_friends = json.loads(invited_friends)
+                return_invited_friends = []
                 for user_dict in invited_friends:
                     try:
                         # save user link to event
@@ -311,6 +312,9 @@ def createEvent(request):
                         account_link = AccountLink.objects.get(account_user=user, friend=friend) 
                         invited_friend = InvitedFriend(event=event, user=friend, can_invite_friends=can_invite_friends)
                         invited_friend.save()
+
+                        invited_friend_dict = {}
+                        return_invited_friends.append(model_to_dict(invited_friend))
 
                         account_link.invited_count += 1
                         account_link.save()
@@ -336,6 +340,9 @@ def createEvent(request):
                         logger.info('Error adding user {0}: {1}'.format(user,e))
                         rtn_dict['success'] = False
                         rtn_dict['msg'] = e
+
+                rtn_dict['invited_friends'] = return_invited_friends       
+
             except Exception as e:
                 logger.info('Error inviting friends: {0}'.format(e))
                 rtn_dict['msg'] = e
