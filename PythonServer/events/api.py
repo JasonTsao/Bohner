@@ -274,6 +274,8 @@ def createEvent(request):
             event.private = request.POST.get('private', False)
             event.save()
 
+
+            '''
             r = R.r
             redis_key = 'event.{0}.hash'.format(event.id)
             r.hmset(redis_key, model_to_dict(event))
@@ -285,11 +287,10 @@ def createEvent(request):
             #score = int(time.mktime(time.strptime(event.start_time, "%Y-%m-%d"))) if event.start_time else int(event.created.strftime("%s"))
             score = int(time.mktime(time.strptime(event.start_time, "%Y-%m-%d"))) if event.start_time else int(event.created.strftime("%s"))
             pushToNOSQLSet(created_events_key, event_dict, False,score)
-
+            '''
             try:
                 invited_friends = request.POST['invited_friends']
-                rtn_dict['invited_friends'] = invited_friends
-                rtn_dict['invited_friend_type'] = type(invited_friends)
+                invited_friends = json.loads(invited_friends)
                 for user_dict in invited_friends:
                     try:
                         # save user link to event
