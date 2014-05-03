@@ -587,6 +587,7 @@ def createGroup(request):
 
 
 #@login_required
+@csrf_exempt
 def getGroup(request, group_id):
 	rtn_dict = {'success': False, "msg": "", "group": ""}
 	try:
@@ -608,6 +609,43 @@ def getGroup(request, group_id):
 	except Exception as e:
 		logger.info('Error retrieving group: {0}'.format(e))
 		rtn_dict['msg'] = 'Error retrieving group: {0}'.format(e)
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@csrf_exempt
+def getGroupMembers(request, group_id):
+	rtn_dict = {'success': False, "msg": "", "members": ""}
+	if request.method == 'POST':
+		try:
+			'''
+			r = R.r
+			r_group_key = 'group.{0}.hash'.format(group_id)
+			group = r.hgetall(r_group_key)
+			'''
+			group = False
+			members = []
+			if not group:
+				if not request.user.id:
+					user_id = request.POST['user']
+				else:
+					user_id = request.user.id
+				account = Account.objects.get(user__id=user_id, is_active=True)
+				group = Group.objects.get(pk=group_id)
+
+				#group = model_to_dict(group)
+				group_members = group.members.all()
+				for member in group_members:
+					member_dict = model_to_dict(member)
+					member_dict['profile_pic'] = str(member_dict['profile_pic'])
+					members.append(member_dict)
+			rtn_dict['members'] = members
+			rtn_dict['success'] = True
+			rtn_dict['msg'] = 'successfully retrieved group {0}'.format(group_id)
+		except Exception as e:
+			logger.info('Error retrieving group: {0}'.format(e))
+			rtn_dict['msg'] = 'Error retrieving group: {0}'.format(e)
+	else:
+		rtn_dict['msg'] = "Request not POST"
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
