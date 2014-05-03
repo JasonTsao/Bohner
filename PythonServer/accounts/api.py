@@ -612,6 +612,7 @@ def getGroup(request, group_id):
 
 
 #@login_required
+@csrf_exempt
 def getGroups(request, account_id):
 	rtn_dict = {'success': False, "msg": "", "groups": []}
 	try:
