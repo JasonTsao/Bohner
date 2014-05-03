@@ -274,7 +274,8 @@ def createEvent(request):
             event.private = request.POST.get('private', False)
             event.save()
 
-
+            rtn_dict['success'] = True
+            rtn_dict['msg'] = 'Successfully created new user event!'
             '''
             r = R.r
             redis_key = 'event.{0}.hash'.format(event.id)
@@ -290,10 +291,12 @@ def createEvent(request):
             '''
             try:
                 invited_friends = request.POST['invited_friends']
+                rtn_dict['invited_friends'] = invited_friends
                 invited_friends = json.loads(invited_friends)
                 for user_dict in invited_friends:
                     try:
                         # save user link to event
+                        rtn_dict['last_user to invite'] = user_dict['user_id']
                         user_id = user_dict['user_id']
                         can_invite_friends = user_dict['can_invite_friends']
                         friend = Account.objects.get(pk=user_id)
@@ -321,15 +324,16 @@ def createEvent(request):
                                         'start_time': str(event.start_time)})
                         pushToNOSQLSet(redis_user_events_key, event_dict, False, score)
                         '''
+                        rtn_dict['success'] = True
+                        rtn_dict['msg'] = 'Successfully created new user event!'
                     except Exception as e:
                         logger.info('Error adding user {0}: {1}'.format(user,e))
+                        rtn_dict['success'] = False
                         rtn_dict['msg'] = e
             except Exception as e:
                 logger.info('Error inviting friends: {0}'.format(e))
                 rtn_dict['msg'] = e
-
-            rtn_dict['success'] = True
-            rtn_dict['msg'] = 'Successfully created new user event!'
+                rtn_dict['success'] = False
 
         except Exception as e:
             print 'Error creating new event: {0}'.format(e)
