@@ -251,7 +251,7 @@ def createEvent(request):
         try:
             logger.info('POST DATA')
             logger.info(request.POST)
-            rtn_dict['post_data'] = request.POST
+            #rtn_dict['post_data'] = request.POST
             if not request.user.id:
                 user_id = request.POST['user']
             else:
@@ -292,6 +292,7 @@ def createEvent(request):
             try:
                 invited_friends = request.POST['invited_friends']
                 invited_friends = json.loads(invited_friends)
+                rtn_dict['started_inviting_friends'] = "Yes"
                 for user_dict in invited_friends:
                     try:
                         # save user link to event
@@ -338,7 +339,7 @@ def createEvent(request):
             print 'Error creating new event: {0}'.format(e)
             logger.info('Error creating new event: {0}'.format(e))
             rtn_dict['msg'] = 'Error creating new event: {0}'.format(e)
-            rtn_dict['post'] = request.POST
+            #rtn_dict['post'] = request.POST
 
     else:
         rtn_dict['msg'] = 'Not POST'
