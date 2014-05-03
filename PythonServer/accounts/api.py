@@ -612,16 +612,20 @@ def getGroup(request, group_id):
 
 
 #@login_required
-def getGroups(request):
+def getGroups(request, account_id):
 	rtn_dict = {'success': False, "msg": "", "groups": []}
 	try:
 		groups_range_start = int(request.GET.get('range_start', 0))
 		group_list = []
+		'''
 		if not request.user.id:
 			user_id = request.POST['user']
 		else:
 			user_id = request.user.id
+
 		account = Account.objects.get(user__id=user_id)
+		'''
+		account = Account.objects.get(pk=account_id)
 
 		'''
 		r = R.r
