@@ -634,7 +634,7 @@ def getGroups(request, account_id):
 		'''
 		r_groups = False
 		if not r_groups:
-			account = Account.objects.get(user=request.user, is_active=True)
+			#account = Account.objects.get(user=request.user, is_active=True)
 			groups = Group.objects.filter(members__id=account.id)
 			for group in groups:
 				group_list.append(model_to_dict(group))
