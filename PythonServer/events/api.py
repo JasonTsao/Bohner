@@ -274,6 +274,11 @@ def createEvent(request):
             event.private = request.POST.get('private', False)
             event.save()
 
+            event_dict = model_to_dict(event)
+            event_dict['start_time'] = str(event.start_time)
+            event_dict['end_time'] = str(event.end_time)
+            rtn_dict['event'] = event_dict
+
             rtn_dict['success'] = True
             rtn_dict['msg'] = 'Successfully created new user event!'
             '''
