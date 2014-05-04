@@ -378,7 +378,7 @@ def getInvitedFriends(request, event_id):
                             'invited_friend_id': invited_friend.id,
                             'friend_id':invited_friend.user.id,
                             'pf_pic': str(invited_friend.user.profile_pic),
-                            'name': invited_friend.user.display_name,
+                            'name': invited_friend.user.user_name,
                             "attending": invited_friend.attending})
                 invited_friends.append(invited_friend_dict)
         rtn_dict['success'] = True
