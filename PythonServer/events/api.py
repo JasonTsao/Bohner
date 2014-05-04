@@ -364,9 +364,11 @@ def getInvitedFriends(request, event_id):
     rtn_dict = {'success': False, "msg": "", "invited_friends": []}
     try:
         friend_range_start = int(request.GET.get('range_start', 0))
+        '''
         r = R.r
         r_invited_friends_key = 'event.{0}.invited_friends.set'.format(event_id)
         invited_friends = r.zrange(r_invited_friends_key, friend_range_start, friend_range_start + RETURN_LIST_SIZE)
+        '''
         invited_friends = False;
         if not invited_friends:
             invited_friends = []
@@ -375,7 +377,7 @@ def getInvitedFriends(request, event_id):
                 invited_friend_dict = json.dumps({
                             'invited_friend_id': invited_friend.id,
                             'friend_id':invited_friend.user.id,
-                            'pf_pic': invited_friend.user.profile_pic,
+                            'pf_pic': str(invited_friend.user.profile_pic),
                             'name': invited_friend.user.display_name,
                             "attending": invited_friend.attending})
                 invited_friends.append(invited_friend_dict)
