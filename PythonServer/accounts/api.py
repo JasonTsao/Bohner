@@ -783,6 +783,39 @@ def updateGroup(request, group_id):
 
 
 @csrf_exempt
+def checkIfPhoneUsersRegistered(request):
+	rtn_dict = {'success': False, "msg": "", "registered_users": [], "nonregistered_users":[]}
+
+	if request.method == 'POST':
+		try:
+			if not request.user.id:
+				user_id = request.POST['user']
+			else:
+				user_id = request.user.id
+
+			registered_users = []
+			nonregistered_users = []
+
+			phone_numbers = json.loads(request.POST['phone_numbers'])
+			for phone_number in phone_numbers:
+				try:
+					Account.objects.get(phone_number=phone_number)
+					registered_users.append(phone_number)
+				except:
+					nonregistered_users.append(phone_number)
+			rtn_dict['registered_users'] = registered_users
+			rtn_dict['nonregistered_users'] = nonregistered_users
+			rtn_dict['success'] = True
+			rtn_dict['msg'] = "Successfully found registered and non registered users"
+		except Exception as e:
+			logger.info('Error checking if phone users are registered: {0}'.format(e))
+			rtn_dict['msg'] = 'Error checking if phone users are registered: {0}'.format(e)
+	else:
+		rtn_dict['msg'] = 'Not POST'
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@csrf_exempt
 def updateAccountProfileField(request):
 	rtn_dict = {'success': False, "msg": ""}
 

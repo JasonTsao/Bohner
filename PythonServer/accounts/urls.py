@@ -37,4 +37,5 @@ urlpatterns += patterns("accounts.api",
                         url(r"^group/(\d+)/members/remove", "removeUsersFromGroup"),
                         url(r"^group/(\d+)/update", "updateGroup"),
                         url(r"^group/(\d+)", "getGroup"),
+                        url(r"^check_if_phone_users_registered", "checkIfPhoneUsersRegistered"),
                         )
