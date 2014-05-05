@@ -451,6 +451,56 @@ def searchUsersByEmail(request):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@csrf_exempt
+def unfriend(request):
+	rtn_dict = {'success': False, "msg": ""}
+	if request.method == 'POST':
+		try:
+			if not request.user.id:
+				user_id = request.POST['user']
+			else:
+				user_id = request.user.id
+			try:
+				phone_number = request.POST['phone_number']
+				account = Account.objects.get(user__id=user_id, is_active=True)
+				friend = Account.objects.get(phone_number=phone_number, is_active=True)
+			except:
+				account = Account.objects.get(user__id=user_id, is_active=True)
+				friend = Account.objects.get(pk=request.POST['friend_id'], is_active=True)
+
+			if account.id != friend.id:
+				link = AccountLink.objects.get(account_user=account, friend=friend)
+				link.blocked = True
+				link.save()
+
+				second_link = AccountLink.objects.get(account_user=friend, friend=account)
+				second_link.blocked = True
+				second_link.save(create_notification=True)
+
+				'''
+				redis_key = 'account.{0}.friends.set'.format(account.id)
+				friend_dict = json.dumps({'id': friend.id, 'pf_pic': str(friend.profile_pic), 'name': friend.display_name})
+				pushToNOSQLSet(redis_key, friend_dict, False,0)
+
+				redis_key = 'account.{0}.friends.set'.format(friend.id)
+				friend_dict = json.dumps({'id': account.id, 'pf_pic': str(account.profile_pic), 'name': account.display_name})
+				pushToNOSQLSet(redis_key, friend_dict, False,0)
+				'''
+				rtn_dict['success'] = True
+				rtn_dict['msg'] = 'successfully blocked friend {0}'.format(friend.id)
+			else:
+				print 'Error blocking friend: User and friend are the same person'
+				logger.info('Error blocking friend: User and friend are the same person')
+				rtn_dict['msg'] = 'Error blocking friend: User and friend are the same person'
+		except Exception as e:
+			print 'Error searching for useres: {0}'.format(e)
+			logger.info('Error searching for useres: {0}'.format(e))
+			rtn_dict['msg'] = 'Error blocking friend: {0}'.format(e)
+	else:
+		rtn_dict['msg'] = 'Not POST'
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
 #login_required
 @csrf_exempt
 def addFriend(request):
@@ -488,6 +538,51 @@ def addFriend(request):
 			print 'Error searching for useres: {0}'.format(e)
 			logger.info('Error searching for useres: {0}'.format(e))
 			rtn_dict['msg'] = 'Error adding friend: {0}'.format(e)
+	else:
+		rtn_dict['msg'] = 'Not POST'
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@csrf_exempt
+def addFriendByPhoneNumber(request):
+	rtn_dict = {'success': False, "msg": ""}
+	if request.method == 'POST':
+		try:
+			if not request.user.id:
+				user_id = request.POST['user']
+			else:
+				user_id = request.user.id
+
+			phone_number = request.POST['phone_number']
+			account = Account.objects.get(user__id=user_id, is_active=True)
+			friend = Account.objects.get(phone_number=phone_number, is_active=True)
+			if account.id != friend.id:
+				link = AccountLink(account_user=account, friend=friend)
+				link.save()
+
+				second_link = AccountLink(account_user=friend, friend=account)
+				second_link.save(create_notification=True)
+
+				'''
+				redis_key = 'account.{0}.friends.set'.format(account.id)
+				friend_dict = json.dumps({'id': friend.id, 'pf_pic': str(friend.profile_pic), 'name': friend.display_name})
+				pushToNOSQLSet(redis_key, friend_dict, False,0)
+
+				redis_key = 'account.{0}.friends.set'.format(friend.id)
+				friend_dict = json.dumps({'id': account.id, 'pf_pic': str(account.profile_pic), 'name': account.display_name})
+				pushToNOSQLSet(redis_key, friend_dict, False,0)
+				'''
+
+				rtn_dict['success'] = True
+				rtn_dict['msg'] = 'successfully added friend {0} by phone number'.format(friend.id)
+			else:
+				print 'Error adding friend by phone number: User and friend are the same person'
+				logger.info('Error adding friend by phone number: User and friend are the same person')
+				rtn_dict['msg'] = 'Error adding friend by phone number: User and friend are the same person'
+		except Exception as e:
+			print 'Error searching for useres: {0}'.format(e)
+			logger.info('Error searching for useres: {0}'.format(e))
+			rtn_dict['msg'] = 'Error adding friend by phone number: {0}'.format(e)
 	else:
 		rtn_dict['msg'] = 'Not POST'
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
