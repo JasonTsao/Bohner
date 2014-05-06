@@ -406,8 +406,6 @@ def login(request):
 
 	login_failed = False
 
-	rtn_dict['request_method'] = request.method
-
 	if request.method == "POST":
  		username = request.POST.get('username')
 		password = request.POST.get('password')
@@ -426,14 +424,12 @@ def login(request):
 			status = 200
 		else:
 			login_failed = True
-			rtn_dict['login_failed'] = True
 			status = 401
 
-		return = HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json", status=status)
+		return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json", status=status)
 
 		#if login_failed:
 		#	response['Auth-Response'] = 'Login failed'
-
 	'''
 	if request.user.is_authenticated():
 		status = 200
