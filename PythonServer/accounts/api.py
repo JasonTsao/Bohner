@@ -436,13 +436,15 @@ def login(request):
 	logger.info('status: {0}'.format(status))
 	print 'status: {0}'.format(status)
 
+	'''
 	response = render_to_response('accounts/login.html', {"rtn_dict":rtn_dict},
                                   context_instance=RequestContext(request))
 	response.status_code = status
 	if login_failed:
-		response['Auth-Response'] = 'Login failed'
-
-	return response
+		response['Auth-Response'] = 'Login failed''
+	'''
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+	#return response
 
 
 #login_required
