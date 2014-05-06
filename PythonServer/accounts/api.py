@@ -414,7 +414,6 @@ def login(request):
 	rtn_dict['request_method'] = request.method
 
 	try:
-		rtn_dict['user'] = request.user
 		rtn_dict['user_name'] = request.user.username
 	except:
 		rtn_dict['user'] = 'couldnt find'
