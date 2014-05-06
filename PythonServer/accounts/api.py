@@ -402,12 +402,20 @@ def registerUser(request):
 
 @csrf_exempt
 def login(request):
+	logger.info('logging in!')
+	print 'logging in!'
+
 	rtn_dict = {'success': False, "msg": ""}
 	login_failed = False
 	if request.method == "POST":
 		rtn_dict['post'] = request.POST
  		username = request.POST.get('username')
 		password = request.POST.get('password')
+
+		logger.info('username: {0}'.format(username))
+		logger.info('password: {0}'.format(password))
+		print 'username: {0}'.format(username)
+		print 'password: {0}'.format(password)
 		user = authenticate(username=username, password=password)
 		if user is not None:
 			if user.is_active:
@@ -425,6 +433,8 @@ def login(request):
 		status = 401
 
 	rtn_dict['status'] = status
+	logger.info('status: {0}'.format(status))
+	print 'status: {0}'.format(status)
 
 	response = render_to_response('accounts/login.html', {"rtn_dict":rtn_dict},
                                   context_instance=RequestContext(request))
