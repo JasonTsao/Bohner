@@ -404,19 +404,10 @@ def registerUser(request):
 def login(request):
 	rtn_dict = {'success': False, "msg": ""}
 
-	logger.info('logging in!')
-	print 'logging in!'
-
 	login_failed = False
-	logger.info('request method: {0}'.format(request.method))
-	print 'request method: {0}'.format(request.method)
 
 	rtn_dict['request_method'] = request.method
 
-	try:
-		rtn_dict['user_name'] = request.user.username
-	except:
-		rtn_dict['user'] = 'couldnt find'
 	if request.method == "POST":
  		username = request.POST.get('username')
 		password = request.POST.get('password')
@@ -424,10 +415,6 @@ def login(request):
 		rtn_dict['username'] = username
 		rtn_dict['password'] = password
 
-		logger.info('username: {0}'.format(username))
-		logger.info('password: {0}'.format(password))
-		print 'username: {0}'.format(username)
-		print 'password: {0}'.format(password)
 		user = authenticate(username=username, password=password)
 		if user is not None:
 			if user.is_active:
@@ -435,18 +422,21 @@ def login(request):
 			else:
 				return HttpResponseForbidden(\
 					content='Your account is not active.')
+
+			status = 200
 		else:
 			login_failed = True
 			rtn_dict['login_failed'] = True
+			status = 401
 
+		return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json", status_code=status)
+
+	'''
 	if request.user.is_authenticated():
 		status = 200
 	else:
 		status = 401
-
-	rtn_dict['status'] = status
-	logger.info('status: {0}'.format(status))
-	print 'status: {0}'.format(status)
+	'''
 
 	'''
 	response = render_to_response('accounts/login.html', {"rtn_dict":rtn_dict},
