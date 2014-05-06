@@ -402,8 +402,10 @@ def registerUser(request):
 
 @csrf_exempt
 def login(request):
+	rtn_dict = {'success': False, "msg": ""}
 	login_failed = False
 	if request.method == "POST":
+		rtn_dict['post'] = request.POST
  		username = request.POST.get('username')
 		password = request.POST.get('password')
 		user = authenticate(username=username, password=password)
@@ -415,13 +417,16 @@ def login(request):
 					content='Your account is not active.')
 		else:
 			login_failed = True
+			rtn_dict['login_failed'] = True
 
 	if request.user.is_authenticated():
 		status = 200
 	else:
 		status = 401
 
-	response = render_to_response('accounts/login.html', {},
+	rtn_dict['status'] = status
+
+	response = render_to_response('accounts/login.html', {"rtn_dict":rtn_dict},
                                   context_instance=RequestContext(request))
 	response.status_code = status
 	if login_failed:
