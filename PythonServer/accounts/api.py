@@ -429,7 +429,7 @@ def login(request):
 			rtn_dict['login_failed'] = True
 			status = 401
 
-		return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json", status_code=status)
+		return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json", status=status)
 
 	'''
 	if request.user.is_authenticated():
