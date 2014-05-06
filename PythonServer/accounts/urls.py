@@ -1,5 +1,6 @@
 from django.conf.urls import url, patterns
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import logout
 
 urlpatterns = patterns("accounts.views",
                         url(r"^create_user", "createUser"),
@@ -16,6 +17,7 @@ urlpatterns += patterns("accounts.api",
                         # manual refreshing/updating of campaign backend data
                         url(r"^register$", "registerUser"),
                         url(r"^login$", "login"),
+                        url(r'logout', logout, name="logout"),
                         url(r"^update$", "updateAccountProfileField"),
                         url(r"^settings/update$", "updateAccountSettingField"),
                         url(r"^settings/get$", "getAccountSettings"),
