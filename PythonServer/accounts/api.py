@@ -402,11 +402,15 @@ def registerUser(request):
 
 @csrf_exempt
 def login(request):
+	rtn_dict = {'success': False, "msg": ""}
+
 	logger.info('logging in!')
 	print 'logging in!'
 
-	rtn_dict = {'success': False, "msg": ""}
 	login_failed = False
+	logger.info('request method: {0}'.format(request.method))
+	print 'request method: {0}'.format(request.method)
+
 	rtn_dict['request_method'] = request.method
 
 	try:
