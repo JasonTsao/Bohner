@@ -444,7 +444,7 @@ def login(request):
 	if login_failed:
 		response['Auth-Response'] = 'Login failed''
 	'''
-	return = HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
 #login_required
