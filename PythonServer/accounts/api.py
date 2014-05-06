@@ -407,10 +407,19 @@ def login(request):
 
 	rtn_dict = {'success': False, "msg": ""}
 	login_failed = False
+	rtn_dict['request_method'] = request.method
+
+	try:
+		rtn_dict['user'] = request.user
+		rtn_dict['user_name'] = request.user.username
+	except:
+		rtn_dict['user'] = 'couldnt find'
 	if request.method == "POST":
-		rtn_dict['post'] = request.POST
  		username = request.POST.get('username')
 		password = request.POST.get('password')
+
+		rtn_dict['username'] = username
+		rtn_dict['password'] = password
 
 		logger.info('username: {0}'.format(username))
 		logger.info('password: {0}'.format(password))
