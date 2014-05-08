@@ -172,9 +172,9 @@ def getEvent(request, event_id):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-#login_required
+@login_required
 @csrf_exempt
-def upcomingEvents(request, account_id):
+def upcomingEvents(request):
     rtn_dict = {'success': False, "msg": ""}
     try:
         upcoming_events = []
@@ -186,6 +186,9 @@ def upcomingEvents(request, account_id):
         owned_upcoming_events_key = 'account.{0}.owned_events.set'.format(account_id)
         owned_upcoming_events = r.zrange(owned_upcoming_events_key, event_range_start, event_range_start + RETURN_LIST_SIZE)
         '''
+
+        account_id = Account.objects.values('id').get(user=request.user)['id']
+
 
         owned_upcoming_events = False
         if not owned_upcoming_events:
