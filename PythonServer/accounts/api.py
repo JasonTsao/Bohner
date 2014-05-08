@@ -362,7 +362,7 @@ def registerUser(request):
 			new_user = User(username=request.POST.get("username"))
 			new_user.is_active = True
 			new_user.password = make_password(request.POST.get('password1'))
-			#new_user.email = request.POST.get('email')
+			new_user.email = request.POST.get('email')
 			new_user.save()
 			user = authenticate(username=request.POST.get("username"), password=request.POST.get("password1"))
 
