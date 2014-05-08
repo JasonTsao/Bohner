@@ -354,6 +354,9 @@ def facebookConnect(request):
 @csrf_exempt
 def registerUser(request):
 	rtn_dict = {'success': False, "msg": ""}
+
+	login_failed = False
+
 	if request.method == 'POST':
 		try:
 			new_user = User(username=request.POST.get("username"))
@@ -362,11 +365,33 @@ def registerUser(request):
 			new_user.email = request.POST.get('email')
 			new_user.save()
 			user = authenticate(username=request.POST.get("username"), password=request.POST.get("password1"))
+
 			auth_login(request, user)
 			account = Account(user=user)
 			account.email = user.email
 			account.user_name = user.username
 			account.save()
+
+			if user is not None:
+				if user.is_active:
+					auth_login(request, user)
+				else:
+					return HttpResponseForbidden(\
+						content='Your account is not active.')
+
+				status = 200
+			else:
+				login_failed = True
+				status = 401
+
+
+			rtn_dict['success'] = True
+			rtn_dict['msg'] = 'Successfully registered new user'
+			rtn_dict['user'] = new_user.id
+			rtn_dict['account'] = account.id
+			return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json", status=status)
+
+			'''
 			r = R.r
 			#PUSH NOTIFICATIONS
 			token = request.POST.get('device_token', None)
@@ -383,12 +408,7 @@ def registerUser(request):
 			
 			user_key = 'account.{0}.hash'.format(account.id)
 			r.hmset(user_key, model_to_dict(account))
-
-
-			rtn_dict['success'] = True
-			rtn_dict['msg'] = 'Successfully registered new user'
-			rtn_dict['user'] = new_user.id
-			rtn_dict['account'] = account.id
+			'''
 		except Exception as e:
 			print 'Error registering new user: {0}'.format(e)
 			logger.info('Error registering new user: {0}'.format(e))
