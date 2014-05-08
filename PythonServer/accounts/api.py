@@ -480,21 +480,26 @@ def searchUsersByEmail(request):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@login_required
 @csrf_exempt
 def unfriend(request):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
+			'''
 			if not request.user.id:
 				user_id = request.POST['user']
 			else:
 				user_id = request.user.id
+			'''
 			try:
 				phone_number = request.POST['phone_number']
-				account = Account.objects.get(user__id=user_id, is_active=True)
+				#account = Account.objects.get(user__id=user_id, is_active=True)
+				account = Account.objects.get(user=request.user, is_active=True)
 				friend = Account.objects.get(phone_number=phone_number, is_active=True)
 			except:
-				account = Account.objects.get(user__id=user_id, is_active=True)
+				account = Account.objects.get(user=request.user, is_active=True)
+				#account = Account.objects.get(user__id=user_id, is_active=True)
 				friend = Account.objects.get(pk=request.POST['friend_id'], is_active=True)
 
 			if account.id != friend.id:
@@ -530,17 +535,20 @@ def unfriend(request):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-#login_required
+@login_required
 @csrf_exempt
 def addFriend(request):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
+			'''
 			if not request.user.id:
 				user_id = request.POST['user']
 			else:
 				user_id = request.user.id
-			account = Account.objects.get(user__id=user_id, is_active=True)
+			'''
+			account = Account.objects.get(user=request.user, is_active=True)
+			#account = Account.objects.get(user__id=user_id, is_active=True)
 			friend = Account.objects.get(pk=request.POST['friend_id'], is_active=True)
 			if account.id != friend.id:
 				link = AccountLink(account_user=account, friend=friend)
@@ -571,19 +579,22 @@ def addFriend(request):
 		rtn_dict['msg'] = 'Not POST'
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
-
+@login_required
 @csrf_exempt
 def addFriendByPhoneNumber(request):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
+			'''
 			if not request.user.id:
 				user_id = request.POST['user']
 			else:
 				user_id = request.user.id
+			'''
 
 			phone_number = request.POST['phone_number']
-			account = Account.objects.get(user__id=user_id, is_active=True)
+			account = Account.objects.get(user=request.user, is_active=True)
+			#account = Account.objects.get(user__id=user_id, is_active=True)
 			friend = Account.objects.get(phone_number=phone_number, is_active=True)
 			if account.id != friend.id:
 				link = AccountLink(account_user=account, friend=friend)
@@ -617,12 +628,14 @@ def addFriendByPhoneNumber(request):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-#login_required
+@login_required
 @csrf_exempt
-def getFriends(request, account_id):
+def getFriends(request):
 	rtn_dict = {'success': False, "msg": "", "friends": []}
 
 	try:
+		account_id = Account.objects.values('id').get(user=request.user)['id']
+
 		#friends_range_start = int(request.GET.get('range_start', 0))
 		friends_range_start = 0;
 		r = R.r
@@ -663,17 +676,20 @@ def getFriends(request, account_id):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-#login_required
+@login_required
 @csrf_exempt
 def createGroup(request):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
+			'''
 			if not request.user.id:
 				user_id = request.POST['user']
 			else:
 				user_id = request.user.id
-			account = Account.objects.get(user__id=user_id)
+			'''
+			#account = Account.objects.get(user__id=user_id)
+			account = Account.objects.get(user=request.user)
 			group = Group(group_creator=account)
 			group.name = request.POST['name']
 			group.save()
@@ -710,7 +726,7 @@ def createGroup(request):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-#@login_required
+@login_required
 @csrf_exempt
 def getGroup(request, group_id):
 	rtn_dict = {'success': False, "msg": "", "group": ""}
@@ -720,11 +736,14 @@ def getGroup(request, group_id):
 		group = r.hgetall(r_group_key)
 		group = False
 		if not group:
+			'''
 			if not request.user.id:
 				user_id = request.POST['user']
 			else:
 				user_id = request.user.id
-			account = Account.objects.get(user__id=user_id, is_active=True)
+			'''
+			account = Account.objects.get(user=request.user, is_active=True)
+			#account = Account.objects.get(user__id=user_id, is_active=True)
 			group = Group.objects.get(pk=group_id)
 			group = model_to_dict(group)
 		rtn_dict['group'] = group
@@ -736,6 +755,7 @@ def getGroup(request, group_id):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@login_required
 @csrf_exempt
 def getGroupMembers(request, group_id):
 	rtn_dict = {'success': False, "msg": "", "members": ""}
@@ -749,11 +769,15 @@ def getGroupMembers(request, group_id):
 			group = False
 			members = []
 			if not group:
+				'''
 				if not request.user.id:
 					user_id = request.POST['user']
 				else:
 					user_id = request.user.id
+
 				account = Account.objects.get(user__id=user_id, is_active=True)
+				'''
+				account = Account.objects.get(user=request.user, is_active=True)
 				group = Group.objects.get(pk=group_id)
 
 				#group = model_to_dict(group)
@@ -773,9 +797,9 @@ def getGroupMembers(request, group_id):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-#@login_required
+@login_required
 @csrf_exempt
-def getGroups(request, account_id):
+def getGroups(request):
 	rtn_dict = {'success': False, "msg": "", "groups": []}
 	try:
 		groups_range_start = int(request.GET.get('range_start', 0))
@@ -788,7 +812,8 @@ def getGroups(request, account_id):
 
 		account = Account.objects.get(user__id=user_id)
 		'''
-		account = Account.objects.get(pk=account_id)
+		account_id = Account.objects.values('id').get(user=request.user)['id']
+		#account = Account.objects.get(pk=account_id)
 
 		'''
 		r = R.r
@@ -798,7 +823,8 @@ def getGroups(request, account_id):
 		r_groups = False
 		if not r_groups:
 			#account = Account.objects.get(user=request.user, is_active=True)
-			groups = Group.objects.filter(members__id=account.id)
+			#groups = Group.objects.filter(members__id=account.id)
+			groups = Group.objects.filter(members__id=account_id)
 			for group in groups:
 				group_list.append(model_to_dict(group))
 		else:
@@ -815,17 +841,20 @@ def getGroups(request, account_id):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-#@login_required
+@login_required
 @csrf_exempt
 def addUsersToGroup(request, group_id):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
+			'''
 			if not request.user.id:
 				user_id = request.POST['user']
 			else:
 				user_id = request.user.id
 			creator = Account.objects.get(user__id=user_id, is_active=True)
+			'''
+			creator = Account.objects.get(user=request.user, is_active=True)
 			group = Group.objects.get(pk=group_id)
 
 			members_to_add = ast.literal_eval(json.loads(request.POST['new_members']))
@@ -906,16 +935,19 @@ def updateGroup(request, group_id):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@login_required
 @csrf_exempt
 def checkIfPhoneUsersRegistered(request):
 	rtn_dict = {'success': False, "msg": "", "registered_users": [], "nonregistered_users":[]}
 
 	if request.method == 'POST':
 		try:
+			'''
 			if not request.user.id:
 				user_id = request.POST['user']
 			else:
 				user_id = request.user.id
+			'''
 
 			registered_users = []
 			nonregistered_users = []
@@ -939,6 +971,7 @@ def checkIfPhoneUsersRegistered(request):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@login_required
 @csrf_exempt
 def updateAccountProfileField(request):
 	rtn_dict = {'success': False, "msg": ""}
@@ -950,11 +983,14 @@ def updateAccountProfileField(request):
 		except:
 			value = request.POST['value']
 		try:
+			'''
 			if not request.user.id:
 				user_id = request.POST['user']
 			else:
 				user_id = request.user.id
 			account = Account.objects.get(user__id=user_id)
+			'''
+			account = Account.objects.get(user=request.user)
 
 			try:
 				getattr(account, field)
@@ -1009,6 +1045,7 @@ def getAccountSettings(request):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@login_required
 @csrf_exempt
 def updateAccountSettingField(request):
 	rtn_dict = {'success': False, "msg": ""}
@@ -1022,12 +1059,15 @@ def updateAccountSettingField(request):
 
 		rtn_dict['post'] = request.POST
 		try:
+			'''
 			if not request.user.id:
 				user_id = request.POST['user']
 			else:
 				user_id = request.user.id
 
 			account = Account.objects.get(user__id=user_id)
+			'''
+			account = Account.objects.get(user=request.user)
 			try:
 				account_settings = AccountSettings.objects.get(account=account)
 			except:

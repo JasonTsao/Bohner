@@ -217,8 +217,9 @@ def upcomingEvents(request):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@login_required
 @csrf_exempt
-def ownedUpcomingEvents(request, account_id):
+def ownedUpcomingEvents(request):
     rtn_dict = {'success': False, "msg": ""}
     try:
         owned_upcoming_events = []
@@ -228,6 +229,7 @@ def ownedUpcomingEvents(request, account_id):
         owned_upcoming_events_key = 'account.{0}.owned_events.set'.format(account_id)
         owned_upcoming_events = r.zrange(owned_upcoming_events_key, event_range_start, event_range_start + RETURN_LIST_SIZE)
         '''
+        account_id = Account.objects.values('id').get(user=request.user)['id']
         #owned_upcoming_events = False
         if not owned_upcoming_events or True:
             #owned_upcoming_events = []
@@ -246,7 +248,7 @@ def ownedUpcomingEvents(request, account_id):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-#login_required
+@login_required
 @csrf_exempt
 def createEvent(request):
     rtn_dict = {'success': False, "msg": ""}
@@ -255,11 +257,14 @@ def createEvent(request):
             logger.info('POST DATA')
             logger.info(request.POST)
             #rtn_dict['post_data'] = request.POST
+            '''
             if not request.user.id:
                 user_id = request.POST['user']
             else:
                 user_id = request.user.id
             user = Account.objects.get(user__id=user_id)
+            '''
+            user = Account.objects.get(user=request.user)
             event = Event(creator=user)
             event.name = request.POST.get('name', "")
             start_time = request.POST.get('start_time', None)
@@ -362,8 +367,12 @@ def createEvent(request):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@login_required
 @csrf_exempt
 def getInvitedFriends(request, event_id):
+    '''
+        NEEDS AUTHENTICATION TO CHECK REQUEST USER IS ALLOWED TO GET ACCESSTO THIS INFORMATION
+    '''
     rtn_dict = {'success': False, "msg": "", "invited_friends": []}
     try:
         friend_range_start = int(request.GET.get('range_start', 0))
@@ -394,7 +403,7 @@ def getInvitedFriends(request, event_id):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-#@login_required
+@login_required
 @csrf_exempt
 def inviteFriends(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
@@ -404,13 +413,16 @@ def inviteFriends(request, event_id):
             invited_friends = ast.literal_eval(json.loads(request.POST['invited_friends']))
             event = Event.objects.get(pk=event_id)
 
+            '''
             if not request.user.id:
                 user_id = request.POST['user']
             else:
                 user_id = request.user.id
+            '''
             # check to see if this use is allowed to invite more friends to event
             try:
-                account = Account.objects.get(user__id=user_id)
+                #account = Account.objects.get(user__id=user_id)
+                account = Account.objects.get(user=request.user)
                 if event.creator == account:
                     is_authorized = True
             except:
@@ -472,7 +484,7 @@ def inviteFriends(request, event_id):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-#@login_required
+@login_required
 @csrf_exempt
 def updateEvent(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
