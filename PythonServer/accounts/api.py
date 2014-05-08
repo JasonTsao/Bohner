@@ -362,34 +362,26 @@ def registerUser(request):
 			new_user = User(username=request.POST.get("username"))
 			new_user.is_active = True
 			new_user.password = make_password(request.POST.get('password1'))
-			new_user.email = request.POST.get('email')
+			#new_user.email = request.POST.get('email')
 			new_user.save()
 			user = authenticate(username=request.POST.get("username"), password=request.POST.get("password1"))
 
-			auth_login(request, user)
-			account = Account(user=user)
-			account.email = user.email
-			account.user_name = user.username
-			account.save()
-
-			if user is not None:
-				if user.is_active:
-					auth_login(request, user)
-				else:
-					return HttpResponseForbidden(\
-						content='Your account is not active.')
-
-				status = 200
-			else:
+			if user is None:
 				login_failed = True
 				status = 401
 
+			else:
+				auth_login(request, user)
+				account = Account(user=user)
+				account.email = user.email
+				account.user_name = user.username
+				account.save()
 
-			rtn_dict['success'] = True
-			rtn_dict['msg'] = 'Successfully registered new user'
-			rtn_dict['user'] = new_user.id
-			rtn_dict['account'] = account.id
-			return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json", status=status)
+				rtn_dict['success'] = True
+				rtn_dict['msg'] = 'Successfully registered new user'
+				rtn_dict['user'] = new_user.id
+				rtn_dict['account'] = account.id
+				return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json", status=status)
 
 			'''
 			r = R.r
