@@ -410,8 +410,10 @@ def addRemoveFriends(request, event_id):
     is_authorized = False
     if request.method == 'POST':
         try:
-            invited_friends = ast.literal_eval(json.loads(request.POST['invited_friends']))
-            removed_friends = ast.literal_eval(json.loads(request.POST['removed_friends']))
+            #invited_friends = ast.literal_eval(json.loads(request.POST['invited_friends']))
+            #removed_friends = ast.literal_eval(json.loads(request.POST['removed_friends']))
+            invited_friends = json.loads(request.POST['invited_friends'])
+            removed_friends = json.loads(request.POST['removed_friends'])
             event = Event.objects.get(pk=event_id)
 
             '''
