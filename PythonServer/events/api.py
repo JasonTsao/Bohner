@@ -405,12 +405,13 @@ def getInvitedFriends(request, event_id):
 
 @login_required
 @csrf_exempt
-def inviteFriends(request, event_id):
+def addRemoveFriends(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     is_authorized = False
     if request.method == 'POST':
         try:
             invited_friends = ast.literal_eval(json.loads(request.POST['invited_friends']))
+            removed_friends = ast.literal_eval(json.loads(request.POST['removed_friends']))
             event = Event.objects.get(pk=event_id)
 
             '''
@@ -425,16 +426,17 @@ def inviteFriends(request, event_id):
                 account = Account.objects.get(user=request.user)
                 if event.creator == account:
                     is_authorized = True
+
+                if not is_authorized:
+                    try:
+                        invited_friend = InvitedFriend.objects.get(event=Event, user=account)
+                        if inivited_friend.can_invite_friends:
+                            is_authorized = True
+                    except:
+                        pass
             except:
                 pass
 
-            if not is_authorized:
-                try:
-                    invited_friend = InvitedFriend.objects.get(event=Event, user=account)
-                    if inivited_friend.can_invite_friends:
-                        is_authorized = True
-                except:
-                    pass
 
             if is_authorized:
                 r = R.r
@@ -452,6 +454,7 @@ def inviteFriends(request, event_id):
                         account_link.invited_count += 1
                         account_link.save()
                         #Save to Redis
+                        '''
                         redis_key = 'event.{0}.invited_friends.set'.format(event_id)
                         invited_friend_dict = json.dumps({
                                                 'invited_friend_id': invited_friend.id,
@@ -467,12 +470,29 @@ def inviteFriends(request, event_id):
                                         'event_name': event.name,
                                         'start_time': str(event.start_time)})
                         pushToNOSQLSet(redis_user_events_key, event_dict, False, 0)
+                        '''
                         rtn_dict['success'] = True
                         rtn_dict['msg'] = 'Successfully added users'
                     except Exception as e:
                         #print 'Error adding user {0}'.format(e)
                         logger.info('Error adding user {0}'.format(e))
                         rtn_dict['msg'] = 'Error adding user {0}'.format(e)
+
+                for user_dict in removed_friends:
+                    try: 
+                        user_id = user_dict['user_id']
+                        friend = Account.objects.get(pk=user_id)
+
+                        invited_friend = InvitedFriend.objects.get(event=event, user=friend)
+                        #invited_friend.save()
+                        invited_friend.delete()
+
+                        rtn_dict['success'] = True
+                        rtn_dict['msg'] = 'Successfully added users'
+                    except Exception as e:
+                        #print 'Error adding user {0}'.format(e)
+                        logger.info('Error removing user {0}'.format(e))
+                        rtn_dict['msg'] = 'Error removing user {0}'.format(e)
                 
             else:
                 rtn_dict['msg'] = 'user is not authorized to invite other friends'
@@ -529,12 +549,15 @@ def updateEvent(request, event_id):
         except:
             pass
 
+        '''
         try:
             invited_friends = InvitedFriend.objects.filter(event=event)
             event.save(invited_friends=invited_friends)
         except:
             event.save()
-        pushToNOSQLHash(redis_key, model_to_dict(event))
+        '''
+        event.save()
+        #pushToNOSQLHash(redis_key, model_to_dict(event))
         rtn_dict['success'] = True
         rtn_dict['msg'] = 'Successfully updated {0}!'.format(event.name)
     except Exception as e:

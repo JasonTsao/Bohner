@@ -121,6 +121,7 @@ class InvitedFriend(models.Model):
     def save(self, create_notification=None, *args, **kwargs):
         try:
             if not self.pk and create_notification:
+                '''
                 message = "{0} said {1}".format(self.event.creator.user_name, self.event.description)
                 custom_payload = {
                                 "invited_by_name": self.event.creator.user_name,
@@ -136,6 +137,7 @@ class InvitedFriend(models.Model):
                 device = Device.objects.get(users__pk=user.id)
                 tokens.append(device.token)
                 sendNotification(notification, tokens)
+                '''
         except Exception as e:
                 print 'Unable to send push notification to {0} abouve updating event {1}'.format(self.user.id, self.event.id)
         super(InvitedFriend, self).save()
