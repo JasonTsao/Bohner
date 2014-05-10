@@ -885,7 +885,7 @@ def addRemoveUsersFromGroup(request, group_id):
 
 			for member_id in members_to_remove:
 				member_to_remove = Account.objects.get(pk=member_id)
-				group.members.remove(new_member)
+				group.members.remove(member_to_remove)
 
 			'''
 			r = R.r
