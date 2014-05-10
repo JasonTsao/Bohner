@@ -843,7 +843,25 @@ def getGroups(request):
 
 @login_required
 @csrf_exempt
-def addUsersToGroup(request, group_id):
+def removeSelfFromGroup(request, group_id):
+	rtn_dict = {'success': False, "msg": ""}
+	if request.method == 'POST':
+		try:
+			member = Account.objects.get(user=request.user)
+			group = Group.objects.get(pk=group_id)
+			group.members.remove(member)
+			rtn_dict['success'] = True
+			rtn_dict['msg'] = 'Successfully removed self from group {0}'.format(group_id)
+		except Exception as e:
+			print 'Error removing self from group: {0}'.format(e)
+			logger.info('Error removing self from group: {0}'.format(e))
+			rtn_dict['msg'] = 'Error removing self from group: {0}'.format(e)
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@login_required
+@csrf_exempt
+def addRemoveUsersFromGroup(request, group_id):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
@@ -857,13 +875,19 @@ def addUsersToGroup(request, group_id):
 			creator = Account.objects.get(user=request.user, is_active=True)
 			group = Group.objects.get(pk=group_id)
 
-			members_to_add = ast.literal_eval(json.loads(request.POST['new_members']))
+			members_to_add = json.loads(request.POST['add_members'])
+			members_to_remove = json.loads(request.POST['remove_members'])
 
 			for member_id in members_to_add:
 				new_member = Account.objects.get(pk=member_id)
 				link = AccountLink.objects.get(account_user=creator, friend=new_member)
 				group.members.add(new_member)
 
+			for member_id in members_to_remove:
+				member_to_remove = Account.objects.get(pk=member_id)
+				group.members.remove(new_member)
+
+			'''
 			r = R.r
 			r_group_key = 'group.{0}.hash'.format(group.id)
 			pushToNOSQLHash(r_group_key, model_to_dict(group))
@@ -872,6 +896,7 @@ def addUsersToGroup(request, group_id):
 			for member in group.members.all():
 				r_groups_key = 'account.{0}.groups.set'.format(member.id)
 				pushToNOSQLSet(r_groups_key, group.id, False, 0)
+			'''
 
 			rtn_dict['success'] = True
 			rtn_dict['msg'] = 'successfully added users to group {0}'.format(group_id)
@@ -913,18 +938,22 @@ def updateGroup(request, group_id):
 	rtn_dict = {'success': False, "msg": ""}
 	if request.method == 'POST':
 		try:
+			'''
 			if not request.user.id:
 				user_id = request.POST['user']
 			else:
 				user_id = request.user.id
-			creator = Account.objects.get(user__id=user_id, is_active=True)
+			'''
+			creator = Account.objects.get(user=request.user, is_active=True)
 			group = Group.objects.get(pk=group_id, group_creator=creator)
 			group.name = request.POST['new_name']
 			group.save()
+			'''
 			r = R.r
 			r_group_key = 'group.{0}.hash'.format(group_id)
 			group['name'] = request.POST['new_name']
 			pushToNOSQLHash(r_group_key, model_to_dict(group))
+			'''
 			rtn_dict['success'] = True
 			rtn_dict['msg'] = 'successfully edited group {0}'.format(group_id)
 		except Exception as e:

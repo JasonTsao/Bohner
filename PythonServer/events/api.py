@@ -508,6 +508,22 @@ def addRemoveFriends(request, event_id):
 
 @login_required
 @csrf_exempt
+def removeSelfFromEvent(request, event_id):
+    rtn_dict = {'success': False, "msg": ""}
+    try:
+        account = Account.objects.get(user=request.user)
+        event = Event.objects.get(pk=event_id)
+        invited_friend = InvitedFriend.objects.get(event=event, user=account)
+        invited_friend.delete()
+    except Exception as e:
+        logger.info('Error updating event {0}: {1}'.format(event_id, e))
+        rtn_dict['msg'] = 'Error updating event {0}: {1}'.format(event_id, e)
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+
+@login_required
+@csrf_exempt
 def updateEvent(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     try:
