@@ -536,8 +536,10 @@ def updateEvent(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     try:
         event = Event.objects.get(pk=event_id)
+        '''
         r = R.r
         redis_key = 'event.{0}.hash'.format(event_id)
+        '''
         try:
             event.name = request.POST['name']
         except:
@@ -545,7 +547,7 @@ def updateEvent(request, event_id):
         try:
             event.start_time = request.POST['start_time']
             rtn_dict['saving_start_time'] = 'start time saving succeeded'
-            rtn_dict['start_time_type'] = type(request.POST['start_time'])
+            #rtn_dict['start_time_type'] = type(request.POST['start_time'])
         except:
             rtn_dict['saving_start_time'] = 'start time saving failed'
         try:
@@ -587,7 +589,7 @@ def updateEvent(request, event_id):
         event.save()
         #pushToNOSQLHash(redis_key, model_to_dict(event))
         rtn_dict['success'] = True
-        rtn_dict['msg'] = 'Successfully updated {0}!'.format(event.name)
+        rtn_dict['msg'] = 'Successfully updated event!'
     except Exception as e:
         logger.info('Error updating event {0}: {1}'.format(event_id, e))
         rtn_dict['msg'] = 'Error updating event {0}: {1}'.format(event_id, e)
