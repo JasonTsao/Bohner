@@ -195,8 +195,12 @@ def upcomingEvents(request):
             #owned_upcoming_events = []
             owned_events = Event.objects.filter(creator=account_id, event_over=False, cancelled=False).order_by('start_time')
             for event in owned_events:
-                #owned_upcoming_events.append(model_to_dict(event)) 
-                upcoming_events.append(model_to_dict(event))
+                #owned_upcoming_events.append(model_to_dict(event))
+                event_dict = model_to_dict(event)
+                created = time.mktime(event.created.timetuple())
+                event_dict['created'] = created
+                upcoming_events.append(event_dict)
+                #upcoming_events.append(model_to_dict(event))
 
         #upcoming_events = False
         if not upcoming_events or True:
@@ -204,7 +208,11 @@ def upcomingEvents(request):
             for invited_user in invited_users:
                 if not invited_user.event.event_over and not invited_user.event.cancelled:
                     if invited_user.event.creator != account_id:
-                        upcoming_events.append(model_to_dict(invited_user.event))
+                        event_dict = model_to_dict(invited_user.event)
+                        created = time.mktime(invited_user.event.created.timetuple())
+                        event_dict['created'] = created
+                        upcoming_events.append(event_dict)
+                        #upcoming_events.append(model_to_dict(invited_user.event))
         rtn_dict['upcoming_events'] = upcoming_events
         #rtn_dict['owned_upcoming_events'] = owned_upcoming_events
         rtn_dict['success'] = True
@@ -536,8 +544,10 @@ def updateEvent(request, event_id):
             pass
         try:
             event.start_time = request.POST['start_time']
+            rtn_dict['saving_start_time'] = 'start time saving succeeded'
+            rtn_dict['start_time_type'] = type(request.POST['start_time'])
         except:
-            pass
+            rtn_dict['saving_start_time'] = 'start time saving failed'
         try:
             event.end_time = request.POST['end_time']
         except:
