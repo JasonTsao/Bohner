@@ -212,11 +212,16 @@ def upcomingEvents(request):
                 if not invited_user.event.event_over and not invited_user.event.cancelled:
                     if invited_user.event.creator != account_id:
                         event_dict = model_to_dict(invited_user.event)
+                        if event.start_time:
+                            started = time.mktime(event.start_time.timetuple())
+                            event_dict['start_time'] = started
                         created = time.mktime(invited_user.event.created.timetuple())
                         event_dict['created'] = created
                         upcoming_events.append(event_dict)
                         #upcoming_events.append(model_to_dict(invited_user.event))
-        rtn_dict['upcoming_events'] = upcoming_events
+
+        sorted_upcoming_events = sorted(upcoming_events, key=lambda k: k['created']) 
+        rtn_dict['upcoming_events'] = sorted_upcoming_events
         #rtn_dict['owned_upcoming_events'] = owned_upcoming_events
         rtn_dict['success'] = True
         rtn_dict['message'] = 'Successfully retrieved upcoming events'
@@ -224,6 +229,7 @@ def upcomingEvents(request):
         print 'Error grabbing upcoming events: {0}'.format(e)
         logger.info('Error grabbing upcoming events: {0}'.format(e))
         rtn_dict['msg'] = 'Error grabbing upcoming events: {0}'.format(e)
+
 
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
@@ -549,8 +555,6 @@ def updateEvent(request, event_id):
             pass
         try:
             event.start_time = request.POST['start_time']
-            rtn_dict['saving_start_time'] = 'start time saving succeeded'
-            #rtn_dict['start_time_type'] = type(request.POST['start_time'])
         except:
             rtn_dict['saving_start_time'] = 'start time saving failed'
         try:
