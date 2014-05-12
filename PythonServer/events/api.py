@@ -197,6 +197,9 @@ def upcomingEvents(request):
             for event in owned_events:
                 #owned_upcoming_events.append(model_to_dict(event))
                 event_dict = model_to_dict(event)
+                if event.start_time:
+                    started = time.mktime(event.start_time.timetuple())
+                    event_dict['start_time'] = started
                 created = time.mktime(event.created.timetuple())
                 event_dict['created'] = created
                 upcoming_events.append(event_dict)
