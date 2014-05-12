@@ -200,6 +200,9 @@ def upcomingEvents(request):
                 if event.start_time:
                     started = time.mktime(event.start_time.timetuple())
                     event_dict['start_time'] = started
+                if event.end_time:
+                    ended = time.mktime(event.end_time.timetuple())
+                    event_dict['end_time'] = ended
                 created = time.mktime(event.created.timetuple())
                 event_dict['created'] = created
                 upcoming_events.append(event_dict)
@@ -215,6 +218,9 @@ def upcomingEvents(request):
                         if event.start_time:
                             started = time.mktime(event.start_time.timetuple())
                             event_dict['start_time'] = started
+                        if event.end_time:
+                            ended = time.mktime(event.end_time.timetuple())
+                            event_dict['end_time'] = ended
                         created = time.mktime(invited_user.event.created.timetuple())
                         event_dict['created'] = created
                         upcoming_events.append(event_dict)
