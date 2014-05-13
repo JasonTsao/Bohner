@@ -1,13 +1,14 @@
 import json
 from django.db import models
 from django.forms.models import model_to_dict
-from accounts.models import Account
+from accounts.models import Account, Group
 from ios_notifications.models import APNService, Notification, Device
 from notifications.api import createNotification, sendNotification
 
 
 class Event(models.Model):
     creator = models.ForeignKey(Account)
+    group = models.ForeignKey(Group, null=True,blank=True)
     name = models.CharField(max_length=255, null=True, blank=True)
     start_time = models.DateTimeField(db_index=True, null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
@@ -41,6 +42,8 @@ class Event(models.Model):
                 'couldnt save historical Event'
                 print e
         if self.pk and invited_friends:
+            print "invited friends in save function"
+            '''
             try:
                 message = "{0} updated {1}".format(self.creator.user_name, self.name)
                 custom_payload = {
@@ -61,6 +64,7 @@ class Event(models.Model):
                 sendNotification(notification, tokens)
             except Exception as e:
                 print 'Unable to send push notification when updateing event {0}: {1}'.format(self.id, e)
+            '''
         super(Event, self).save()
 
     def __unicode__(self):

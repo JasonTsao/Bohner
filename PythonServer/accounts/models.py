@@ -126,6 +126,20 @@ class AccountSetting(models.Model):
         unique_together = (('account', 'setting_name'),)
 
 
+class FriendRequest(models.Model):
+    account_user = models.ForeignKey(Account, related_name='friend_requester')
+    friend = models.ForeignKey(Account, related_name='friend_recieving_request')
+    resolved = models.NullBooleanField(default=False)
+    ignore = models.NullBooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateField(auto_now=True)
+
+    def __unicode__(self):
+        return str('{0} requested {1} to friend'.format(self.account_user.user_name,self.friend.user_name))
+    class Meta:
+        unique_together = (('account_user', 'friend'),)
+
+
 class AccountLink(models.Model):
     account_user = models.ForeignKey(Account, related_name='account_user')
     friend = models.ForeignKey(Account, related_name='friend')

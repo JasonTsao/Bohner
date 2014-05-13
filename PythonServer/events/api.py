@@ -172,6 +172,66 @@ def getEvent(request, event_id):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+def userInGroup(account_id, group_id):
+    user_authorized = None
+
+    group = Group.objects.get(pk=group_id)
+    for member in group.members.all():
+        if member.id == account_id:
+            user_authorized = group
+    return user_authorized
+
+
+@login_required
+@csrf_exempt
+def groupUpcomingEvents(request, group_id):
+    rtn_dict = {'success': False, "msg": ""}
+
+
+    try:
+        upcoming_events = []
+        '''
+        r = R.r
+        event_range_start = int(request.GET.get('range_start', 0))
+        upcoming_events_key = 'account.{0}.events.set'.format(account_id)
+        upcoming_events = r.zrange(upcoming_events_key, event_range_start, event_range_start + RETURN_LIST_SIZE)
+        owned_upcoming_events_key = 'account.{0}.owned_events.set'.format(account_id)
+        owned_upcoming_events = r.zrange(owned_upcoming_events_key, event_range_start, event_range_start + RETURN_LIST_SIZE)
+        '''
+        account_id = Account.objects.values('id').get(user=request.user)['id']
+
+        group = userInGroup(account_id, group_id)
+        if group != None:
+        #upcoming_events = False
+            if not upcoming_events or True:
+
+                events = Event.objects.filter(group=group, cancelled=False)
+                for event in events:
+                    event_dict = model_to_dict(event)
+                    if event.start_time:
+                        started = time.mktime(event.start_time.timetuple())
+                        event_dict['start_time'] = started
+                    if event.end_time:
+                        ended = time.mktime(event.end_time.timetuple())
+                        event_dict['end_time'] = ended
+                    upcoming_events.append(event_dict)
+
+            sorted_upcoming_events = sorted(upcoming_events, key=lambda k: k['created']) 
+            rtn_dict['upcoming_events'] = sorted_upcoming_events
+            #rtn_dict['owned_upcoming_events'] = owned_upcoming_events
+            rtn_dict['success'] = True
+            rtn_dict['message'] = 'Successfully retrieved upcoming events'
+        else:
+            rtn_dict['msg'] = 'User is not authorized to view groups upcoming events'
+    except Exception as e:
+        print 'Error grabbing group upcoming events: {0}'.format(e)
+        logger.info('Error grabbing group upcoming events: {0}'.format(e))
+        rtn_dict['msg'] = 'Error grabbing group upcoming events: {0}'.format(e)
+
+
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
 @login_required
 @csrf_exempt
 def upcomingEvents(request):
@@ -291,11 +351,16 @@ def createEvent(request):
             event = Event(creator=user)
             event.name = request.POST.get('name', "")
             start_time = request.POST.get('start_time', None)
+            group_id = request.POST.get('group_id', None)
             if start_time:
                 event.start_time = start_time
             end_time = request.POST.get('end_time', None)
             if end_time:
                 event.end_time = end_time
+            if group_id:
+                group = Group.objects.get(pk=group_id)
+                event.group = group
+
             event.description = request.POST.get('description', None)
             event.meetup_spot = request.POST.get('meetup_spot','In Front')
             event.location_name = request.POST.get('location_name', None)
