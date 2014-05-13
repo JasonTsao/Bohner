@@ -215,6 +215,8 @@ def groupUpcomingEvents(request, group_id):
                         ended = time.mktime(event.end_time.timetuple())
                         event_dict['end_time'] = ended
                     upcoming_events.append(event_dict)
+                    created = time.mktime(event.created.timetuple())
+                    event_dict['created'] = created
 
             sorted_upcoming_events = sorted(upcoming_events, key=lambda k: k['created']) 
             rtn_dict['upcoming_events'] = sorted_upcoming_events
