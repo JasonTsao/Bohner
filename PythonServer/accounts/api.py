@@ -8,6 +8,7 @@ import urlparse
 import oauth2 as oauth
 import httplib2
 import datetime
+
 from celery import task
 from facepy import GraphAPI
 from PythonServer.settings import RETURN_LIST_SIZE
@@ -17,6 +18,7 @@ from django.template import loader, Context, RequestContext
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth.views import logout
 from django.core.serializers.json import DjangoJSONEncoder
 from django.forms.models import model_to_dict
 from ios_notifications.models import APNService, Notification, Device
@@ -456,6 +458,15 @@ def login(request):
 	if login_failed:
 		response['Auth-Response'] = 'Login failed''
 	'''
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@csrf_exempt
+def logoutUser(request):
+	rtn_dict = {'success': False, "msg": ""}
+	logout(request)
+	if not request.user.is_authenticated():
+		rtn_dict['success'] = True
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 

@@ -17,7 +17,7 @@ urlpatterns += patterns("accounts.api",
                         # manual refreshing/updating of campaign backend data
                         url(r"^register$", "registerUser"),
                         url(r"^login$", "login"),
-                        url(r'logout', logout, name="logout"),
+                        url(r'logout', "logoutUser"),
                         url(r"^update$", "updateAccountProfileField"),
                         url(r"^settings/update$", "updateAccountSettingField"),
                         url(r"^settings/get$", "getAccountSettings"),
