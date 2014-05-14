@@ -41,6 +41,17 @@ class Account(models.Model):
         super(Account, self).save()
 
 
+class UserLocation(models.Model):
+    account = models.ForeignKey(Account)
+    longitude = models.FloatField()
+    latitude = models.FloatField()
+
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True, blank=True, null=True)
+    def __unicode__(self):
+        return str("{0} : {1},{2}".format(self.account.user_name, self.longitude, self.latitude))
+
+
 class FacebookProfile(models.Model):
     user = models.ForeignKey(Account)
     facebook_id = models.CharField(max_length=150)
@@ -52,6 +63,8 @@ class FacebookProfile(models.Model):
     active = models.NullBooleanField(default=False)
     issue = models.NullBooleanField(default=True)
     polls = models.NullBooleanField(default=True)
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True, blank=True, null=True)
 
     def is_active(self):
         return active
@@ -80,6 +93,8 @@ class VenmoProfile(models.Model):
     last_name = models.CharField(max_length=255, null=True, blank=True)
     email = models.CharField(max_length=255, null=True, blank=True)
     access_token = models.CharField(max_length=255, null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    modified = models.DateTimeField(auto_now=True, blank=True, null=True)
 
     def update_token(self, token):
         self.access_token = token
@@ -95,6 +110,7 @@ class VenmoTransaction(models.Model):
     date_created = models.DateTimeField(null=True, blank=True)
     date_completed = models.DateTimeField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True, blank=True, null=True)
 
 
 class AccountDeviceID(models.Model):
@@ -112,6 +128,8 @@ class AccountSettings(models.Model):
     reminder_delta = timedelta.fields.TimedeltaField(null=True,blank=True)
     vibrate_on_notification = models.NullBooleanField(default=True)
     allow_charge = models.NullBooleanField(default=False, null=True,blank=True)
+    created = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    modified = models.DateTimeField(auto_now=True, blank=True, null=True)
 
 
 class AccountSetting(models.Model):
@@ -145,6 +163,7 @@ class AccountLink(models.Model):
     friend = models.ForeignKey(Account, related_name='friend')
     invited_count = models.IntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True, blank=True, null=True)
     blocked = models.NullBooleanField(default=False)
 
     def save(self, create_notification=None, *args, **kwargs):
@@ -177,6 +196,7 @@ class Group(models.Model):
     members = models.ManyToManyField(Account)
     is_active = models.NullBooleanField(default=True)
     created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True, blank=True, null=True)
     def __unicode__(self):
         return str('{0} : {1}'.format(self.name,self.group_creator.id))
     class Meta:

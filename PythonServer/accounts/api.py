@@ -22,7 +22,7 @@ from django.contrib.auth.views import logout
 from django.core.serializers.json import DjangoJSONEncoder
 from django.forms.models import model_to_dict
 from ios_notifications.models import APNService, Notification, Device
-from accounts.models import Account, AccountLink, Group, AccountSetting, AccountSettings, FacebookProfile, VenmoProfile
+from accounts.models import Account, AccountLink, Group, AccountSetting, AccountSettings, FacebookProfile, UserLocation
 from events.models import Event, InvitedFriend
 from notifications.api import registerDevice, createNotification, sendNotification, addNotificationToRedis
 from django.contrib.auth.hashers import make_password
@@ -1162,4 +1162,24 @@ def updateAccountSettingField(request):
 
 	else:
 		rtn_dict['msg'] = 'URL was accessed without being set as POST'
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@login_required
+@csrf_exempt
+def updateUserLocation(request):
+	rtn_dict = {"success": False, "msg": ""}
+	if request.method == "POST":
+		try:
+			latitude = request.POST["latitude"]
+			longitude = request.POST["longitude"]
+			user_acct = Account.objects.get(user=request.user)
+			location = UserLocation(longitude=longitude, latitude=latitude, account=user_acct)
+			location.save()
+			rtn_dict["success"] = True
+			retn_dict["msg"] = "WE KNOW WHERE YOU ARE, BITCH!"
+		except Exception as e:
+			rtn_dict["msg"] = "Error creating Location Object :: {}".format(e)
+	else:
+		rtn_dict["msg"] = "Error... data needs to be POST"
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
