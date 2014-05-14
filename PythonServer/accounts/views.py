@@ -17,6 +17,9 @@ def searchByEmail(request):
 	return render_to_response("accounts/search_by_email.html", {}, context_instance=RequestContext(request))
 
 
+def searchByUsername(request):
+	return render_to_response("accounts/search_by_username.html", {}, context_instance=RequestContext(request))
+
 def addFriend(request):
 	return render_to_response("accounts/add_friend.html", {}, context_instance=RequestContext(request))
 

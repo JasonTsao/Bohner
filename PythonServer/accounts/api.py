@@ -491,6 +491,28 @@ def searchUsersByEmail(request):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@csrf_exempt
+def searchUsersByUsername(request):
+	rtn_dict = {'success': False, "msg": "", "users": []}
+	if request.method == 'POST':
+		try:
+			#r = R.r
+			searched_users = []
+			search_field = request.POST['search_field']
+			users = Account.objects.filter(user_name__startswith=search_field, is_active=True)
+			for user in users:
+				user_dict = model_to_dict(user)
+				user_dict['profile_pic']= str(user.profile_pic)
+				searched_users.append(user_dict)
+
+			rtn_dict['users'] = searched_users
+
+		except Exception as e:
+			logger.info('Error searching for useres: {0}'.format(e))
+			rtn_dict['msg'] = 'Error searching for useres: {0}'.format(e)
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
 @login_required
 @csrf_exempt
 def unfriend(request):
