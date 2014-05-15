@@ -17,7 +17,7 @@ from django.forms.models import model_to_dict
 from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth.models import User
 from ios_notifications.models import APNService, Notification, Device
-from accounts.models import Account, AccountLink, Group
+from accounts.models import Account, AccountLink, Group, UserLocation
 from accounts.api import pushToNOSQLSet, pushToNOSQLHash
 #from notifications.api import eventPushNotification, sendPushNotification
 from models import Event, EventComment, EventNotification, InvitedFriend
@@ -28,8 +28,8 @@ logger = logging.getLogger("django.request")
 
 consumer_key =                  'wsO2jmBIAYgsv1eRvVADng'
 consumer_secret =               'tfBAJVkvHgfGM-A6wvuJiTZFCQc'
-TOKEN =                         'C4qwk2N4qwFrjaUb19ndxFv6brIeZVn-'
-token_secret =                  'wLv6o02l3s94bcwXraFmo1GgNYI'
+TOKEN =                         'DaaEHcwUsuO_vQuokMk8f6mm1RInbd52'
+token_secret =                  '1RhTKjKP7sta5B_bP8CdCpOCPcI'
 
 
 def yelpRequest(host, path, url_params, consumer_key, consumer_secret, token, token_secret):
@@ -40,6 +40,7 @@ def yelpRequest(host, path, url_params, consumer_key, consumer_secret, token, to
         encoded_params = urllib.urlencode(url_params)
 
     url = 'http://%s%s?%s' % (host, path, encoded_params)
+    print url
 
     # Sign the URL
     consumer = oauth2.Consumer(consumer_key, consumer_secret)
@@ -52,7 +53,6 @@ def yelpRequest(host, path, url_params, consumer_key, consumer_secret, token, to
     token = oauth2.Token(token, token_secret)
     oauth_request.sign_request(oauth2.SignatureMethod_HMAC_SHA1(), consumer, token)
     signed_url = oauth_request.to_url()
-
     # Connect
     try:
         conn = urllib2.urlopen(signed_url, None)
@@ -69,7 +69,7 @@ def yelpRequest(host, path, url_params, consumer_key, consumer_secret, token, to
 
 
 #YELP API STUFF
-def yelpSearch(term,location):
+def yelpSearch(term,location,user):
     rtn_dict = {'success': False, "msg": ""}
     country_code = 'US'
     lang = 'en'
@@ -79,7 +79,19 @@ def yelpSearch(term,location):
     url_params = {}
     url_params['term'] = term
     url_params['limit'] = 5
-    url_params['location'] = location
+    location = ""
+    if location != "":
+        url_params['location'] = location
+    try:
+        user_location = UserLocation.objects.filter(account__user=user).order_by("-created")
+        last_location = user_location[0]
+        coordinates = "{0},{1}".format(last_location.latitude, last_location.longitude)
+        if location == "":
+            url_params['ll'] = coordinates
+        else:
+            url_params['cll'] = coordinates
+    except Exception, e:
+        print e
 
     # run yelp search
     search_results = json.loads(yelpRequest(host, path,url_params, consumer_key, consumer_secret, TOKEN, token_secret))
@@ -108,13 +120,48 @@ def yelpSearch(term,location):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+def searchYelp(term,user,location=""):
+    rtn_dict = {'success': False, "msg": ""}
+    country_code = 'US'
+    lang = 'en'
+    location_array = location.split(',')
+    host = 'api.yelp.com'
+    path = '/v2/search'
+    url_params = {}
+    url_params['term'] = term
+    url_params['limit'] = 1
+    location = ""
+    if location != "":
+        url_params['location'] = location
+    try:
+        user_location = UserLocation.objects.filter(account__user=user).order_by("-created")
+        last_location = user_location[0]
+        coordinates = "{0},{1}".format(last_location.latitude, last_location.longitude)
+        if location == "":
+            url_params['ll'] = coordinates
+        else:
+            url_params['cll'] = coordinates
+    except Exception, e:
+        print e
+    search_results = json.loads(yelpRequest(host, path,url_params, consumer_key, consumer_secret, TOKEN, token_secret))
+    loc_address = ""
+    try:
+        for address_segment in search_results['businesses'][0]['location']['display_address']:
+            loc_address += address_segment + " "
+    except Exception as e:
+        print e
+    return loc_address
+
+
+
 def yelpConnect(request):
-    term = 'ma dang sae'
+    term = 'White House'
     location = '901 S Vermont Ave, Los Angeles, CA 90006'
+    user = request.user
     if request.method == 'POST':
         term = request.POST['term']
         location = request.POST['location']
-    return yelpSearch(term, location)
+    return yelpSearch(term, location, user)
 
 
 def checkIfAuthorized(event, account):
@@ -371,6 +418,13 @@ def createEvent(request):
             event.friends_can_invite = request.POST.get('friends_can_invite', False) # not saving nullboolean fields correctly 
             event.private = request.POST.get('private', False)
             event.save()
+
+            if event.location_name is not None:
+                address = searchYelp(event.location_name,request.user)
+                if address != "":
+                    event.location_address = searchYelp(event.location_name,request.user)
+                    event.save()
+
 
             event_dict = model_to_dict(event)
             event_dict['start_time'] = str(event.start_time)
