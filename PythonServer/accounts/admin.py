@@ -9,5 +9,5 @@ admin.site.register(AccountDeviceID)
 admin.site.register(FacebookProfile)
 admin.site.register(VenmoProfile)
 admin.site.register(Group)
-
+admin.site.register(UserLocation)
 

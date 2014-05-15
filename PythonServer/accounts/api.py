@@ -1177,7 +1177,7 @@ def updateUserLocation(request):
 			location = UserLocation(longitude=longitude, latitude=latitude, account=user_acct)
 			location.save()
 			rtn_dict["success"] = True
-			retn_dict["msg"] = "WE KNOW WHERE YOU ARE, BITCH!"
+			rtn_dict["msg"] = "WE KNOW WHERE YOU ARE, BITCH!"
 		except Exception as e:
 			rtn_dict["msg"] = "Error creating Location Object :: {}".format(e)
 	else:
