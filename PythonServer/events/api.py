@@ -155,7 +155,7 @@ def searchYelp(term,user,location=""):
     loc_address = ""
     yelp_mobile_url = ""
     try:
-        yelp_mobile_url = search_results[businesses][0]["mobile_url"]
+        yelp_mobile_url = search_results["businesses"][0]["mobile_url"]
         for address_segment in search_results['businesses'][0]['location']['display_address']:
             loc_address += str(address_segment) + " "
         print "LOCATION ADDRESS"
