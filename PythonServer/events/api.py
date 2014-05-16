@@ -149,7 +149,8 @@ def searchYelp(term,user,location=""):
     loc_address = ""
     try:
         for address_segment in search_results['businesses'][0]['location']['display_address']:
-            loc_address += address_segment + " "
+            loc_address += str(address_segment) + " "
+        print "LOCATION ADDRESS"
         print loc_address
     except Exception as e:
         print e
