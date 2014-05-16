@@ -40,7 +40,6 @@ def yelpRequest(host, path, url_params, consumer_key, consumer_secret, token, to
         encoded_params = urllib.urlencode(url_params)
 
     url = 'http://%s%s?%s' % (host, path, encoded_params)
-    print url
 
     # Sign the URL
     consumer = oauth2.Consumer(consumer_key, consumer_secret)
@@ -58,7 +57,6 @@ def yelpRequest(host, path, url_params, consumer_key, consumer_secret, token, to
         conn = urllib2.urlopen(signed_url, None)
         try:
             response = json.loads(conn.read())
-            print response
         finally:
             conn.close()
     except urllib2.HTTPError, error:
@@ -155,7 +153,9 @@ def searchYelp(term,user,location=""):
     search_results = json.loads(yelpRequest(host, path,url_params, consumer_key, consumer_secret, TOKEN, token_secret))
     print search_results
     loc_address = ""
+    yelp_mobile_url = ""
     try:
+        yelp_mobile_url = search_results[businesses][0]["mobile_url"]
         for address_segment in search_results['businesses'][0]['location']['display_address']:
             loc_address += str(address_segment) + " "
         print "LOCATION ADDRESS"

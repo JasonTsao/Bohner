@@ -22,6 +22,7 @@ class Event(models.Model):
     cancelled = models.NullBooleanField(default=False)
     private = models.NullBooleanField(default=False)
     friends_can_invite = models.NullBooleanField(default=False)
+    yelp_url = models.URLField(max_length=200, blank=True, null=True)
 
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True, blank=True, null=True)
@@ -181,6 +182,4 @@ class EventComment(models.Model):
             except Exception as e:
                 print 'Unable to send push notification when updateing event {0}'.format(self.id)
         super(EventComment, self).save()
-
-
 
