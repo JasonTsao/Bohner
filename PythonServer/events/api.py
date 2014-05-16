@@ -162,7 +162,7 @@ def searchYelp(term,user,location=""):
         print loc_address
     except Exception as e:
         print e
-    return loc_address
+    return loc_address, yelp_mobile_url
 
 
 
@@ -434,9 +434,10 @@ def createEvent(request):
             rtn_dict["location_name"] = event.location_name
 
             if event.location_name is not None:
-                address = searchYelp(event.location_name,request.user)
-                if address != "":
-                    event.location_address = searchYelp(event.location_name,request.user)
+                address, yelp_url = searchYelp(event.location_name,request.user)
+                if address != "" and yelp_url is not None:
+                    event.location_address = address
+                    event.yelp_url = yelp_url
                     rtn_dict["address"] = event.location_address
                     event.save()
 
