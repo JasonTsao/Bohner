@@ -58,6 +58,7 @@ def yelpRequest(host, path, url_params, consumer_key, consumer_secret, token, to
         conn = urllib2.urlopen(signed_url, None)
         try:
             response = json.loads(conn.read())
+            print response
         finally:
             conn.close()
     except urllib2.HTTPError, error:
