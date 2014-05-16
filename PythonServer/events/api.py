@@ -145,6 +145,7 @@ def searchYelp(term,user,location=""):
     except Exception, e:
         print e
     search_results = json.loads(yelpRequest(host, path,url_params, consumer_key, consumer_secret, TOKEN, token_secret))
+    print search_results
     loc_address = ""
     try:
         for address_segment in search_results['businesses'][0]['location']['display_address']:
