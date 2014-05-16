@@ -1178,8 +1178,8 @@ def updateUserLocation(request):
 			except Exception, e:
 				print e
 			try:
-				latitude = request.POST["latitude"]
-				longitude = request.POST["longitude"]
+				latitude = float(request.POST["latitude"])
+				longitude = float(request.POST["longitude"])
 				if previous_locations.count() > 0:
 					if latitude == previous_locations[0].latitude and longitude == previous_locations[0].longitude:
 						location = previous_locations[0]
