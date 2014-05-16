@@ -419,6 +419,8 @@ def createEvent(request):
             event.private = request.POST.get('private', False)
             event.save()
 
+            rtn_dict["location_name"] = event.location_name
+
             if event.location_name is not None:
                 address = searchYelp(event.location_name,request.user)
                 if address != "":
