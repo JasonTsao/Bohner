@@ -1181,7 +1181,7 @@ def updateUserLocation(request):
 				latitude = request.POST["latitude"]
 				longitude = request.POST["longitude"]
 				if previous_locations.count() > 0:
-					if latitude == previous_locations[0].latitude and longitude = previous_locations[0].longitude:
+					if latitude == previous_locations[0].latitude and longitude == previous_locations[0].longitude:
 						location = previous_locations[0]
 					else:
 						location = UserLocation(longitude=longitude, latitude=latitude, account=user_acct)
