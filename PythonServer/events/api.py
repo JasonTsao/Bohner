@@ -62,7 +62,7 @@ def yelpRequest(host, path, url_params, consumer_key, consumer_secret, token, to
         finally:
             conn.close()
     except urllib2.HTTPError, error:
-        response = json.loads(error.read())
+        response = {"error": error}
         return response
 
     json_response = json.dumps(response, sort_keys=True, indent=2)
@@ -98,6 +98,14 @@ def yelpSearch(term,location,user):
     search_results = json.loads(yelpRequest(host, path,url_params, consumer_key, consumer_secret, TOKEN, token_secret))
     #print 'search results'
     #print search_results['businesses']
+    loc_address = ""
+    try:
+        for address_segment in search_results['businesses'][0]['location']['display_address']:
+            loc_address += str(address_segment) + " "
+        print "LOCATION ADDRESS"
+        print loc_address
+    except Exception as e:
+        print e
     list_results = []
     result_dict = {}
     business_id = ''
