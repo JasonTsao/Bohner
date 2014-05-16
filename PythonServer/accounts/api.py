@@ -1171,15 +1171,29 @@ def updateUserLocation(request):
 	rtn_dict = {"success": False, "msg": ""}
 	if request.method == "POST":
 		try:
-			latitude = request.POST["latitude"]
-			longitude = request.POST["longitude"]
 			user_acct = Account.objects.get(user=request.user)
-			location = UserLocation(longitude=longitude, latitude=latitude, account=user_acct)
-			location.save()
-			rtn_dict["success"] = True
-			rtn_dict["msg"] = "WE KNOW WHERE YOU ARE, BITCH!"
-		except Exception as e:
-			rtn_dict["msg"] = "Error creating Location Object :: {}".format(e)
+			previous_locations = None
+			try:
+				previous_locations = UserLocation.objects.filter(account=user_acct).order_by("-created")
+			except Exception, e:
+				print e
+			try:
+				latitude = request.POST["latitude"]
+				longitude = request.POST["longitude"]
+				if previous_locations.count() > 0:
+					if latitude == previous_locations[0].latitude and longitude = previous_locations[0].longitude:
+						location = previous_locations[0]
+					else:
+						location = UserLocation(longitude=longitude, latitude=latitude, account=user_acct)
+				else:
+					location = UserLocation(longitude=longitude, latitude=latitude, account=user_acct)
+				location.save()
+				rtn_dict["success"] = True
+				rtn_dict["msg"] = "WE KNOW WHERE YOU ARE, BITCH!"
+			except Exception as e:
+				rtn_dict["msg"] = "Error creating Location Object :: {}".format(e)
+		except Exception, e:
+			rtn_dict["msg"] = "Could not load User Account"
 	else:
 		rtn_dict["msg"] = "Error... data needs to be POST"
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
