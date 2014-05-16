@@ -423,6 +423,7 @@ def createEvent(request):
                 address = searchYelp(event.location_name,request.user)
                 if address != "":
                     event.location_address = searchYelp(event.location_name,request.user)
+                    rtn_dict["address"] = event.location_address
                     event.save()
 
 
