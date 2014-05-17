@@ -216,7 +216,7 @@ def syncFacebookUser(request, access_token):
 			myprofile.active = True
 			myprofile.update_token(access_token)
 			rtn_dict['success'] = True
-			rtn_dict['msg'] = 'successfully got access token'
+			rtn_dict['msg'] = 'successfully got updated access token'
 			# COULD POTENTIALLY UPDATE ACCOUNT WITH NEW FB DATA HERE TOO
 		except:
 	 		myprofile = FacebookProfile(user=account, facebook_id=userid, image_url=(GRAPH_URL + content_dict['username'] + '/picture'), access_token=access_token)
@@ -244,7 +244,7 @@ def syncFacebookUser(request, access_token):
 				pass
 			account.save()
 			rtn_dict['success'] = True
-			rtn_dict['msg'] = 'successfully got access token'
+			rtn_dict['msg'] = 'successfully created new user facebook profile model'
 	except Exception as e:
 		print 'Unable to sync Facebook user to our server: {0}'.format(e)
 		rtn_dict['msg'] = 'Unable to sync Facebook user to our server: {0}'.format(e)
