@@ -158,7 +158,7 @@ def searchYelp(term,user,location=""):
         yelp_img_url = search_results["businesses"][0]["image_url"]
     except Exception as e:
         print e
-    return loc_address, yelp_mobile_url
+    return loc_address, yelp_mobile_url, yelp_img_url
 
 
 
