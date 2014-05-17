@@ -159,7 +159,6 @@ def searchYelp(term,user,location=""):
             loc_address += str(address_segment) + " "
     except Exception as e:
         print e
-    print "hi"
     return loc_address, yelp_mobile_url
 
 
@@ -440,6 +439,7 @@ def createEvent(request):
                     print event.location_address
                     print event.yelp_url
                     addrss, lat, lng = reconcileAddressToCoordinates(address)
+                    print "WOAH"
                     print addrss
                     print lat
                     print lng
