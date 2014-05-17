@@ -201,6 +201,7 @@ def syncFacebookUser(request, access_token):
 
 	try:
 		redirect_uri = 'http://' + request.META['HTTP_HOST'] + '/acct/syncFacebookUser/{0}'.format(access_token) 
+		graph = GraphAPI()
 		content_dict = graph.get(
 				path='me',
 				redirect_uri=redirect_uri,
