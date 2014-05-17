@@ -194,16 +194,72 @@ def venmoConnect(request):
 	return HttpResponseRedirect(url)
 
 
+@login_required
+@csrf_exempt
+def syncFacebookUser(request, access_token):
+	rtn_dict = {"success": False, "msg": ""}
+
+	try:
+		redirect_uri = 'http://' + request.META['HTTP_HOST'] + '/acct/syncFacebookUser/{0}'.format(access_token) 
+		graph = GraphAPI()
+		content_dict = graph.get(
+				path='me',
+				redirect_uri=redirect_uri,
+				access_token=access_token
+			)
+
+		userid = content_dict['id']
+
+		account = Account.objects.get(user=request.user)
+		try:
+			myprofile = FacebookProfile.objects.get(user=account)
+			myprofile.active = True
+			myprofile.update_token(access_token)
+			rtn_dict['success'] = True
+			rtn_dict['msg'] = 'successfully got updated access token'
+			# COULD POTENTIALLY UPDATE ACCOUNT WITH NEW FB DATA HERE TOO
+		except:
+	 		myprofile = FacebookProfile(user=account, facebook_id=userid, image_url=(GRAPH_URL + content_dict['username'] + '/picture'), access_token=access_token)
+			myprofile.get_remote_image()
+			myprofile.active = True
+			myprofile.save()
+			account.facebook_id = str(userid)
+			account.first_name = content_dict['first_name']
+			account.last_name = content_dict['last_name']
+			account.email = content_dict['email']
+			account.profile_pic = myprofile.profilePicture
+			try:
+				account.gender = content_dict['gender']
+			except:
+				pass
+			try:
+				birthday_str = content_dict['birthday']
+				birthday = datetime.datetime.strptime(birthday_str, "%m/%d/%Y").date()
+				account.birthday = birthday
+			except Exception as e:
+				print 'error saving birthday: {0}'.format(e)
+			try:
+				account.home_town = content_dict['hometown']['name']
+			except:
+				pass
+			account.save()
+			rtn_dict['success'] = True
+			rtn_dict['msg'] = 'successfully created new user facebook profile model'
+	except Exception as e:
+		print 'Unable to sync Facebook user to our server: {0}'.format(e)
+		rtn_dict['msg'] = 'Unable to sync Facebook user to our server: {0}'.format(e)
+	
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@csrf_exempt
+@login_required
 def syncFacebookFriends(request):
 	rtn_dict = {"success": False, "msg": "", "fb_pf": False}
 	facebook = None
-	if not request.user.id:
-		user_id = request.POST['user']
-	else:
-		user_id = request.user.id
 	# Try to get a pre-existing Facebook Profile for the signed in user
 	try:
-		account = Account.objects.get(user__id=user_id)
+		account = Account.objects.get(user=request.user)
 		facebook = FacebookProfile.objects.get(user=account)
 		rtn_dict['fb_pf'] = True
 	except Exception as e:
@@ -224,6 +280,7 @@ def syncFacebookFriends(request):
 			)
 			# getting list from dict of user friends
 			friends = content_dict['data']
+			rtn_dict['friends'] = friends
 			for friend_dict in friends:
 				facebook_id = friend_dict['id']
 				try:
@@ -232,18 +289,22 @@ def syncFacebookFriends(request):
 					try:
 						account_link = AccountLink(account_user=account,friend=friend_account)
 						account_link.save()
+						'''
 						redis_key = 'account.{0}.friends.set'.format(account.id)
 						friend_dict = json.dumps({'id': friend_account.id, 'pf_pic': friend_account.profile_pic, 'name': friend_account.display_name})
 						pushToNOSQLSet(redis_key, friend_dict, False,0)
+						'''
 					except:
 						logger.info('Tried creating an AccountLink that already exists')
 						print 'Tried creating an AccountLink that already exists'
 					try:
 						account_link = AccountLink(account_user=friend_account,friend=account)
 						account_link.save()
+						'''
 						redis_key = 'account.{0}.friends.set'.format(friend_account.id)
 						friend_dict = json.dumps({'id': account.id, 'pf_pic': account.profile_pic, 'name': account.display_name})
 						pushToNOSQLSet(redis_key, friend_dict, False,0)
+						'''
 					except:
 						logger.info('Tried creating an AccountLink that already exists')
 						print 'Tried creating an AccountLink that already exists'
@@ -266,8 +327,6 @@ def getAccessToken(request):
 	redirect_uri = 'http://' + request.META['HTTP_HOST'] + '/acct/getAccessToken'
 	logger.info('redirect_uri')
 	logger.info(redirect_uri)
-	print 'redirect_uri'
-	print redirect_uri
 	try:
 		graph = GraphAPI()
 		# getting access code

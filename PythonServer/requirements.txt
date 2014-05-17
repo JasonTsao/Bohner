@@ -1,6 +1,6 @@
 Django==1.6
 wsgiref==0.1.2
-south==0.7.6
+south==0.8.4
 redis==2.7.2
 celery==3.0.12
 django-celery==3.0.11
