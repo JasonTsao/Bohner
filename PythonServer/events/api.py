@@ -152,13 +152,14 @@ def searchYelp(term,user,location=""):
         print e
     search_results = json.loads(yelpRequest(host, path,url_params, consumer_key, consumer_secret, TOKEN, token_secret))
     loc_address = ""
-    yelp_mobile_url = ""
+    yelp_mobile_url = None
     try:
         yelp_mobile_url = search_results["businesses"][0]["mobile_url"]
         for address_segment in search_results['businesses'][0]['location']['display_address']:
             loc_address += str(address_segment) + " "
     except Exception as e:
         print e
+    print "hi"
     return loc_address, yelp_mobile_url
 
 
@@ -429,7 +430,8 @@ def createEvent(request):
             event.save()
 
             rtn_dict["location_name"] = event.location_name
-
+            address = ""
+            yelp_url = None
             if event.location_name is not None:
                 address, yelp_url = searchYelp(event.location_name,request.user)
                 if address != "" and yelp_url is not None:
