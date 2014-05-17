@@ -346,6 +346,12 @@ def upcomingEvents(request):
 
         sorted_upcoming_events = sorted(upcoming_events, key=lambda k: k['created']) 
         rtn_dict['upcoming_events'] = sorted_upcoming_events
+        try:
+            last_location = UserLocation.objects.filter(account__user=request.user)
+            rtn_dict["lat"] = last_location[0].latitude
+            rtn_dict["lng"] = last_location[0].longitude
+        except Exception, e:
+            raise e
         #rtn_dict['owned_upcoming_events'] = owned_upcoming_events
         rtn_dict['success'] = True
         rtn_dict['message'] = 'Successfully retrieved upcoming events'
@@ -436,20 +442,11 @@ def createEvent(request):
                 if address != "" and yelp_url is not None:
                     event.location_address = address
                     event.yelp_url = yelp_url
-                    print event.location_address
-                    print event.yelp_url
                     addrss, lat, lng = reconcileAddressToCoordinates(address)
-                    print "WOAH"
-                    print addrss
-                    print lat
-                    print lng
                     if addrss is not None and lat is not None and lng is not None:
                         event.location_address = str(addrss)
                         event.location_latitude = float(lat)
                         event.location_longitude = float(lng)
-                        print event.location_address
-                        print event.location_latitude
-                        print event.location_longitude
                         event.save()
 
 
@@ -946,7 +943,6 @@ def reconcileAddressToCoordinates(address_string):
     """
         queries google for corresponding coordinates for given address (if address is valid)
     """
-    print "you've come to the wrong neighbordhood"
     params = {"address":address_string, "sensor":False}
     google_url = "http://maps.google.com/maps/api/geocode/json?%s" % (urllib.urlencode(params))
     logger.info(google_url)
@@ -954,15 +950,12 @@ def reconcileAddressToCoordinates(address_string):
     latitude = None
     longitude = None
     try:
-        print google_url
         conn = urllib2.urlopen(google_url, None)
         response = json.loads(conn.read())
-        print response
         address = response["results"][0]["formatted_address"]
         latitude = response["results"][0]["geometry"]["location"]["lat"]
         longitude = response["results"][0]["geometry"]["location"]["lng"]
         print response
     except Exception as e:
         print e
-    print "hi"
     return address, latitude, longitude
