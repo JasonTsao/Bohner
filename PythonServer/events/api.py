@@ -151,15 +151,12 @@ def searchYelp(term,user,location=""):
     except Exception, e:
         print e
     search_results = json.loads(yelpRequest(host, path,url_params, consumer_key, consumer_secret, TOKEN, token_secret))
-    print search_results
     loc_address = ""
     yelp_mobile_url = ""
     try:
         yelp_mobile_url = search_results["businesses"][0]["mobile_url"]
         for address_segment in search_results['businesses'][0]['location']['display_address']:
             loc_address += str(address_segment) + " "
-        print "LOCATION ADDRESS"
-        print loc_address
     except Exception as e:
         print e
     return loc_address, yelp_mobile_url
@@ -438,6 +435,8 @@ def createEvent(request):
                 if address != "" and yelp_url is not None:
                     event.location_address = address
                     event.yelp_url = yelp_url
+                    print event.location_address
+                    print event.yelp_url
                     addrss, lat, lng = reconcileAddressToCoordinates(address)
                     print addrss
                     print lat
@@ -446,10 +445,10 @@ def createEvent(request):
                         event.location_address = str(addrss)
                         event.location_latitude = float(lat)
                         event.location_longitude = float(lng)
-                    print event.location_address
-                    print event.location_latitude
-                    print event.location_longitude
-                    event.save()
+                        print event.location_address
+                        print event.location_latitude
+                        print event.location_longitude
+                        event.save()
 
 
             event_dict = model_to_dict(event)
