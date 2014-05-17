@@ -333,6 +333,7 @@ def getAllFacebookFriends(request):
 
 	if facebook:
 		try:
+			rtn_friends = []
 			redirect_uri = 'http://' + request.META['HTTP_HOST'] + '/acct/friends/facebook/all'
 			graph = GraphAPI()
 			# getting user friend list
@@ -344,7 +345,14 @@ def getAllFacebookFriends(request):
 			)
 			# getting list from dict of user friends
 			friends = content_dict['data']
-			rtn_dict['all_facebook_friends'] = json.dumps(friends)
+			i = 0
+			for friend in friends:
+				if i > 15:
+					break
+				rtn_friends.append(friend)
+				i+= 1
+			
+			rtn_dict['all_facebook_friends'] = json.dumps(rtn_friends)
 		except Exception as e:
 			print 'Unable to pull users facebook friends: {0}'.format(e)
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
