@@ -426,7 +426,7 @@ def createEvent(request):
             event.meetup_spot = request.POST.get('meetup_spot','In Front')
             event.location_name = request.POST.get('location_name', None)
             event.location_address = request.POST.get('location_address', None)
-            event.location_coordinates = request.POST.get('location_coordinates', None)
+            # event.location_coordinates = request.POST.get('location_coordinates', None)
             event.friends_can_invite = request.POST.get('friends_can_invite', False) # not saving nullboolean fields correctly 
             event.private = request.POST.get('private', False)
             event.save()
@@ -438,7 +438,11 @@ def createEvent(request):
                 if address != "" and yelp_url is not None:
                     event.location_address = address
                     event.yelp_url = yelp_url
-                    rtn_dict["address"] = event.location_address
+                    addrss, lat, lng = reconcileAddressToCoordinates(address)
+                    if addrss != "" and lat != "" and lng != "":
+                        event.location_address = addrss
+                        event.location_latitude = lat
+                        event.location_longitude = lng
                     event.save()
 
 
@@ -720,10 +724,12 @@ def updateEvent(request, event_id):
             event.location_address = request.POST['location_address']
         except:
             pass
+        """
         try:
             event.location_coordinates = request.POST['location_coordinates']
         except:
             pass
+        """
         try:
             event.friends_can_invite = request.POST['friends_can_invite']
         except:
@@ -927,3 +933,22 @@ def getEventComments(request, event_id):
         logger.info('Error retrieving event comments: {0}'.format(e))
         rtn_dict['msg'] = 'Error retrieving event comments: {0}'.format(e)
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+def reconcileAddressToCoordinates(address_string):
+    """
+        queries google for corresponding coordinates for given address (if address is valid)
+    """
+    google_url = "http://maps.google.com/maps/api/geocode/json?address=%s&sensor=false" % (urllib.urlencode(address_string))
+    address = ""
+    latitude = ""
+    longitude = ""
+    try:
+        conn = urllib2.urlopen(google_url, None)
+        response = json.loads(conn.read())
+        address = response["results"][0]["formatted_address"]
+        latitude = response["results"][0]["geometry"]["location"]["lat"]
+        longitude = response["results"][0]["geometry"]["location"]["lng"]
+    except Exception as e:
+        print e
+    return address, latitude, longitude
