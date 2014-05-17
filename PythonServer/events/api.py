@@ -946,12 +946,13 @@ def reconcileAddressToCoordinates(address_string):
     """
         queries google for corresponding coordinates for given address (if address is valid)
     """
+    logger.info("querying google for updated address coordinates")
     google_url = "http://maps.google.com/maps/api/geocode/json?address=%s&sensor=false" % (urllib.urlencode(address_string))
+    logger.info(google_url)
     address = None
     latitude = None
     longitude = None
     try:
-        print "hi"
         print google_url
         conn = urllib2.urlopen(google_url, None)
         response = json.loads(conn.read())
