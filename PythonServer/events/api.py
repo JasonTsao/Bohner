@@ -441,8 +441,8 @@ def createEvent(request):
                     addrss, lat, lng = reconcileAddressToCoordinates(address)
                     if addrss != "" and lat != "" and lng != "":
                         event.location_address = addrss
-                        event.location_latitude = lat
-                        event.location_longitude = lng
+                        event.location_latitude = float(lat)
+                        event.location_longitude = float(lng)
                     event.save()
 
 
