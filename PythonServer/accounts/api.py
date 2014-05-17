@@ -318,6 +318,38 @@ def syncFacebookFriends(request):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@csrf_exempt
+@login_required
+def getAllFacebookFriends(request):
+	rtn_dict = {"success": False, "msg": "", "all_facebook_friends": {}}
+	facebook = None
+	# Try to get a pre-existing Facebook Profile for the signed in user
+	try:
+		account = Account.objects.get(user=request.user)
+		facebook = FacebookProfile.objects.get(user=account)
+	except Exception as e:
+		print 'User facebook profile does not exist for user {0}: {1}'.format(user_id, e)
+		rtn_dict['msg'] = 'User facebook profile does not exist for user {0}: {1}'.format(user_id, e)
+
+	if facebook:
+		try:
+			redirect_uri = 'http://' + request.META['HTTP_HOST'] + '/acct/friends/facebook/all'
+			graph = GraphAPI()
+			# getting user friend list
+			path = str(facebook.facebook_id) + '/friends'
+			content_dict = graph.get(
+				path=path,
+				redirect_uri=redirect_uri,
+				access_token=facebook.access_token
+			)
+			# getting list from dict of user friends
+			friends = content_dict['data']
+			rtn_dict['all_facebook_friends'] = json.dumps(friends)
+		except Exception as e:
+			print 'Unable to pull users facebook friends: {0}'.format(e)
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
 def getAccessToken(request):
 	rtn_dict = {"success": False, "msg": ""}
 	code = request.GET.get('code')
