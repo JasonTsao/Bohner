@@ -443,6 +443,9 @@ def createEvent(request):
                         event.location_address = str(addrss)
                         event.location_latitude = float(lat)
                         event.location_longitude = float(lng)
+                    print event.location_address
+                    print event.location_latitude
+                    print event.location_longitude
                     event.save()
 
 
