@@ -194,6 +194,63 @@ def venmoConnect(request):
 	return HttpResponseRedirect(url)
 
 
+@login_required
+@csrf_exempt
+def syncFacebookUser(request, access_token):
+	rtn_dict = {"success": False, "msg": ""}
+
+	try:
+		redirect_uri = 'http://' + request.META['HTTP_HOST'] + '/acct/syncFacebookUser/{0}'.format(access_token) 
+		content_dict = graph.get(
+				path='me',
+				redirect_uri=redirect_uri,
+				access_token=access_token
+			)
+
+		userid = content_dict['id']
+
+		account = Account.objects.get(user=request.user)
+		try:
+			myprofile = FacebookProfile.objects.get(user=account)
+			myprofile.active = True
+			myprofile.update_token(access_token)
+			rtn_dict['success'] = True
+		rtn_dict['msg'] = 'successfully got access token'
+			# COULD POTENTIALLY UPDATE ACCOUNT WITH NEW FB DATA HERE TOO
+		except:
+	 		myprofile = FacebookProfile(user=account, facebook_id=userid, image_url=(GRAPH_URL + content_dict['username'] + '/picture'), access_token=access_token)
+			myprofile.get_remote_image()
+			myprofile.active = True
+			myprofile.save()
+			account.facebook_id = str(userid)
+			account.first_name = content_dict['first_name']
+			account.last_name = content_dict['last_name']
+			account.email = content_dict['email']
+			account.profile_pic = myprofile.profilePicture
+			try:
+				account.gender = content_dict['gender']
+			except:
+				pass
+			try:
+				birthday_str = content_dict['birthday']
+				birthday = datetime.datetime.strptime(birthday_str, "%m/%d/%Y").date()
+				account.birthday = birthday
+			except Exception as e:
+				print 'error saving birthday: {0}'.format(e)
+			try:
+				account.home_town = content_dict['hometown']['name']
+			except:
+				pass
+			account.save()
+			rtn_dict['success'] = True
+			rtn_dict['msg'] = 'successfully got access token'
+	except Exception as e:
+		print 'Unable to sync Facebook user to our server: {0}'.format(e)
+		rtn_dict['msg'] = 'Unable to sync Facebook user to our server: {0}'.format(e)
+	
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
 def syncFacebookFriends(request):
 	rtn_dict = {"success": False, "msg": "", "fb_pf": False}
 	facebook = None
@@ -266,8 +323,6 @@ def getAccessToken(request):
 	redirect_uri = 'http://' + request.META['HTTP_HOST'] + '/acct/getAccessToken'
 	logger.info('redirect_uri')
 	logger.info(redirect_uri)
-	print 'redirect_uri'
-	print redirect_uri
 	try:
 		graph = GraphAPI()
 		# getting access code
