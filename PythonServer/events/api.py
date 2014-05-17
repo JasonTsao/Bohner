@@ -100,8 +100,6 @@ def yelpSearch(term,location,user):
     try:
         for address_segment in search_results['businesses'][0]['location']['display_address']:
             loc_address += str(address_segment) + " "
-        print "LOCATION ADDRESS"
-        print loc_address
     except Exception as e:
         print e
     list_results = []
@@ -157,6 +155,7 @@ def searchYelp(term,user,location=""):
         yelp_mobile_url = search_results["businesses"][0]["mobile_url"]
         for address_segment in search_results['businesses'][0]['location']['display_address']:
             loc_address += str(address_segment) + " "
+        yelp_img_url = search_results["businesses"][0]["image_url"]
     except Exception as e:
         print e
     return loc_address, yelp_mobile_url
@@ -438,10 +437,11 @@ def createEvent(request):
             address = ""
             yelp_url = None
             if event.location_name is not None:
-                address, yelp_url = searchYelp(event.location_name,request.user)
+                address, yelp_url, yelp_image_url = searchYelp(event.location_name,request.user)
                 if address != "" and yelp_url is not None:
                     event.location_address = address
                     event.yelp_url = yelp_url
+                    event.yelp_img_url = yelp_image_url
                     addrss, lat, lng = reconcileAddressToCoordinates(address)
                     if addrss is not None and lat is not None and lng is not None:
                         event.location_address = str(addrss)
