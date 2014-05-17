@@ -442,7 +442,7 @@ def createEvent(request):
                     print addrss
                     print lat
                     print lng
-                    if addrss != "" and lat != "" and lng != "":
+                    if addrss is not None and lat is not None and lng is not None:
                         event.location_address = str(addrss)
                         event.location_latitude = float(lat)
                         event.location_longitude = float(lng)
@@ -946,16 +946,17 @@ def reconcileAddressToCoordinates(address_string):
         queries google for corresponding coordinates for given address (if address is valid)
     """
     google_url = "http://maps.google.com/maps/api/geocode/json?address=%s&sensor=false" % (urllib.urlencode(address_string))
-    address = ""
-    latitude = ""
-    longitude = ""
+    address = None
+    latitude = None
+    longitude = None
     try:
         conn = urllib2.urlopen(google_url, None)
         response = json.loads(conn.read())
-        print response
         address = response["results"][0]["formatted_address"]
-        latitude = str(response["results"][0]["geometry"]["location"]["lat"])
-        longitude = str(response["results"][0]["geometry"]["location"]["lng"])
+        latitude = response["results"][0]["geometry"]["location"]["lat"]
+        longitude = response["results"][0]["geometry"]["location"]["lng"]
+        print response
     except Exception as e:
         print e
+    print "hi"
     return address, latitude, longitude
