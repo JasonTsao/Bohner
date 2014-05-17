@@ -947,7 +947,8 @@ def reconcileAddressToCoordinates(address_string):
         queries google for corresponding coordinates for given address (if address is valid)
     """
     print "you've come to the wrong neighbordhood"
-    google_url = "http://maps.google.com/maps/api/geocode/json?address=%s&sensor=false" % (urllib.urlencode(address_string))
+    params = {"address":address_string, "sensor":False}
+    google_url = "http://maps.google.com/maps/api/geocode/json?%s" % (urllib.urlencode(params))
     logger.info(google_url)
     address = None
     latitude = None
