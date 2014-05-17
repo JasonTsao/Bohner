@@ -347,7 +347,7 @@ def getAllFacebookFriends(request):
 			friends = content_dict['data']
 			i = 0
 			for friend in friends:
-				if i > 15:
+				if i > 5:
 					break
 				rtn_friends.append(friend)
 				i+= 1
