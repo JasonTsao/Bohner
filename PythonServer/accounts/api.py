@@ -280,7 +280,6 @@ def syncFacebookFriends(request):
 			)
 			# getting list from dict of user friends
 			friends = content_dict['data']
-			rtn_dict['friends'] = friends
 			for friend_dict in friends:
 				facebook_id = friend_dict['id']
 				try:
