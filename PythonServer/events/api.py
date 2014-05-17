@@ -439,6 +439,9 @@ def createEvent(request):
                     event.location_address = address
                     event.yelp_url = yelp_url
                     addrss, lat, lng = reconcileAddressToCoordinates(address)
+                    print addrss
+                    print lat
+                    print lng
                     if addrss != "" and lat != "" and lng != "":
                         event.location_address = str(addrss)
                         event.location_latitude = float(lat)
