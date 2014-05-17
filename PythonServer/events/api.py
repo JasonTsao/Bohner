@@ -948,8 +948,8 @@ def reconcileAddressToCoordinates(address_string):
         response = json.loads(conn.read())
         print response
         address = response["results"][0]["formatted_address"]
-        latitude = response["results"][0]["geometry"]["location"]["lat"]
-        longitude = response["results"][0]["geometry"]["location"]["lng"]
+        latitude = float(response["results"][0]["geometry"]["location"]["lat"])
+        longitude = float(response["results"][0]["geometry"]["location"]["lng"])
     except Exception as e:
         print e
     return address, latitude, longitude
