@@ -950,8 +950,11 @@ def reconcileAddressToCoordinates(address_string):
     latitude = None
     longitude = None
     try:
+        print "hi"
+        print google_url
         conn = urllib2.urlopen(google_url, None)
         response = json.loads(conn.read())
+        print response
         address = response["results"][0]["formatted_address"]
         latitude = response["results"][0]["geometry"]["location"]["lat"]
         longitude = response["results"][0]["geometry"]["location"]["lng"]
