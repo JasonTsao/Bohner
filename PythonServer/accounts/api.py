@@ -282,6 +282,7 @@ def syncFacebookFriends(request):
 			)
 			# getting list from dict of user friends
 			friends = content_dict['data']
+			rtn_dict['friends'] = friends
 			for friend_dict in friends:
 				facebook_id = friend_dict['id']
 				try:
@@ -290,18 +291,22 @@ def syncFacebookFriends(request):
 					try:
 						account_link = AccountLink(account_user=account,friend=friend_account)
 						account_link.save()
+						'''
 						redis_key = 'account.{0}.friends.set'.format(account.id)
 						friend_dict = json.dumps({'id': friend_account.id, 'pf_pic': friend_account.profile_pic, 'name': friend_account.display_name})
 						pushToNOSQLSet(redis_key, friend_dict, False,0)
+						'''
 					except:
 						logger.info('Tried creating an AccountLink that already exists')
 						print 'Tried creating an AccountLink that already exists'
 					try:
 						account_link = AccountLink(account_user=friend_account,friend=account)
 						account_link.save()
+						'''
 						redis_key = 'account.{0}.friends.set'.format(friend_account.id)
 						friend_dict = json.dumps({'id': account.id, 'pf_pic': account.profile_pic, 'name': account.display_name})
 						pushToNOSQLSet(redis_key, friend_dict, False,0)
+						'''
 					except:
 						logger.info('Tried creating an AccountLink that already exists')
 						print 'Tried creating an AccountLink that already exists'
