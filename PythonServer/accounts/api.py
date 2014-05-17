@@ -215,7 +215,7 @@ def syncFacebookUser(request, access_token):
 			myprofile.active = True
 			myprofile.update_token(access_token)
 			rtn_dict['success'] = True
-		rtn_dict['msg'] = 'successfully got access token'
+			rtn_dict['msg'] = 'successfully got access token'
 			# COULD POTENTIALLY UPDATE ACCOUNT WITH NEW FB DATA HERE TOO
 		except:
 	 		myprofile = FacebookProfile(user=account, facebook_id=userid, image_url=(GRAPH_URL + content_dict['username'] + '/picture'), access_token=access_token)
