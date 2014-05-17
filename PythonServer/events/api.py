@@ -159,7 +159,6 @@ def searchYelp(term,user,location=""):
             loc_address += str(address_segment) + " "
     except Exception as e:
         print e
-    print "hi"
     return loc_address, yelp_mobile_url
 
 
@@ -440,6 +439,7 @@ def createEvent(request):
                     print event.location_address
                     print event.yelp_url
                     addrss, lat, lng = reconcileAddressToCoordinates(address)
+                    print "WOAH"
                     print addrss
                     print lat
                     print lng
@@ -946,12 +946,13 @@ def reconcileAddressToCoordinates(address_string):
     """
         queries google for corresponding coordinates for given address (if address is valid)
     """
+    print "you've come to the wrong neighbordhood"
     google_url = "http://maps.google.com/maps/api/geocode/json?address=%s&sensor=false" % (urllib.urlencode(address_string))
+    logger.info(google_url)
     address = None
     latitude = None
     longitude = None
     try:
-        print "hi"
         print google_url
         conn = urllib2.urlopen(google_url, None)
         response = json.loads(conn.read())
