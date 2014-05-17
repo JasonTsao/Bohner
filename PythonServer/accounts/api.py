@@ -252,16 +252,14 @@ def syncFacebookUser(request, access_token):
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+@csrf_exempt
+@login_required
 def syncFacebookFriends(request):
 	rtn_dict = {"success": False, "msg": "", "fb_pf": False}
 	facebook = None
-	if not request.user.id:
-		user_id = request.POST['user']
-	else:
-		user_id = request.user.id
 	# Try to get a pre-existing Facebook Profile for the signed in user
 	try:
-		account = Account.objects.get(user__id=user_id)
+		account = Account.objects.get(user=request.user)
 		facebook = FacebookProfile.objects.get(user=account)
 		rtn_dict['fb_pf'] = True
 	except Exception as e:
