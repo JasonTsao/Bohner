@@ -151,6 +151,7 @@ def searchYelp(term,user,location=""):
     search_results = json.loads(yelpRequest(host, path,url_params, consumer_key, consumer_secret, TOKEN, token_secret))
     loc_address = ""
     yelp_mobile_url = None
+    yelp_img_url = None
     try:
         yelp_mobile_url = search_results["businesses"][0]["mobile_url"]
         for address_segment in search_results['businesses'][0]['location']['display_address']:
@@ -158,7 +159,7 @@ def searchYelp(term,user,location=""):
         yelp_img_url = search_results["businesses"][0]["image_url"]
     except Exception as e:
         print e
-    return loc_address, yelp_mobile_url
+    return loc_address, yelp_mobile_url, yelp_img_url
 
 
 
@@ -441,7 +442,8 @@ def createEvent(request):
                 if address != "" and yelp_url is not None:
                     event.location_address = address
                     event.yelp_url = yelp_url
-                    event.yelp_img_url = yelp_image_url
+                    if yelp_image_url is not None:
+                        event.yelp_img_url = yelp_image_url
                     addrss, lat, lng = reconcileAddressToCoordinates(address)
                     if addrss is not None and lat is not None and lng is not None:
                         event.location_address = str(addrss)
