@@ -878,6 +878,8 @@ def selectAttending(request, event_id):
 @login_required
 @csrf_exempt
 def createEventChatMessage(request, event_id):
+    print 'creating event chat message!!'
+    logger.info('creating event chat message!')
     rtn_dict = {'success': False, "msg": ""}
     if request.method == 'POST':
         try:
