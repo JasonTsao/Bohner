@@ -307,7 +307,6 @@ def upcomingEvents(request):
 
         account_id = Account.objects.values('id').get(user=request.user)['id']
 
-
         owned_upcoming_events = False
         if not owned_upcoming_events:
             #owned_upcoming_events = []
@@ -327,6 +326,7 @@ def upcomingEvents(request):
                 #upcoming_events.append(model_to_dict(event))
 
         #upcoming_events = False
+
         if not upcoming_events or True:
             invited_users = InvitedFriend.objects.select_related('event').filter(user=account_id)
             for invited_user in invited_users:
@@ -337,14 +337,17 @@ def upcomingEvents(request):
                             started = time.mktime(invited_user.event.start_time.timetuple())
                             event_dict['start_time'] = started
                         if invited_user.event.end_time:
-                            ended = time.mktime(invited_userevent.end_time.timetuple())
+                            ended = time.mktime(invited_user.event.end_time.timetuple())
                             event_dict['end_time'] = ended
                         created = time.mktime(invited_user.event.created.timetuple())
                         event_dict['created'] = created
                         upcoming_events.append(event_dict)
                         #upcoming_events.append(model_to_dict(invited_user.event))
 
+
         sorted_upcoming_events = sorted(upcoming_events, key=lambda k: k['created']) 
+
+
         rtn_dict['upcoming_events'] = sorted_upcoming_events
         try:
             last_location = UserLocation.objects.filter(account__user=request.user)
