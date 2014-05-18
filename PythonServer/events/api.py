@@ -333,10 +333,10 @@ def upcomingEvents(request):
                 if not invited_user.event.event_over and not invited_user.event.cancelled:
                     if invited_user.event.creator != account_id:
                         event_dict = model_to_dict(invited_user.event)
-                        if event.start_time:
+                        if invited_user.event.start_time:
                             started = time.mktime(invited_user.event.start_time.timetuple())
                             event_dict['start_time'] = started
-                        if event.end_time:
+                        if invited_user.event.end_time:
                             ended = time.mktime(invited_userevent.end_time.timetuple())
                             event_dict['end_time'] = ended
                         created = time.mktime(invited_user.event.created.timetuple())
