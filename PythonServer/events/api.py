@@ -598,7 +598,8 @@ def getInvitedFriendsWithLocation(request, event_id):
                     invitee_data["lat"] = last_location[0].latitude
                 invitee_data["name"] = invitee.user.user_name
                 invitee_data["picture"] = invitee.user.profile_pic
-                rtn_dict["invited"].append(invitee_data)
+                json_data = json.loads(invitee_data)
+                rtn_dict["invited"].append(json_data)
             except Exception, e:
                 print e
                 continue
