@@ -589,6 +589,7 @@ def getInvitedFriendsWithLocation(request, event_id):
     rtn_dict = {"success": False, "msg": "", "invited":[]}
     try:
         invited_friends = InvitedFriend.objects.filter(event=event_id)
+        people = []
         for invitee in invited_friends:
             try:
                 invitee_data = {}
@@ -598,11 +599,10 @@ def getInvitedFriendsWithLocation(request, event_id):
                     invitee_data["lat"] = last_location[0].latitude
                 invitee_data["name"] = invitee.user.user_name
                 invitee_data["picture"] = invitee.user.profile_pic
-                json_data = json.loads(invitee_data)
-                rtn_dict["invited"].append(json_data)
+                people.append(invitee_data)
             except Exception, e:
                 print e
-                continue
+        rtn_dict["invited"] = people
         rtn_dict["success"] = True
     except Exception, e:
         print e
