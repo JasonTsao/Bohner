@@ -594,7 +594,7 @@ def getInvitedFriendsWithLocation(request, event_id):
             try:
                 invitee_data = {}
                 try:
-                    facebook_profile = FacebookProfile.objects.get(user=initee.user)
+                    facebook_profile = FacebookProfile.objects.get(user=invitee.user)
                 except Exception as e:
                     facebook_profile = None
                 last_location = UserLocation.objects.filter(account=invitee.user)
