@@ -118,10 +118,8 @@ class InvitedFriend(models.Model):
     user = models.ForeignKey(Account)
     event = models.ForeignKey(Event)
     can_invite_friends = models.NullBooleanField(default=True)
-    coordinates = models.CharField(max_length=255, null=True, blank=True)
-    latitude = models.FloatField(null=True, blank=True)
-    longitude = models.FloatField(null=True, blank=True)
     attending = models.NullBooleanField(null=True, blank=True, default=False) # need to be changed to attending!!
+    is_creator = models.NullBooleanField(default=False, blank=True, null=True)
     class Meta:
         unique_together = (('user', 'event',),)
 

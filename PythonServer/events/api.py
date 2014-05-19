@@ -472,6 +472,13 @@ def createEvent(request):
             score = int(time.mktime(time.strptime(event.start_time, "%Y-%m-%d"))) if event.start_time else int(event.created.strftime("%s"))
             pushToNOSQLSet(created_events_key, event_dict, False,score)
             '''
+            # Created Invited Friend object for the host, set is_creator field to true
+            try:
+                host_invite = InvitedFriend(event=event, user=user, can_invite_friends=True, is_host=True)
+                host_invite.attending = True
+                host_invite.save()
+            except Exception, e:
+                print e
             try:
                 invited_friends = request.POST['invited_friends']
                 invited_friends = json.loads(invited_friends)
@@ -572,6 +579,29 @@ def getInvitedFriends(request, event_id):
         rtn_dict['msg'] = 'Error getting invited friends for event {0}: {1}'.format(event_id, e)
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
+
+@login_required
+@csrf_exempt
+def getInvitedFriendsWithLocation(request, event_id):
+    rtn_dict = {"success": False, "msg": "", "invited":[]}
+    try:
+        invited_friends = InvitedFriend.objects.filter(event=event_id)
+        friend_list = []
+        for invitee in invited_friends:
+            invitee_data = {}
+            last_location = UserLocation.objects.filter(account=invitee.user)
+            if last_location.count() > 0:
+                invitee_data["lng"] = last_location[0].longitude
+                invitee_data["lat"] = last_location[0].latitude
+            invitee_data["name"] = invitee.user.user_name
+            invitee_data["picture"] = invitee.user.profile_pic
+            friend_list.append(invitee_data)
+        rtn_dict["invited_users"] = friend_list
+        rtn_dict["success"] = True
+    except Exception, e:
+        print e
+        rtn_dict["msg"] = "Error getting friend list with location :: {}".format(e)
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 @login_required
 @csrf_exempt
