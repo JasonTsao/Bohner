@@ -589,17 +589,19 @@ def getInvitedFriendsWithLocation(request, event_id):
     rtn_dict = {"success": False, "msg": "", "invited":[]}
     try:
         invited_friends = InvitedFriend.objects.filter(event=event_id)
-        friend_list = []
         for invitee in invited_friends:
-            invitee_data = {}
+            try:
+                invitee_data = {}
             last_location = UserLocation.objects.filter(account=invitee.user)
             if last_location.count() > 0:
                 invitee_data["lng"] = last_location[0].longitude
                 invitee_data["lat"] = last_location[0].latitude
             invitee_data["name"] = invitee.user.user_name
             invitee_data["picture"] = invitee.user.profile_pic
-            friend_list.append(invitee_data)
-        rtn_dict["invited_users"] = friend_list
+            rtn_dict["invited"].append(invitee_data)
+            except Exception, e:
+                print e
+                continue
         rtn_dict["success"] = True
     except Exception, e:
         print e
