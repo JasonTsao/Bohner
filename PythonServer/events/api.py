@@ -17,7 +17,7 @@ from django.forms.models import model_to_dict
 from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth.models import User
 from ios_notifications.models import APNService, Notification, Device
-from accounts.models import Account, AccountLink, Group, UserLocation
+from accounts.models import Account, AccountLink, Group, UserLocation, FacebookProfile
 from accounts.api import pushToNOSQLSet, pushToNOSQLHash
 #from notifications.api import eventPushNotification, sendPushNotification
 from models import Event, EventComment, EventNotification, InvitedFriend
@@ -593,12 +593,17 @@ def getInvitedFriendsWithLocation(request, event_id):
         for invitee in invited_friends:
             try:
                 invitee_data = {}
+                try:
+                    facebook_profile = FacebookProfile.objects.get(user=initee.user)
+                except Exception as e:
+                    facebook_profile = None
                 last_location = UserLocation.objects.filter(account=invitee.user)
                 if last_location.count() > 0:
                     invitee_data["lng"] = last_location[0].longitude
                     invitee_data["lat"] = last_location[0].latitude
                 invitee_data["name"] = invitee.user.user_name
-                invitee_data["picture"] = invitee.user.profile_pic
+                if facebook_profile is not None:
+                    invitee_data["picture"] = facebook_profile.image_url
                 people.append(invitee_data)
             except Exception, e:
                 print e
