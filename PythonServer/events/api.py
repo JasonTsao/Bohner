@@ -307,7 +307,6 @@ def upcomingEvents(request):
 
         account_id = Account.objects.values('id').get(user=request.user)['id']
 
-
         owned_upcoming_events = False
         if not owned_upcoming_events:
             #owned_upcoming_events = []
@@ -327,24 +326,28 @@ def upcomingEvents(request):
                 #upcoming_events.append(model_to_dict(event))
 
         #upcoming_events = False
+
         if not upcoming_events or True:
             invited_users = InvitedFriend.objects.select_related('event').filter(user=account_id)
             for invited_user in invited_users:
                 if not invited_user.event.event_over and not invited_user.event.cancelled:
                     if invited_user.event.creator != account_id:
                         event_dict = model_to_dict(invited_user.event)
-                        if event.start_time:
-                            started = time.mktime(event.start_time.timetuple())
+                        if invited_user.event.start_time:
+                            started = time.mktime(invited_user.event.start_time.timetuple())
                             event_dict['start_time'] = started
-                        if event.end_time:
-                            ended = time.mktime(event.end_time.timetuple())
+                        if invited_user.event.end_time:
+                            ended = time.mktime(invited_user.event.end_time.timetuple())
                             event_dict['end_time'] = ended
                         created = time.mktime(invited_user.event.created.timetuple())
                         event_dict['created'] = created
                         upcoming_events.append(event_dict)
                         #upcoming_events.append(model_to_dict(invited_user.event))
 
+
         sorted_upcoming_events = sorted(upcoming_events, key=lambda k: k['created']) 
+
+
         rtn_dict['upcoming_events'] = sorted_upcoming_events
         try:
             last_location = UserLocation.objects.filter(account__user=request.user)
@@ -905,31 +908,31 @@ def selectAttending(request, event_id):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
-#@login_required
+@login_required
 @csrf_exempt
-def createEventComment(request, event_id):
+def createEventChatMessage(request, event_id):
+    print 'creating event chat message!!'
+    logger.info('creating event chat message!')
     rtn_dict = {'success': False, "msg": ""}
     if request.method == 'POST':
         try:
-            if not request.user.id:
-                user_id = request.POST['user']
-            else:
-                user_id = request.user.id
-            account = Account.objects.get(user__id=user_id)
+            account = Account.objects.get(user=request.user)
             event = Event.objects.get(pk=event_id)
             is_authorized = checkIfAuthorized(event, account)
             if is_authorized:
                 #creating event in SQL DB
                 new_comment = EventComment(event=event,user=account)
-                new_comment.description = request.POST['description']
+                new_comment.description = request.POST['message']
                 new_comment.save()
                 # creating comment in redis
+                '''
                 r = R.r
                 redis_key = 'event.{0}.comments.set'.format(event_id)
                 new_comment_dict = model_to_dict(new_comment)
                 comment_dict = json.dumps(new_comment_dict)
                 score = int(new_comment.created.strftime("%s"))
                 pushToNOSQLSet(redis_key, comment_dict, False, score)
+                '''
 
                 rtn_dict['success'] = True
                 rtn_dict['msg'] = 'successfully created comment for event {0}'.format(event_id)
@@ -943,13 +946,17 @@ def createEventComment(request, event_id):
 
 
 #@login_required
-def getEventComments(request, event_id):
+@login_required
+@csrf_exempt
+def getEventChatMessages(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     try:
+        '''
         comment_range_start = int(request.GET.get('range_start', 0))
         r = R.r
         redis_key = 'event.{0}.comments.set'.format(event_id)
         comments = r.zrange(redis_key, comment_range_start, comment_range_start + RETURN_LIST_SIZE)
+        '''
         comments = False
         if not comments:
             comments = []
@@ -957,10 +964,15 @@ def getEventComments(request, event_id):
             event = Event.objects.get(pk=event_id)
             is_authorized = checkIfAuthorized(event, account)
 
-            event_comments = EventComment.objects.filter(event=event)
+            event_comments = EventComment.objects.filter(event=event).order_by('created')
 
             for event_comment in event_comments:
-                comments.append(model_to_dict(event_comment))
+                message_dict = {}
+                message_dict['created'] = event_comment.created
+                message_dict['creator_name'] = event_comment.user.user_name
+                message_dict['creator_id'] = event_comment.user.id
+                message_dict['message'] = event_comment.description
+                comments.append(message_dict)
 
         rtn_dict['comments'] = comments
         rtn_dict['success'] = True

@@ -352,7 +352,7 @@ def getAllFacebookFriends(request):
 				rtn_friends.append(friend)
 				i+= 1
 			
-			rtn_dict['all_facebook_friends'] = json.dumps(rtn_friends)
+			rtn_dict['all_facebook_friends'] = rtn_friends
 		except Exception as e:
 			print 'Unable to pull users facebook friends: {0}'.format(e)
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
