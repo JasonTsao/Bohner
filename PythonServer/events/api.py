@@ -597,7 +597,7 @@ def getInvitedFriendsWithLocation(request, event_id):
                     facebook_profile = FacebookProfile.objects.get(user=invitee.user)
                 except Exception as e:
                     facebook_profile = None
-                last_location = UserLocation.objects.filter(account=invitee.user)
+                last_location = UserLocation.objects.filter(account=invitee.user).order_by("-created")
                 if last_location.count() > 0:
                     invitee_data["lng"] = last_location[0].longitude
                     invitee_data["lat"] = last_location[0].latitude
