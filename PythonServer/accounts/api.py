@@ -522,9 +522,6 @@ def login(request):
  		username = request.POST.get('username')
 		password = request.POST.get('password')
 
-		rtn_dict['username'] = username
-		rtn_dict['password'] = password
-
 		user = authenticate(username=username, password=password)
 		if user is not None:
 			if user.is_active:
@@ -537,6 +534,13 @@ def login(request):
 		else:
 			login_failed = True
 			status = 401
+
+		try:
+			account = Account.objects.get(user=user)
+			rtn_dict['userid'] = account.id
+		except:
+			print 'Unable to get account for user id {0}'.format(e)
+			logger.info('Unable to get account for user id {0}'.format(e))
 
 		return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json", status=status)
 
