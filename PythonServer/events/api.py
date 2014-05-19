@@ -592,13 +592,13 @@ def getInvitedFriendsWithLocation(request, event_id):
         for invitee in invited_friends:
             try:
                 invitee_data = {}
-            last_location = UserLocation.objects.filter(account=invitee.user)
-            if last_location.count() > 0:
-                invitee_data["lng"] = last_location[0].longitude
-                invitee_data["lat"] = last_location[0].latitude
-            invitee_data["name"] = invitee.user.user_name
-            invitee_data["picture"] = invitee.user.profile_pic
-            rtn_dict["invited"].append(invitee_data)
+                last_location = UserLocation.objects.filter(account=invitee.user)
+                if last_location.count() > 0:
+                    invitee_data["lng"] = last_location[0].longitude
+                    invitee_data["lat"] = last_location[0].latitude
+                invitee_data["name"] = invitee.user.user_name
+                invitee_data["picture"] = invitee.user.profile_pic
+                rtn_dict["invited"].append(invitee_data)
             except Exception, e:
                 print e
                 continue
