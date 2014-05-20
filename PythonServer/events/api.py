@@ -919,8 +919,6 @@ def selectAttending(request, event_id):
 @login_required
 @csrf_exempt
 def createEventChatMessage(request, event_id):
-    print 'creating event chat message!!'
-    logger.info('creating event chat message!')
     rtn_dict = {'success': False, "msg": ""}
     if request.method == 'POST':
         try:
@@ -943,13 +941,16 @@ def createEventChatMessage(request, event_id):
                 '''
 
                 rtn_dict['success'] = True
+                rtn_dict['chat_created'] = True
                 rtn_dict['msg'] = 'successfully created comment for event {0}'.format(event_id)
             else:
                 logger.info('user not authorized to create event comments')
                 rtn_dict['msg'] = 'user not authorized to create event comments'
+                rtn_dict['chat_created'] = False
         except Exception as e:
             logger.info('Error creating event comment: {0}'.format(e))
             rtn_dict['msg'] = 'Error creating event comment: {0}'.format(e)
+            rtn_dict['chat_created'] = False
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
