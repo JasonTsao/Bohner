@@ -571,7 +571,8 @@ def getInvitedFriends(request, event_id):
                             'friend_id':invited_friend.user.id,
                             'pf_pic': str(invited_friend.user.profile_pic),
                             'name': invited_friend.user.user_name,
-                            "attending": invited_friend.attending})
+                            "attending": invited_friend.attending,
+                            'has_viewed_event': invited_friend.has_viewed_event})
                 invited_friends.append(invited_friend_dict)
         rtn_dict['success'] = True
         rtn_dict['msg'] = "successfully got list of invited friends for event {0}".format(event_id)
@@ -613,6 +614,7 @@ def getInvitedFriendsWithLocation(request, event_id):
         print e
         rtn_dict["msg"] = "Error getting friend list with location :: {}".format(e)
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
 
 @login_required
 @csrf_exempt
@@ -912,6 +914,25 @@ def selectAttending(request, event_id):
             print 'Error selected attending for event {0}: user {1}: {2}'.format(event.id, user.id , e)
             logger.info('Error selected attending for event {0}: user {1}: {2}'.format(event.id, user.id , e))
             rtn_dict['msg'] = 'Error selected attending for event {0}: user {1}: {2}'.format(event.id, user.id , e)
+
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@login_required
+@csrf_exempt
+def invitedFriendHasViewedEvent(request, event_id):
+    rtn_dict = {'success': False, "msg": ""}
+
+    try:
+        account = Account.objects.get(user=request.user)
+        event = Event.objects.get(pk=event_id)
+        invited_friend = InvitedFriend.objects.get(user=account, event=event)
+        invited_friend.has_viewed_event = True
+        invited_friend.save()
+        rtn_dict['success'] = True
+        rtn_dict['msg'] = 'Successfully updated invited friend has viewed event to True'
+    except Exception as e:
+        rtn_dict['msg'] = 'Error marking invited viewer as has viewed event: {0}'.format(e)
 
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
