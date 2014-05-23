@@ -119,6 +119,7 @@ class InvitedFriend(models.Model):
     event = models.ForeignKey(Event)
     can_invite_friends = models.NullBooleanField(default=True)
     attending = models.NullBooleanField(null=True, blank=True, default=False) # need to be changed to attending!!
+    has_viewed_event = models.NullBooleanField(default=False, blank=True, null=True)
     is_creator = models.NullBooleanField(default=False, blank=True, null=True)
     class Meta:
         unique_together = (('user', 'event',),)
