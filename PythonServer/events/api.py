@@ -961,15 +961,22 @@ def createEventChatMessage(request, event_id):
                 pushToNOSQLSet(redis_key, comment_dict, False, score)
                 '''
 
-                '''
                 try:
                     message = "{0} said: {1}".format(account.user_name, new_comment.description)
                     custom_payload = None
                     notification = createNotification(message, custom_payload)
-
+                    invited_friends = InvitedFriend.objects.select_related('user').filter(event=event)
+                    device_tokens = []
+                    for invited_friend in invited_friends:
+                        try:
+                            friend_account = invited_friend.user
+                            device = Device.objects.get(users__pk=friend_account.user.id)
+                            device_tokens.append(device.token)
+                        except:
+                            pass
+                    sendNotification(notification, device_tokens)
                 except Exception as e:
                     print 'Error sending push notification: {0}'.format(e)
-                '''
 
                 rtn_dict['success'] = True
                 rtn_dict['chat_created'] = True
