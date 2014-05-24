@@ -10,3 +10,6 @@ oauth2
 django-timedeltafield
 django-ios-notifications
 facepy==0.8.4
+django-fields==0.2.2
+pyOpenSSL
+pycrypto==2.6

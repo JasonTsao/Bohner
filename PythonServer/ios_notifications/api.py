@@ -65,7 +65,7 @@ class DeviceResource(BaseResource):
             # Strip out any special characters that may be in the token
             token = re.sub('<|>|\s', '', token)
         devices = Device.objects.filter(token=token,
-                                        service__id=int(request.POST.get('service', 0)))
+                                        service__id=int(request.POST.get('service', 1)))
         devices.users.add(request.user)
         devices.save()
 

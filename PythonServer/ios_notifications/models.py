@@ -36,12 +36,18 @@ class BaseService(models.Model):
         # ssl in Python < 3.2 does not support certificates/keys as strings.
         # See http://bugs.python.org/issue3823
         # Therefore pyOpenSSL which lets us do this is a dependancy.
+
+        print 'in the Base Service connect class'
+        print 'opening socket'
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print 'getting certificate'
         cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certificate)
+        
         args = [OpenSSL.crypto.FILETYPE_PEM, private_key]
         if passphrase is not None:
             args.append(str(passphrase))
         try:
+            print 'trying to openssl cypto load private key'
             pkey = OpenSSL.crypto.load_privatekey(*args)
         except OpenSSL.crypto.Error:
             raise InvalidPassPhrase
@@ -52,6 +58,7 @@ class BaseService(models.Model):
         self.connection.connect((self.hostname, self.PORT))
         self.connection.set_connect_state()
         self.connection.do_handshake()
+        print 'at the end of base service connect class'
 
     def _disconnect(self):
         """
@@ -97,6 +104,8 @@ class APNService(BaseService):
         """
         if devices is None:
             devices = self.device_set.filter(is_active=True)
+        print 'devices = {0}'.format(devices)
+        print 'notification sending: {0}'.format( notification)
         self._write_message(notification, devices, chunk_size)
 
     def _write_message(self, notification, devices, chunk_size):
@@ -104,6 +113,8 @@ class APNService(BaseService):
         Writes the message for the supplied devices to
         the APN Service SSL socket.
         """
+        print 'in iosnotifications write message'
+
         if not isinstance(notification, Notification):
             raise TypeError('notification should be an instance of ios_notifications.models.Notification')
 
@@ -112,21 +123,29 @@ class APNService(BaseService):
 
         payload = notification.payload
 
+        print 'the payload: {0}'.format(payload)
+        print 'devices: {0}'.format(devices)
         # Split the devices into manageable chunks.
         # Chunk sizes being determined by the `chunk_size` arg.
         device_length = devices.count() if isinstance(devices, models.query.QuerySet) else len(devices)
         chunks = [devices[i:i + chunk_size] for i in xrange(0, device_length, chunk_size)]
 
+        print "chunks is: {0}".format(chunks)
         for index in xrange(len(chunks)):
+            print 'index in chunks:{0}'.format(index)
             chunk = chunks[index]
-            self._connect()
+            print 'chunk from chunks: {0}'.format(chunk)
 
+            self._connect()
+            print 'connected'
             for device in chunk:
+                print 'device in chunk: {0}'.format(device)
                 if not device.is_active:
                     continue
                 try:
                     self.connection.send(self.pack_message(payload, device))
                 except (OpenSSL.SSL.WantWriteError, socket.error) as e:
+                    print 'openssl want write error: {0}'.format(e)
                     if isinstance(e, socket.error) and isinstance(e.args, tuple) and e.args[0] != errno.EPIPE:
                         raise e  # Unexpected exception, raise it.
                     self._disconnect()
@@ -160,12 +179,15 @@ class APNService(BaseService):
         """
         Converts a notification payload into binary form.
         """
+        print 'packing message: {0} for device: {1}'.format(payload, device)
         if len(payload) > 256:
             raise NotificationPayloadSizeExceeded
         if not isinstance(device, Device):
             raise TypeError('device must be an instance of ios_notifications.models.Device')
 
+        print 'payload is: {0}'.format(payload)
         msg = struct.pack(self.fmt % len(payload), chr(0), 32, unhexlify(device.token), len(payload), payload)
+        print 'msg is: {0}'.format(msg)
         return msg
 
     def __unicode__(self):
