@@ -66,6 +66,9 @@ class DeviceResource(BaseResource):
             token = re.sub('<|>|\s', '', token)
         devices = Device.objects.filter(token=token,
                                         service__id=int(request.POST.get('service', 0)))
+        devices.users.add(request.user)
+        devices.save()
+
         if devices.exists():
             device = devices.get()
             device.is_active = True
