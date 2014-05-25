@@ -59,11 +59,11 @@ def testIOSNotificationAPI(request):
 
 def createAPNService(request):
 	#cert, key = generate_cert_and_pkey()
-	service = APNService.objects.create(name='sandbox', hostname='gateway.push.apple.com', certificate=CERTIFICATE, private_key=PRIVATE_KEY)
+	service = APNService.objects.create(name='sandbox', hostname='gateway.sandbox.push.apple.com', certificate=CERTIFICATE, private_key=PRIVATE_KEY)
 
 
 def createNotification(message, custom_payload=False):
-	service = APNService.objects.get(hostname='gateway.push.apple.com', name='sandbox')
+	service = APNService.objects.get(hostname='gateway.sandbox.push.apple.com', name='sandbox')
 	notification = Notification(message=message, service=service)
 	if custom_payload:
 		notification.custom_payload = custom_payload
@@ -83,7 +83,7 @@ def addNotificationToRedis(notification, account_id):
 def sendNotification(notification, device_tokens):
 	rtn_dict = {'success': False, "msg": ""}
 	try:
-		service = APNService.objects.get(hostname='gateway.push.apple.com', name='sandbox')
+		service = APNService.objects.get(hostname='gateway.sandbox.push.apple.com', name='sandbox')
 		devices = Device.objects.filter(token__in=device_tokens, service=service)
 		service.push_notification_to_devices(notification=notification, devices=devices, chunk_size=100)
 		rtn_dict['success'] = True
