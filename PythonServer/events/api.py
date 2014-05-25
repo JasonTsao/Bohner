@@ -566,13 +566,20 @@ def getInvitedFriends(request, event_id):
             invited_friends = []
             invited_friends_list = InvitedFriend.objects.select_related('user').filter(event=event_id)
             for invited_friend in invited_friends_list:
+                facebook_pf_pic_url = ''
+                try:
+                    facebook_profile = FacebookProfile.objects.get(user=invited_friend.user)
+                    facebook_pf_pic_url = facebook_profile.image_url
+                except:
+                    pass
                 invited_friend_dict = json.dumps({
                             'invited_friend_id': invited_friend.id,
                             'friend_id':invited_friend.user.id,
                             'pf_pic': str(invited_friend.user.profile_pic),
                             'name': invited_friend.user.user_name,
                             "attending": invited_friend.attending,
-                            'has_viewed_event': invited_friend.has_viewed_event})
+                            'has_viewed_event': invited_friend.has_viewed_event,
+                            'fb_profile_pic': facebook_pf_pic_url})
                 invited_friends.append(invited_friend_dict)
         rtn_dict['success'] = True
         rtn_dict['msg'] = "successfully got list of invited friends for event {0}".format(event_id)
