@@ -3,3 +3,4 @@ sudo service nginx restart
 sudo nano /etc/nginx/sites-enabled/default
 python manage.py collectstatic
 https://github.com/beathan/Django-iOS-Auth
+ssh -i meep1.pem ubuntu@50.112.180.63
