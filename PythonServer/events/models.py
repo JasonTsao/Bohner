@@ -158,6 +158,7 @@ class EventComment(models.Model):
     modified = models.DateTimeField(auto_now=True, blank=True, null=True)
     def save(self, invited_friends=None, *args, **kwargs):
         if not self.pk:
+            '''
             try:
                 message = "{0} said {1}".format(self.user.user_name, self.description)
                 custom_payload = {
@@ -182,5 +183,6 @@ class EventComment(models.Model):
                 sendNotification(notification, tokens)
             except Exception as e:
                 print 'Unable to send push notification when updateing event {0}'.format(self.id)
+            '''
         super(EventComment, self).save()
 
