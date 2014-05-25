@@ -970,7 +970,6 @@ def createEventChatMessage(request, event_id):
 
                 try:
                     message = "{0} said: {1}".format(account.user_name, new_comment.description)
-                    print 'about to try to push message: {0}'.format(message)
                     custom_payload = None
                     notification = createNotification(message, custom_payload)
                     invited_friends = InvitedFriend.objects.select_related('user').filter(event=event)
