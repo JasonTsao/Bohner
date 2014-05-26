@@ -9,4 +9,5 @@ urlpatterns = patterns("notifications.api",
                         url(r"^update_device", "updateDevice"),
                         url(r"^device_details/(\d+)", "getDeviceDetails"),
                         url(r"^test_ios_notifications", "testIOSNotificationAPI"),
+                        url(r"^get", "getNotifications"),
                         )

@@ -4,6 +4,13 @@ import ast
 import urllib2
 import os
 import time
+import datetime
+
+
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+
+from django.forms.models import model_to_dict
 
 from ios_notifications.management.commands.push_ios_notification import Command
 from ios_notifications.models import APNService, Notification, Device
@@ -47,6 +54,31 @@ def pushToNOSQLSet(key, push_item, delete_item, score):
 	if delete_item:
 		r.zrem(key, delete_item)
 
+
+@login_required
+@csrf_exempt
+def getNotifications(request):
+	rtn_dict = {'success': False, "msg": "", "notifications":[]}
+	try:
+		service = APNService.objects.get(pk=1)
+		notifications = Notification.objects.filter(recipients__pk=request.user.id, service=service)
+		notifications_array = []
+		for notification in notifications:
+			notification_dict = {}
+			notification_dict['message'] = notification.message
+			created_at = time.mktime(notification.created_at.timetuple())
+			notification_dict['created_at'] = created_at
+			notification_dict['id'] = notification.id
+			notifications_array.append(notification_dict)
+		rtn_dict['notifications'] = notifications_array
+		rtn_dict['success'] = True
+		rtn_dict['msg'] = 'Successfully pulled notifications'
+	except Exception as e:
+		print 'unable to grab notifications for user: {0}'.format(e)
+		rtn_dict['msg'] = 'unable to grab notifications for user: {0}'.format(e)
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
 def testIOSNotificationAPI(request):
 	rtn_dict = {'success': False, "msg": ""}
 	try:
@@ -62,13 +94,15 @@ def createAPNService(request):
 	service = APNService.objects.create(name='sandbox', hostname='gateway.sandbox.push.apple.com', certificate=CERTIFICATE, private_key=PRIVATE_KEY)
 
 
-def createNotification(message, custom_payload=False):
+def createNotification(message, custom_payload=False, recipients=[]):
 	service = APNService.objects.get(hostname='gateway.sandbox.push.apple.com', name='sandbox')
 	notification = Notification(message=message, service=service)
 	if custom_payload:
 		notification.custom_payload = custom_payload
 	notification.badge = None
 	notification.save()
+	for recipient in recipients:
+		notification.recipients.add(recipient)
 	return notification
 
 

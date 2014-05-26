@@ -971,15 +971,16 @@ def createEventChatMessage(request, event_id):
                 try:
                     message = "{0} said: {1}".format(account.user_name, new_comment.description)
                     custom_payload = None
-                    notification = createNotification(message, custom_payload)
                     invited_friends = InvitedFriend.objects.select_related('user').filter(event=event)
                     device_tokens = []
+                    recipients = []
 
                     #check if should send notification to group creator
                     if account != event.creator:
                         try:
                             device = Device.objects.get(users__pk=event.creator.user.id)
                             device_tokens.append(device.token)
+                            recipients.append(event.creator.user)
                         except:
                             pass
 
@@ -989,8 +990,12 @@ def createEventChatMessage(request, event_id):
                                 friend_account = invited_friend.user
                                 device = Device.objects.get(users__pk=friend_account.user.id)
                                 device_tokens.append(device.token)
+                                recipients.append(friend_account.user)
                             except:
                                 pass
+
+
+                    notification = createNotification(message, custom_payload, recipients)
                     sendNotification(notification, device_tokens)
                 except Exception as e:
                     print 'Error sending push notification: {0}'.format(e)
@@ -1017,18 +1022,32 @@ def createTestEventChatMessage(request, event_id):
         account = Account.objects.get(user=request.user)
         event = Event.objects.get(pk=event_id)
         try:
-            message = "{0} said: {1}".format(account.user_name, "This is a test chat messagee")
+            message = "{0} said: {1}".format(account.user_name, "This is a test chat jea")
             custom_payload = None
-            notification = createNotification(message, custom_payload)
             invited_friends = InvitedFriend.objects.select_related('user').filter(event=event)
             device_tokens = []
-            for invited_friend in invited_friends:
+            recipients = []
+
+            #check if should send notification to group creator
+            if account != event.creator:
                 try:
-                    friend_account = invited_friend.user
-                    device = Device.objects.get(users__pk=friend_account.user.id)
+                    device = Device.objects.get(users__pk=event.creator.user.id)
                     device_tokens.append(device.token)
+                    recipients.append(event.creator.user)
                 except:
                     pass
+
+            for invited_friend in invited_friends:
+                if invited_friend.user != account:
+                    try:
+                        friend_account = invited_friend.user
+                        device = Device.objects.get(users__pk=friend_account.user.id)
+                        device_tokens.append(device.token)
+                        recipients.append(friend_account.user)
+                    except:
+                        pass
+
+            notification = createNotification(message, custom_payload, recipients)
             sendNotification(notification, device_tokens)
         except Exception as e:
             print 'Error sending push notification: {0}'.format(e)
