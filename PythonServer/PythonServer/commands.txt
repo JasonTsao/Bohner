@@ -3,3 +3,33 @@ sudo service nginx restart
 sudo nano /etc/nginx/sites-enabled/default
 python manage.py collectstatic
 https://github.com/beathan/Django-iOS-Auth
+ssh -i meep1.pem ubuntu@50.112.180.63
+
+Directions for Push notifications Problem: SSL in server nginx settings
+	http://www.entrust.net/knowledge-base/technote.cfm?tn=8471
+	You need to combine the Entrust root, chain and server certificate into a single, concatenated file. 
+
+	The order should look something like this:
+
+	 -----BEGIN CERTIFICATE-----
+	(Your Web server Certificate)
+	-----END CERTIFICATE-----
+	-----BEGIN CERTIFICATE-----
+	(Entrust L1C Cross Certificate)
+	-----END CERTIFICATE-----
+	-----BEGIN CERTIFICATE-----
+	(Entrust 2048 Root)
+	-----END CERTIFICATE----- 
+
+	Once you have your certificate file combined in this order, you just need to edit the configuration file to use the certificate and the private key that you created. The private key was created when you created you CSR.  
+
+	The configuraiton file should be called ngnix.conf. You should have some lines in here that refer to your certificate and key. Specify the path to your certificate and key files in the configuration.
+
+	server 
+	{ 
+	listen 443; 
+	server_name www.mysite.com; 
+	ssl on; 
+	ssl_certificate /path/to/SSL/entrust_combined.crt; 
+	ssl_certificate_key /path/to/SSL/private.key;
+	} 

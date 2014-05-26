@@ -36,6 +36,7 @@ class BaseService(models.Model):
         # ssl in Python < 3.2 does not support certificates/keys as strings.
         # See http://bugs.python.org/issue3823
         # Therefore pyOpenSSL which lets us do this is a dependancy.
+
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certificate)
         args = [OpenSSL.crypto.FILETYPE_PEM, private_key]
@@ -119,14 +120,16 @@ class APNService(BaseService):
 
         for index in xrange(len(chunks)):
             chunk = chunks[index]
-            self._connect()
 
+            self._connect()
             for device in chunk:
                 if not device.is_active:
                     continue
                 try:
-                    self.connection.send(self.pack_message(payload, device))
+                    #self.connection.send(self.pack_message(payload, device))
+                    self.connection.write(self.pack_message(payload, device))
                 except (OpenSSL.SSL.WantWriteError, socket.error) as e:
+                    print 'openssl want write error: {0}'.format(e)
                     if isinstance(e, socket.error) and isinstance(e.args, tuple) and e.args[0] != errno.EPIPE:
                         raise e  # Unexpected exception, raise it.
                     self._disconnect()
@@ -138,6 +141,8 @@ class APNService(BaseService):
                     # and you send one to it anyways, Apple immediately drops the connection to your APNS socket.
                     # http://stackoverflow.com/a/13332486/1025116
                     self._write_message(notification, chunk[i + 1:], chunk_size)
+                
+
 
             self._disconnect()
 

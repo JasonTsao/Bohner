@@ -65,14 +65,21 @@ class DeviceResource(BaseResource):
             # Strip out any special characters that may be in the token
             token = re.sub('<|>|\s', '', token)
         devices = Device.objects.filter(token=token,
-                                        service__id=int(request.POST.get('service', 0)))
+                                        service__id=int(request.POST.get('service', 1)))
+
+        for device in devices:
+            device.users.add(request.user)
+            device.save()
+
         if devices.exists():
+            print 'device exists!!'
             device = devices.get()
             device.is_active = True
             device.save()
             return JSONResponse(device)
         form = DeviceForm(request.POST)
         if form.is_valid():
+            print 'form is valid!!'
             device = form.save(commit=False)
             device.is_active = True
             device.save()

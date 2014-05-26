@@ -19,7 +19,7 @@ from django.contrib.auth.models import User
 from ios_notifications.models import APNService, Notification, Device
 from accounts.models import Account, AccountLink, Group, UserLocation, FacebookProfile
 from accounts.api import pushToNOSQLSet, pushToNOSQLHash
-#from notifications.api import eventPushNotification, sendPushNotification
+from notifications.api import sendNotification, createNotification
 from models import Event, EventComment, EventNotification, InvitedFriend
 from django.views.decorators.csrf import csrf_exempt
 from rediscli import r as R
@@ -604,12 +604,20 @@ def getInvitedFriends(request, event_id):
             invited_friends = []
             invited_friends_list = InvitedFriend.objects.select_related('user').filter(event=event_id)
             for invited_friend in invited_friends_list:
+                facebook_pf_pic_url = ''
+                try:
+                    facebook_profile = FacebookProfile.objects.get(user=invited_friend.user)
+                    facebook_pf_pic_url = facebook_profile.image_url
+                except:
+                    pass
                 invited_friend_dict = json.dumps({
                             'invited_friend_id': invited_friend.id,
                             'friend_id':invited_friend.user.id,
                             'pf_pic': str(invited_friend.user.profile_pic),
                             'name': invited_friend.user.user_name,
-                            "attending": invited_friend.attending})
+                            "attending": invited_friend.attending,
+                            'has_viewed_event': invited_friend.has_viewed_event,
+                            'fb_profile_pic': facebook_pf_pic_url})
                 invited_friends.append(invited_friend_dict)
         rtn_dict['success'] = True
         rtn_dict['msg'] = "successfully got list of invited friends for event {0}".format(event_id)
@@ -651,6 +659,7 @@ def getInvitedFriendsWithLocation(request, event_id):
         print e
         rtn_dict["msg"] = "Error getting friend list with location :: {}".format(e)
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
 
 @login_required
 @csrf_exempt
@@ -956,9 +965,26 @@ def selectAttending(request, event_id):
 
 @login_required
 @csrf_exempt
+def invitedFriendHasViewedEvent(request, event_id):
+    rtn_dict = {'success': False, "msg": ""}
+
+    try:
+        account = Account.objects.get(user=request.user)
+        event = Event.objects.get(pk=event_id)
+        invited_friend = InvitedFriend.objects.get(user=account, event=event)
+        invited_friend.has_viewed_event = True
+        invited_friend.save()
+        rtn_dict['success'] = True
+        rtn_dict['msg'] = 'Successfully updated invited friend has viewed event to True'
+    except Exception as e:
+        rtn_dict['msg'] = 'Error marking invited viewer as has viewed event: {0}'.format(e)
+
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@login_required
+@csrf_exempt
 def createEventChatMessage(request, event_id):
-    print 'creating event chat message!!'
-    logger.info('creating event chat message!')
     rtn_dict = {'success': False, "msg": ""}
     if request.method == 'POST':
         try:
@@ -980,14 +1006,114 @@ def createEventChatMessage(request, event_id):
                 pushToNOSQLSet(redis_key, comment_dict, False, score)
                 '''
 
+                try:
+                    message = "{0} said: {1}".format(account.user_name, new_comment.description)
+                    custom_payload = None
+                    invited_friends = InvitedFriend.objects.select_related('user').filter(event=event)
+                    device_tokens = []
+                    recipients = []
+
+                    #check if should send notification to group creator
+                    if account != event.creator:
+                        try:
+                            device = Device.objects.get(users__pk=event.creator.user.id)
+                            device_tokens.append(device.token)
+                            recipients.append(event.creator.user)
+                        except:
+                            pass
+
+                    for invited_friend in invited_friends:
+                        if invited_friend.user != account:
+                            try:
+                                friend_account = invited_friend.user
+                                device = Device.objects.get(users__pk=friend_account.user.id)
+                                device_tokens.append(device.token)
+                                recipients.append(friend_account.user)
+                            except:
+                                pass
+
+                    custom_payload = {'notification_type': 'event_chat',
+                                'chat_id': new_comment.id,
+                                'event_id': event.id,
+                                'creator_id': account.id}
+                    custom_payload = json.dumps(custom_payload)    
+
+
+                    notification = createNotification(message, custom_payload, recipients)
+                    sendNotification(notification, device_tokens)
+                except Exception as e:
+                    print 'Error sending push notification: {0}'.format(e)
+
                 rtn_dict['success'] = True
+                rtn_dict['chat_created'] = True
                 rtn_dict['msg'] = 'successfully created comment for event {0}'.format(event_id)
             else:
                 logger.info('user not authorized to create event comments')
                 rtn_dict['msg'] = 'user not authorized to create event comments'
+                rtn_dict['chat_created'] = False
         except Exception as e:
             logger.info('Error creating event comment: {0}'.format(e))
             rtn_dict['msg'] = 'Error creating event comment: {0}'.format(e)
+            rtn_dict['chat_created'] = False
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@login_required
+@csrf_exempt
+def createTestEventChatMessage(request, event_id):
+    rtn_dict = {'success': False, "msg": ""}
+    try:
+        account = Account.objects.get(user=request.user)
+        event = Event.objects.get(pk=event_id)
+
+        new_comment = EventComment(event=event,user=account)
+        new_comment.description = "This is a test chat jea"
+        new_comment.save()
+        try:
+            message = "{0} said: {1}".format(account.user_name, "This is a test chat jea")
+            custom_payload = None
+            invited_friends = InvitedFriend.objects.select_related('user').filter(event=event)
+            device_tokens = []
+            recipients = []
+
+            #check if should send notification to group creator
+            if account != event.creator:
+                try:
+                    device = Device.objects.get(users__pk=event.creator.user.id)
+                    device_tokens.append(device.token)
+                    recipients.append(event.creator.user)
+                except:
+                    pass
+
+            for invited_friend in invited_friends:
+                if invited_friend.user != account:
+                    try:
+                        friend_account = invited_friend.user
+                        device = Device.objects.get(users__pk=friend_account.user.id)
+                        device_tokens.append(device.token)
+                        recipients.append(friend_account.user)
+                    except:
+                        pass
+
+            custom_payload = {'notification_type': 'chat',
+                                'chat_id': new_comment.id,
+                                'event_id': event.id,
+                                'creator_id': account.id}
+            custom_payload = json.dumps(custom_payload)  
+
+            notification = createNotification(message, custom_payload, recipients)
+            sendNotification(notification, device_tokens)
+        except Exception as e:
+            print 'Error sending push notification: {0}'.format(e)
+
+        rtn_dict['success'] = True
+        rtn_dict['chat_created'] = True
+        rtn_dict['msg'] = 'successfully created comment for event {0}'.format(event_id)
+
+    except Exception as e:
+        logger.info('Error creating event comment: {0}'.format(e))
+        rtn_dict['msg'] = 'Error creating event comment: {0}'.format(e)
+        rtn_dict['chat_created'] = False
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
