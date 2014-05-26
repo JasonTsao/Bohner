@@ -77,7 +77,7 @@ def yelpSearch(term,location,user):
     path = '/v2/search'
     url_params = {}
     url_params['term'] = term
-    url_params['limit'] = 5
+    url_params['limit'] = 10
     location = ""
     if location != "":
         url_params['location'] = location
@@ -161,6 +161,44 @@ def searchYelp(term,user,location=""):
         print e
     return loc_address, yelp_mobile_url, yelp_img_url
 
+
+def yelpLocationSearch(request):
+    term = request.GET.get("query", None)
+    user = request.user
+    rtn_dict = {'success': False, "msg": ""}
+    country_code = 'US'
+    lang = 'en'
+    location_array = location.split(',')
+    host = 'api.yelp.com'
+    path = '/v2/search'
+    url_params = {}
+    url_params['term'] = term
+    url_params['limit'] = 10
+    try:
+        user_location = UserLocation.objects.filter(account__user=user).order_by("-created")
+        last_location = user_location[0]
+        coordinates = "{0},{1}".format(last_location.latitude, last_location.longitude)
+        if location == "":
+            url_params['ll'] = coordinates
+        else:
+            url_params['cll'] = coordinates
+    except Exception, e:
+        print e
+    search_results = json.loads(yelpRequest(host, path, url_params, consumer_key, consumer_secret, TOKEN, token_secret))
+    businesses = []
+    for business in search_results["businesses"]:
+        try:
+            name = re.sub("([a-z])([A-Z])","\g<1> \g<2>",business["name"])
+            buss_dict = {"name": name}
+            buss_dict["address"] = business["location"]["address"][0]
+            buss_dict["yelp_id"] = business["id"]
+            buss_dict["yelp_mobile_url"] = business["mobile_url"]
+            businesses.append(buss_dict)
+        except Exception, e:
+            print e
+    rtn_dict["data"] = businesses
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+        
 
 
 def yelpConnect(request):
