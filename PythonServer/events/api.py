@@ -994,7 +994,7 @@ def createEventChatMessage(request, event_id):
                             except:
                                 pass
 
-                    custom_payload = {'notification_type': 'chat',
+                    custom_payload = {'notification_type': 'event_chat',
                                 'chat_id': new_comment.id,
                                 'event_id': event.id,
                                 'creator_id': account.id}
