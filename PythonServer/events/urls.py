@@ -23,6 +23,7 @@ urlpatterns = patterns("events.api",
                         url(r"^invited_friend_location/(\d+)", "getInvitedFriendLocation"),
                         url(r"^request/invited_friend_location/(\d+)", "requestInvitedFriendLocation"),
                         url(r"^yelpConnect","yelpConnect"),
+                        url(r"^searchlocations","yelpLocationSearch"),
                         )
 
 urlpatterns += patterns("events.views",
