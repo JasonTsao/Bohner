@@ -994,6 +994,12 @@ def createEventChatMessage(request, event_id):
                             except:
                                 pass
 
+                    custom_payload = {'notification_type': 'chat',
+                                'chat_id': new_comment.id,
+                                'event_id': event.id,
+                                'creator_id': account.id}
+                    custom_payload = json.dumps(custom_payload)    
+
 
                     notification = createNotification(message, custom_payload, recipients)
                     sendNotification(notification, device_tokens)
@@ -1021,6 +1027,10 @@ def createTestEventChatMessage(request, event_id):
     try:
         account = Account.objects.get(user=request.user)
         event = Event.objects.get(pk=event_id)
+
+        new_comment = EventComment(event=event,user=account)
+        new_comment.description = "This is a test chat jea"
+        new_comment.save()
         try:
             message = "{0} said: {1}".format(account.user_name, "This is a test chat jea")
             custom_payload = None
@@ -1046,6 +1056,12 @@ def createTestEventChatMessage(request, event_id):
                         recipients.append(friend_account.user)
                     except:
                         pass
+
+            custom_payload = {'notification_type': 'chat',
+                                'chat_id': new_comment.id,
+                                'event_id': event.id,
+                                'creator_id': account.id}
+            custom_payload = json.dumps(custom_payload)  
 
             notification = createNotification(message, custom_payload, recipients)
             sendNotification(notification, device_tokens)
