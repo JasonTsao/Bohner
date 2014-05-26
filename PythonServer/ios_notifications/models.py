@@ -192,6 +192,7 @@ class Notification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     last_sent_at = models.DateTimeField(null=True, blank=True)
     custom_payload = models.CharField(max_length=240, blank=True, help_text='JSON representation of an object containing custom payload.')
+    notification_type = models.CharField(max_length=255, blank=True, null=True)
 
     def __init__(self, *args, **kwargs):
         self.persist = getattr(settings, 'IOS_NOTIFICATIONS_PERSIST_NOTIFICATIONS', True)

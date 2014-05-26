@@ -69,6 +69,7 @@ def getNotifications(request):
 			created_at = time.mktime(notification.created_at.timetuple())
 			notification_dict['created_at'] = created_at
 			notification_dict['id'] = notification.id
+			notification_dict['notification_type'] = notification.notification_type
 			notifications_array.append(notification_dict)
 		rtn_dict['notifications'] = notifications_array
 		rtn_dict['success'] = True
@@ -94,12 +95,13 @@ def createAPNService(request):
 	service = APNService.objects.create(name='sandbox', hostname='gateway.sandbox.push.apple.com', certificate=CERTIFICATE, private_key=PRIVATE_KEY)
 
 
-def createNotification(message, custom_payload=False, recipients=[]):
+def createNotification(message, notification_type, custom_payload=False, recipients=[]):
 	service = APNService.objects.get(hostname='gateway.sandbox.push.apple.com', name='sandbox')
 	notification = Notification(message=message, service=service)
 	if custom_payload:
 		notification.custom_payload = custom_payload
 	notification.badge = None
+	notification.notification_type = notification_type
 	notification.save()
 	for recipient in recipients:
 		notification.recipients.add(recipient)
