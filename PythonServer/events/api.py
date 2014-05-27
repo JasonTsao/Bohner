@@ -593,7 +593,7 @@ def createEvent(request):
                     except:
                         pass
 
-                custom_payload = {'notification_type': 'event_update',
+                custom_payload = {'notification_type': 'event_create',
                             'event_id': event.id,
                             'creator_id': account.id}
                 custom_payload = json.dumps(custom_payload)    
