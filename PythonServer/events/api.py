@@ -574,6 +574,35 @@ def createEvent(request):
                 rtn_dict['msg'] = e
                 rtn_dict['success'] = False
 
+            '''
+                SEND NOTIFICATION TO EVENT MEMBERS
+            '''
+            try:
+                message = "{0} invited you to {1}".format(event.creator.user_name, event.description)
+                custom_payload = None
+                invited_friends = InvitedFriend.objects.select_related('user').filter(event=event)
+                device_tokens = []
+                recipients = []
+
+                for invited_friend in invited_friends:
+                    try:
+                        friend_account = invited_friend.user
+                        device = Device.objects.get(users__pk=friend_account.user.id)
+                        device_tokens.append(device.token)
+                        recipients.append(friend_account.user)
+                    except:
+                        pass
+
+                custom_payload = {'notification_type': 'event_update',
+                            'event_id': event.id,
+                            'creator_id': account.id}
+                custom_payload = json.dumps(custom_payload)    
+
+                notification = createNotification(message, 'event_create', custom_payload, recipients)
+                sendNotification(notification, device_tokens)
+            except Exception as e:
+                print 'Error sending push notification: {0}'.format(e)
+
         except Exception as e:
             print 'Error creating new event: {0}'.format(e)
             logger.info('Error creating new event: {0}'.format(e))
@@ -786,6 +815,7 @@ def updateEvent(request, event_id):
     rtn_dict = {'success': False, "msg": ""}
     try:
         event = Event.objects.get(pk=event_id)
+        account = Account.objects.get(user=request.user)
         '''
         r = R.r
         redis_key = 'event.{0}.hash'.format(event_id)
@@ -837,6 +867,44 @@ def updateEvent(request, event_id):
             event.save()
         '''
         event.save()
+
+        #SEND NOTIFICATON TO INVITED PEOPLE OF UPDATE
+        try:
+            message = "{0} updated {1}".format(account.user_name, event.description)
+            custom_payload = None
+            invited_friends = InvitedFriend.objects.select_related('user').filter(event=event)
+            device_tokens = []
+            recipients = []
+
+            #check if should send notification to group creator
+            if account != event.creator:
+                try:
+                    device = Device.objects.get(users__pk=event.creator.user.id)
+                    device_tokens.append(device.token)
+                    recipients.append(event.creator.user)
+                except:
+                    pass
+
+            for invited_friend in invited_friends:
+                if invited_friend.user != account:
+                    try:
+                        friend_account = invited_friend.user
+                        device = Device.objects.get(users__pk=friend_account.user.id)
+                        device_tokens.append(device.token)
+                        recipients.append(friend_account.user)
+                    except:
+                        pass
+
+            custom_payload = {'notification_type': 'event_update',
+                        'event_id': event.id,
+                        'creator_id': account.id}
+            custom_payload = json.dumps(custom_payload)    
+
+
+            notification = createNotification(message, 'event_update', custom_payload, recipients)
+            sendNotification(notification, device_tokens)
+        except Exception as e:
+            print 'Error sending push notification: {0}'.format(e)
         #pushToNOSQLHash(redis_key, model_to_dict(event))
         rtn_dict['success'] = True
         rtn_dict['msg'] = 'Successfully updated event!'
