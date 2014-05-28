@@ -1107,7 +1107,7 @@ def createEventChatMessage(request, event_id):
                     custom_payload = json.dumps(custom_payload)    
 
 
-                    notification = createNotification(message, 'chat', custom_payload, recipients)
+                    notification = createNotification(message, 'event_chat', custom_payload, recipients)
                     sendNotification(notification, device_tokens)
                 except Exception as e:
                     print 'Error sending push notification: {0}'.format(e)
@@ -1163,13 +1163,13 @@ def createTestEventChatMessage(request, event_id):
                     except:
                         pass
 
-            custom_payload = {'notification_type': 'chat',
+            custom_payload = {'notification_type': 'event_chat',
                                 'chat_id': new_comment.id,
                                 'event_id': event.id,
                                 'creator_id': account.id}
             custom_payload = json.dumps(custom_payload)  
 
-            notification = createNotification(message, 'chat', custom_payload, recipients)
+            notification = createNotification(message, 'event_chat', custom_payload, recipients)
             sendNotification(notification, device_tokens)
         except Exception as e:
             print 'Error sending push notification: {0}'.format(e)
