@@ -239,6 +239,7 @@ class Notification(models.Model):
         aps = {}
         if self.message:
             aps['alert'] = self.message
+            aps['content-available'] = 1
         if self.badge is not None:
             aps['badge'] = self.badge
         if self.sound:
