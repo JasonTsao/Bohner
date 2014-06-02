@@ -1104,7 +1104,8 @@ def createEventChatMessage(request, event_id):
                                 'chat_id': new_comment.id,
                                 'event_id': event.id,
                                 'creator_id': account.id,
-                                'user_name': account.user_name}
+                                'user_name': account.user_name,
+                                'message': new_comment.description}
                     custom_payload = json.dumps(custom_payload)    
 
 
@@ -1168,7 +1169,8 @@ def createTestEventChatMessage(request, event_id):
                                 'chat_id': new_comment.id,
                                 'event_id': event.id,
                                 'creator_id': account.id,
-                                'user_name': account.user_name}
+                                'user_name': account.user_name,
+                                'message': new_comment.description}
             custom_payload = json.dumps(custom_payload)  
 
             notification = createNotification(message, 'event_chat', custom_payload, recipients)
