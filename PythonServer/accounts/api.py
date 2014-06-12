@@ -538,7 +538,7 @@ def login(request):
 		try:
 			account = Account.objects.get(user=user)
 			rtn_dict['userid'] = account.id
-		except:
+		except Exception as e:
 			print 'Unable to get account for user id {0}'.format(e)
 			logger.info('Unable to get account for user id {0}'.format(e))
 
