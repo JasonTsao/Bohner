@@ -70,7 +70,7 @@ def getNotifications(request):
 			notification_dict['created_at'] = created_at
 			notification_dict['id'] = notification.id
 			notification_dict['notification_type'] = notification.notification_type
-			notification_dict['extra'] = notifications.custom_payload
+			notification_dict['extra'] = notification.custom_payload
 			notifications_array.append(notification_dict)
 		rtn_dict['notifications'] = notifications_array
 		rtn_dict['success'] = True
