@@ -299,7 +299,7 @@ def groupUpcomingEvents(request, group_id):
         #upcoming_events = False
             if not upcoming_events or True:
 
-                events = Event.objects.filter(group=group, cancelled=False)
+                events = Event.objects.filter(group=group, cancelled=False).order_by('-start_time')
                 for event in events:
                     event_dict = model_to_dict(event)
                     if event.start_time:
@@ -348,7 +348,7 @@ def upcomingEvents(request):
         owned_upcoming_events = False
         if not owned_upcoming_events:
             #owned_upcoming_events = []
-            owned_events = Event.objects.filter(creator=account_id, event_over=False, cancelled=False).order_by('start_time')
+            owned_events = Event.objects.filter(creator=account_id, event_over=False, cancelled=False).order_by('-start_time')
             for event in owned_events:
                 #owned_upcoming_events.append(model_to_dict(event))
                 event_dict = model_to_dict(event)
