@@ -72,14 +72,12 @@ class DeviceResource(BaseResource):
             device.save()
 
         if devices.exists():
-            print 'device exists!!'
             device = devices.get()
             device.is_active = True
             device.save()
             return JSONResponse(device)
         form = DeviceForm(request.POST)
         if form.is_valid():
-            print 'form is valid!!'
             device = form.save(commit=False)
             device.is_active = True
             device.save()

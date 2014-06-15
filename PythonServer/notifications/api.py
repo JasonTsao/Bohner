@@ -61,7 +61,7 @@ def getNotifications(request):
 	rtn_dict = {'success': False, "msg": "", "notifications":[]}
 	try:
 		service = APNService.objects.get(pk=1)
-		notifications = Notification.objects.filter(recipients__pk=request.user.id, service=service)
+		notifications = Notification.objects.filter(recipients__pk=request.user.id, service=service).order_by('-created_at')
 		notifications_array = []
 		for notification in notifications:
 			notification_dict = {}
