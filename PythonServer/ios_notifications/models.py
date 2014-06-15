@@ -246,10 +246,6 @@ class Notification(models.Model):
             aps['sound'] = self.sound
         message = {'aps': aps}
         extra = self.extra
-
-        print 'extra custom payload'
-        print extra
-        message['extra'] = extra
         if extra is not None:
             message.update(extra)
         payload = json.dumps(message, separators=(',', ':'))
