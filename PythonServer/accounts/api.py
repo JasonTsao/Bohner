@@ -700,6 +700,30 @@ def addFriend(request):
 				friend_dict = json.dumps({'id': account.id, 'pf_pic': str(account.profile_pic), 'name': account.display_name})
 				pushToNOSQLSet(redis_key, friend_dict, False,0)
 
+				'''
+					Send notification friend
+				'''
+				try:
+					message = "{0} requested to friend you".format(account.user_name)
+					custom_payload = None
+					device_tokens = []
+					recipients = []
+
+					user = friend.user
+					device = Device.objects.get(users__pk=user.id)
+					device_tokens.append(device.token)
+					recipients.append(user)
+
+					custom_payload = {'notification_type': 'friend_request',
+								'friend_id': account.id,
+								'friend_name': account.user_name}
+					custom_payload = json.dumps(custom_payload)    
+
+					notification = createNotification(message, 'friend_request', custom_payload, recipients)
+					sendNotification(notification, device_tokens)
+				except Exception as e:
+					print 'Error sending push notification: {0}'.format(e)
+
 				rtn_dict['success'] = True
 				rtn_dict['msg'] = 'successfully added friend {0}'.format(friend.id)
 			else:
@@ -713,6 +737,7 @@ def addFriend(request):
 	else:
 		rtn_dict['msg'] = 'Not POST'
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
 
 @login_required
 @csrf_exempt
@@ -760,6 +785,40 @@ def addFriendByPhoneNumber(request):
 			rtn_dict['msg'] = 'Error adding friend by phone number: {0}'.format(e)
 	else:
 		rtn_dict['msg'] = 'Not POST'
+	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
+@login_required
+@csrf_exempt
+def getFriend(request, friend_id):
+	rtn_dict = {'success': False, "msg": "", "friend": None}
+
+	try:
+		#account_id = Account.objects.values('id').get(user=request.user)['id']
+		account = Account.objects.get(user=request.user)
+		link = AccountLink.objects.select_related('friend').get(account_user=account, friend__pk=friend_id)
+		if link.friend.is_active:
+			friend_dict = {'pf_pic': None, 'id':None, 'name': None}
+			try:
+				fb_profile = FacebookProfile.objects.get(user=link.friend)
+				friend_dict['fb_pfpic_url'] = fb_profile.image_url
+			except:
+				friend_dict['fb_pfpic_url'] = ""
+			friend_dict['pf_pic'] = str(link.friend.profile_pic)
+			friend_dict['account_id'] = link.friend.id
+			friend_dict['name'] = link.friend.user_name
+			friend_dict['phone_number'] = link.friend.phone_number
+			friend_dict['invited_count'] = link.invited_count
+			friend_dict['bio'] = link.friend.bio
+
+			rtn_dict['success'] = True
+			rtn_dict['msg'] = 'successfully retrieved friend with id {0}'.format(friend_id)
+			rtn_dict['friend'] = friend_dict
+
+	except Exception as e:
+		logger.info('Error getting friend {0}: {1}'.format(friend_id,e))
+		rtn_dict['msg'] = 'Error getting friend {0}: {1}'.format(friend_id,e)
+
 	return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
