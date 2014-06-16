@@ -867,10 +867,10 @@ def createGroup(request):
 
 				for member in members:
 					try:
-						friend_account = member.user
-						device = Device.objects.get(users__pk=friend_account.user.id)
+						user = member.user
+						device = Device.objects.get(users__pk=user.id)
 						device_tokens.append(device.token)
-						recipients.append(friend_account.user)
+						recipients.append(user)
 					except:
 						pass
 
@@ -1074,10 +1074,10 @@ def addRemoveUsersFromGroup(request, group_id):
 
 				for member in members:
 					try:
-						friend_account = member.user
-						device = Device.objects.get(users__pk=friend_account.user.id)
+						user = member.user
+						device = Device.objects.get(users__pk=user.id)
 						device_tokens.append(device.token)
-						recipients.append(friend_account.user)
+						recipients.append(user)
 					except:
 						pass
 
