@@ -874,6 +874,8 @@ def createGroup(request):
 					except:
 						pass
 
+				print 'recipients :{0}'.format(recipients)
+
 				custom_payload = {'notification_type': 'group_added',
 							'group_id': group.id,
 							'group_name': group.name,
@@ -1078,6 +1080,8 @@ def addRemoveUsersFromGroup(request, group_id):
 						recipients.append(friend_account.user)
 					except:
 						pass
+
+				print 'recipients :{0}'.format(recipients)
 
 				custom_payload = {'notification_type': 'group_added',
 							'group_id': group.id,
