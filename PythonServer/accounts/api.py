@@ -854,6 +854,36 @@ def createGroup(request):
 				r_groups_key = 'account.{0}.groups.set'.format(member.id)
 				pushToNOSQLSet(r_groups_key, group.id, False, 0)
 			'''
+
+			'''
+				Send notifications to group members
+			'''
+			try:
+				message = "{0} added you to group {1}".format(group.group_creator.user_name, group.name)
+				custom_payload = None
+				members = group.members.all()
+				device_tokens = []
+				recipients = []
+
+				for member in members:
+					try:
+						friend_account = member.user
+						device = Device.objects.get(users__pk=friend_account.user.id)
+						device_tokens.append(device.token)
+						recipients.append(friend_account.user)
+					except:
+						pass
+
+				custom_payload = {'notification_type': 'group_added',
+							'group_id': group.id,
+							'group_name': group.name,
+							'creator_id': account.id}
+				custom_payload = json.dumps(custom_payload)    
+
+				notification = createNotification(message, 'group_added', custom_payload, recipients)
+				sendNotification(notification, device_tokens)
+			except Exception as e:
+				print 'Error sending push notification: {0}'.format(e)
 		except Exception as e:
 			print 'Error creating group: {0}'.format(e)
 			logger.info('Error creating group: {0}'.format(e))
@@ -1032,6 +1062,33 @@ def addRemoveUsersFromGroup(request, group_id):
 				r_groups_key = 'account.{0}.groups.set'.format(member.id)
 				pushToNOSQLSet(r_groups_key, group.id, False, 0)
 			'''
+
+			try:
+				message = "{0} added you to group {1}".format(group.group_creator.user_name, group.name)
+				custom_payload = None
+				members = group.members.all()
+				device_tokens = []
+				recipients = []
+
+				for member in members:
+					try:
+						friend_account = member.user
+						device = Device.objects.get(users__pk=friend_account.user.id)
+						device_tokens.append(device.token)
+						recipients.append(friend_account.user)
+					except:
+						pass
+
+				custom_payload = {'notification_type': 'group_added',
+							'group_id': group.id,
+							'group_name': group.name,
+							'creator_id': account.id}
+				custom_payload = json.dumps(custom_payload)    
+
+				notification = createNotification(message, 'group_added', custom_payload, recipients)
+				sendNotification(notification, device_tokens)
+			except Exception as e:
+				print 'Error sending push notification: {0}'.format(e)
 
 			rtn_dict['success'] = True
 			rtn_dict['msg'] = 'successfully added users to group {0}'.format(group_id)
