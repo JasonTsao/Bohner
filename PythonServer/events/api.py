@@ -328,6 +328,76 @@ def groupUpcomingEvents(request, group_id):
     return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
 
 
+def getEventsFriendsIntersection(user, friend):
+    events_with_friend = []
+
+    try:
+        user_invited_objs = InvitedFriend.objects.select_related('event').filter(user=user)
+        friend_invited_objs = InvitedFriend.objects.select_related('event').filter(user=friend)
+
+        for invited_user in user_invited_objs:
+            for invited_friend in friend_invited_objs:
+                if invited_user.event == invited_friend.event:
+                    events_with_friend.append(invited_user.event)
+
+    except Exception as e:
+        print 'Unable to get event friends intersection: {0}'.format(e)
+
+    return events_with_friend
+
+
+
+@login_required
+@csrf_exempt
+def eventsWithFriend(request, friend_id):
+    rtn_dict = {'success': False, "msg": ""}
+
+
+    try:
+        events_with_friend = []
+        '''
+        r = R.r
+        event_range_start = int(request.GET.get('range_start', 0))
+        upcoming_events_key = 'account.{0}.events.set'.format(account_id)
+        upcoming_events = r.zrange(upcoming_events_key, event_range_start, event_range_start + RETURN_LIST_SIZE)
+        owned_upcoming_events_key = 'account.{0}.owned_events.set'.format(account_id)
+        owned_upcoming_events = r.zrange(owned_upcoming_events_key, event_range_start, event_range_start + RETURN_LIST_SIZE)
+        '''
+        #account_id = Account.objects.values('id').get(user=request.user)['id']
+        account = Account.objects.get(user=request.user)
+        friend = Account.objects.get(pk=friend_id)
+        account_link = AccountLink.objects.get(account_user=account,friend=friend)
+
+        if not events_with_friend or True:
+            events = getEventsFriendsIntersection(account, friend)
+            for event in events:
+                event_dict = model_to_dict(event)
+                if event.start_time:
+                    started = time.mktime(event.start_time.timetuple())
+                    event_dict['start_time'] = started
+                if event.end_time:
+                    ended = time.mktime(event.end_time.timetuple())
+                    event_dict['end_time'] = ended
+                events_with_friend.append(event_dict)
+                created = time.mktime(event.created.timetuple())
+                event_dict['created'] = created
+
+            sorted_events_with_friend = sorted(events_with_friend, key=lambda k: k['created']) 
+            rtn_dict['events_with_friend'] = sorted_events_with_friend
+            #rtn_dict['owned_upcoming_events'] = owned_upcoming_events
+            rtn_dict['success'] = True
+            rtn_dict['message'] = 'Successfully retrieved events with friend'
+        else:
+            rtn_dict['msg'] = 'User is not authorized to view groups upcoming events'
+    except Exception as e:
+        print 'Error grabbing group upcoming events: {0}'.format(e)
+        logger.info('Error grabbing group upcoming events: {0}'.format(e))
+        rtn_dict['msg'] = 'Error grabbing group upcoming events: {0}'.format(e)
+
+
+    return HttpResponse(json.dumps(rtn_dict, cls=DjangoJSONEncoder), content_type="application/json")
+
+
 @login_required
 @csrf_exempt
 def upcomingEvents(request):
